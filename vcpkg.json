@@ -1,0 +1,10 @@
+{
+  "dependencies": [
+    "fmt",
+    "glfw3",
+    "glm",
+    "imgui",
+    "lodepng",
+    "glad"
+  ]
+}
