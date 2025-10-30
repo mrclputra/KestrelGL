@@ -25,10 +25,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# copy shaders to build directory
+file(COPY "${CMAKE_SOURCE_DIR}/assets" DESTINATION "${CMAKE_BINARY_DIR}")
+
 # Add source to this project's executable.
 # also link libraries
 # add_executable (KestrelGL "KestrelGL.cpp" "KestrelGL.h")
-add_executable(KestrelGL "src/main.cpp")
+add_executable(KestrelGL "src/main.cpp" "src/shader.h")
 
 # link libraries here
 target_link_libraries(KestrelGL PRIVATE fmt::fmt)
