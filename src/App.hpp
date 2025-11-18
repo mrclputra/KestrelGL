@@ -13,6 +13,7 @@ public:
   void onFrameBufferSize(int width, int height);
   void onCursorPos(double xPos, double yPos);
   void onScroll(double xOff, double yOff);
+  void onKey(int key, int scancode, int action, int mods);
 
 private:
   void init();

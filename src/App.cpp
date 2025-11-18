@@ -5,15 +5,17 @@ static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
   auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
   app->onFrameBufferSize(width, height);
 }
-
 static void cursor_position_callback(GLFWwindow* window, double xPos, double yPos) {
   auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
   app->onCursorPos(xPos, yPos);
 }
-
 static void scroll_callback(GLFWwindow* window, double xOff, double yOff) {
   auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
   app->onScroll(xOff, yOff);
+}
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+  auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
+  app->onKey(key, scancode, action, mods);
 }
 
 App::App(int w, int h, const char* t) 
@@ -63,6 +65,7 @@ void App::setupCallbacks() {
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwSetCursorPosCallback(window, cursor_position_callback);
   glfwSetScrollCallback(window, scroll_callback);
+  glfwSetKeyCallback(window, key_callback);
 
   // config cursor
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // set to disabled
@@ -101,4 +104,9 @@ void App::onCursorPos(double xPos, double yPos) {
 
 void App::onScroll(double xOff, double yOff) {
   // TODO: handle scroll (yOff)
+}
+
+void App::onKey(int key, int scancode, int action, int mods) {
+  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    glfwSetWindowShouldClose(window, true);
 }
