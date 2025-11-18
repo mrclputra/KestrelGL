@@ -26,7 +26,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # add_executable(KestrelGL "src/main.cpp")
-add_executable(KestrelGL "src/main.cpp" "src/App.cpp")
+add_executable(KestrelGL "src/main.cpp" "src/App.cpp" "include/stb_image.h")
 
 # link libraries
 target_link_libraries(KestrelGL PRIVATE

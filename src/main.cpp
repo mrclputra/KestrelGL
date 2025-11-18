@@ -2,7 +2,13 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <shader.hpp>
+#include <model.hpp>
+#include <mesh.hpp>
+
 #include "App.hpp"
+
 
 #include <iostream>
 
@@ -14,20 +20,15 @@ int main() {
   App app(800, 600, "test");
   app.run();
 
+  //TODO:
   // initialize and configure GLFW
-
   // create window
-
   // load OpenGL GLAD function pointers
   
   // build and compile shader program
-
   // load models
-
   // setup scene
-
   // render loop
-
   // cleanup
 
   return 0;
