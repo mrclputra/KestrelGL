@@ -1,3 +1,5 @@
+
+#define STB_IMAGE_IMPLEMENTATION
 #include "App.hpp"
 #include <iostream>
 
@@ -16,6 +18,20 @@ static void scroll_callback(GLFWwindow* window, double xOff, double yOff) {
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
   auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
   app->onKey(key, scancode, action, mods);
+}
+static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+  auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
+  if (button == GLFW_MOUSE_BUTTON_LEFT) {
+    if (action == GLFW_PRESS) {
+      app->mousePressed = true;
+      app->firstMouse = true; // reset drag
+      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // hide cursor
+    }
+    else if (action == GLFW_RELEASE) {
+      app->mousePressed = false;
+      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // show cursor
+    }
+  }
 }
 
 App::App(int w, int h, const char* t) 
@@ -46,6 +62,13 @@ void App::init() {
     std::exit(EXIT_FAILURE);
   }
 
+  // center window
+  GLFWmonitor* primary = glfwGetPrimaryMonitor();
+  const GLFWvidmode* mode = glfwGetVideoMode(primary);
+  int xpos = (mode->width - width) / 2;
+  int ypos = (mode->height - height) / 2;
+  glfwSetWindowPos(window, xpos, ypos);
+
   glfwMakeContextCurrent(window);
   glfwSetWindowUserPointer(window, this);
 
@@ -59,6 +82,14 @@ void App::init() {
   int fbWidth, fbHeight;
   glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
   glViewport(0, 0, fbWidth, fbHeight);
+  glEnable(GL_DEPTH_TEST);
+
+  //camera = Camera(10.0f, 0.0f, 0.0f);
+  camera = Camera(4.0f, 0.0f, 0.0f);
+
+  loadShaders();
+  loadModel();
+  setupLighting();
 }
 
 void App::setupCallbacks() {
@@ -66,26 +97,78 @@ void App::setupCallbacks() {
   glfwSetCursorPosCallback(window, cursor_position_callback);
   glfwSetScrollCallback(window, scroll_callback);
   glfwSetKeyCallback(window, key_callback);
+  glfwSetMouseButtonCallback(window, mouse_button_callback);
 
   // config cursor
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // set to disabled
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // normal mode
+  //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); 
 }
 
 void App::run() {
+  float lastTime = 0.0f;
   while (!glfwWindowShouldClose(window)) {
+    float currentTime = glfwGetTime();
+    float deltaTime = currentTime - lastTime;
+    lastTime = currentTime;
+
+    update();
+
     // render
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    //glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // TODO: need to pass these to vertex shader
-    glm::mat4 view = camera.getViewMatrix();
-    glm::mat4 projection = camera.getProjectionMatrix(width, height);
+    glm::mat4 viewMatrix = camera.getViewMatrix();
+    glm::mat4 projectionMatrix = camera.getProjectionMatrix(width, height);
 
     // TODO: draw scene
+    shader.use();
+    shader.setMat4("view", viewMatrix);
+    shader.setMat4("projection", projectionMatrix);
+
+    shader.setInt("numLights", lights.size());
+    for (int i = 0; i < (int)lights.size(); i++) {
+      shader.setVec3("lights[" + std::to_string(i) + "].position", lights[i].position);
+      shader.setVec3("lights[" + std::to_string(i) + "].color", lights[i].color);
+    }
+
+    glm::mat4 modelMatrix(1.0f);
+    //modelMatrix = glm::scale(modelMatrix, glm::vec3(0.3f));
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(model.getScaleToStandard(5.0f)));
+    //modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.f), glm::vec3(1, 0, 0)); // maya to opengl
+    //modelMatrix = glm::rotate(modelMatrix, glm::radians(-180.f), glm::vec3(1, 0, 0)); // flip 180
+    modelMatrix = glm::translate(modelMatrix, -model.getCenter()); // center model at origin
+    shader.setMat4("model", modelMatrix);
+
+    model.Draw(shader);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
+}
+
+void App::loadShaders() {
+  shader = Shader(SHADER_DIR "/vertex.glsl", SHADER_DIR "/fragment.glsl");
+}
+
+void App::loadModel() {
+  stbi_set_flip_vertically_on_load(true);
+  //model = Model("assets/models/granite-head-of-amenemhat-iii/source/2763163_201492194838/mesh/sculpt.obj");
+  //model = Model("assets/models/tibetan-amoghasiddhi-buddha-13th-c-ce/source/mia_031182_Amoghasiddhi_64k.obj");
+  model = Model("assets/models/tibetan-hayagriva-18th-c-ce/source/190614_mia337_132174_402_local_64Kmesh_OBJ.obj");
+  //model = Model("assets/models/teeth.ply");
+}
+
+void App::setupLighting() {
+  lights.clear();
+  lights.push_back({ glm::vec3(30.0f, 50.0f, 30.0f), glm::vec3(1.0f, 1.0f, 0.95f) });   // key
+  lights.push_back({ glm::vec3(-20.0f, 20.0f, 20.0f), glm::vec3(0.7f, 0.7f, 0.75f) });  // fill
+  lights.push_back({ glm::vec3(0.0f, 30.0f, -30.0f), glm::vec3(0.6f, 0.6f, 0.65f) });   // back
+}
+
+void App::update() {
+  camera.update();
 }
 
 void App::cleanup() {
@@ -103,7 +186,8 @@ void App::onFrameBufferSize(int w, int h) {
 }
 
 void App::onCursorPos(double xPos, double yPos) {
-  // TODO: handle cursor movement
+  if (!mousePressed) return;
+
   if (firstMouse) {
     lastX = xPos;
     lastY = yPos;
@@ -111,11 +195,27 @@ void App::onCursorPos(double xPos, double yPos) {
   }
 
   float xOffset = xPos - lastX;
-  float yOffset = lastY - yPos;
+  float yOffset = yPos - lastY;
   lastX = xPos;
   lastY = yPos;
 
   camera.rotate(xOffset, yOffset);
+
+  // wrap cursor
+  int w, h;
+  glfwGetWindowSize(window, &w, &h);
+
+  bool wrapped = false;
+  if (xPos <= 0) { xPos = w - 2; wrapped = true; }
+  if (xPos >= w - 1) { xPos = 1; wrapped = true; }
+  if (yPos <= 0) { yPos = h - 2; wrapped = true; }
+  if (yPos >= h - 1) { yPos = 1; wrapped = true; }
+
+  if (wrapped) {
+    glfwSetCursorPos(window, xPos, yPos);
+    lastX = xPos;
+    lastY = yPos;
+  }
 }
 
 void App::onScroll(double xOff, double yOff) {

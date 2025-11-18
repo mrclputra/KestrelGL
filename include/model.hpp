@@ -31,18 +31,52 @@ public:
   string directory;
   bool isGammaCorrection;
 
+  // default
+  Model() : isGammaCorrection(false) {}
+
   // constructor
   // expects file path to a model file
   Model(string const& path, bool gamma = false) : isGammaCorrection(gamma) {
     loadModel(path);
-    std::cout << "Model Successfully Loaded...\n";
   }
 
   // draws the model and all it's meshes
-  void Draw(Shader shader) {
-    for (unsigned int i = 0; i < meshes.size(); i++) {
+  void Draw(const Shader& shader) {
+    for (unsigned int i = 0; i < meshes.size(); i++)
       meshes[i].Draw(shader);
+  }
+
+  glm::vec3 getCenter() const {
+    glm::vec3 minVertex(FLT_MAX), maxVertex(-FLT_MAX);
+
+    for (const auto& mesh : meshes) {
+      for (const auto& vertex : mesh.vertices) {
+        minVertex = glm::min(minVertex, vertex.Position);
+        maxVertex = glm::max(maxVertex, vertex.Position);
+      }
     }
+
+    return (minVertex + maxVertex) * 0.5f; // center of model
+  }
+
+  glm::vec3 getSize() const {
+    glm::vec3 minVertex(FLT_MAX), maxVertex(-FLT_MAX);
+
+    for (const auto& mesh : meshes) {
+      for (const auto& vertex : mesh.vertices) {
+        minVertex = glm::min(minVertex, vertex.Position);
+        maxVertex = glm::max(maxVertex, vertex.Position);
+      }
+    }
+
+    return maxVertex - minVertex; // width, height, depth
+  }
+
+  // get scaling factor to get to a standard size
+  float Model::getScaleToStandard(float standardSize) const {
+    glm::vec3 size = getSize();
+    float maxDim = glm::max(size.x, glm::max(size.y, size.z));
+    return standardSize / maxDim; // scaling factor
   }
 
 private:
@@ -62,6 +96,8 @@ private:
 
     // process ASSIMP root node recursively
     processNode(scene->mRootNode, scene);
+
+    std::cout << "Model Successfully Loaded...\n";
   }
 
   // processes current node, and children (if any)
@@ -85,6 +121,11 @@ private:
     vector<Vertex> vertices;
     vector<unsigned int> indices;
     vector<Texture> textures;
+
+    // debug stuff
+    std::ostringstream vertexBuffer;
+    const unsigned int flushInterval = 500; // flush
+    unsigned int counter = 0;
 
     // walk through each of the mesh's vertices
     for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
@@ -115,7 +156,7 @@ private:
         vertex.TexCoords = vec;
         // tangent
         vector.x = mesh->mTangents[i].x;
-        vector.z = mesh->mTangents[i].y;
+        vector.y = mesh->mTangents[i].y;
         vector.z = mesh->mTangents[i].z;
         vertex.Tangent = vector;
         // bitangent
@@ -129,6 +170,25 @@ private:
       }
 
       vertices.push_back(vertex);
+
+      // debug ----
+      vertexBuffer << "v" << i << ": P(" << vertex.Position.x << "," << vertex.Position.y << "," << vertex.Position.z << ") "
+        << "N(" << vertex.Normal.x << "," << vertex.Normal.y << "," << vertex.Normal.z << ") "
+        << "T(" << vertex.Tangent.x << "," << vertex.Tangent.y << "," << vertex.Tangent.z << ") "
+        << "B(" << vertex.Bitangent.x << "," << vertex.Bitangent.y << "," << vertex.Bitangent.z << ") "
+        << "UV(" << vertex.TexCoords.x << "," << vertex.TexCoords.y << ")\n";
+      counter++;
+
+      if (counter >= flushInterval) {
+        std::cout << vertexBuffer.str();
+        vertexBuffer.str("");   // clear buffer
+        vertexBuffer.clear();   // reset flags
+        counter = 0;
+      }
+    }
+
+    if (counter > 0) {
+      std::cout << vertexBuffer.str();
     }
 
     // go through each face and retrieve corresponding indices
@@ -196,7 +256,7 @@ private:
   }
 };
 
-unsigned int TextureFromFile(const char* path, const string& directory, bool gamma) {
+inline unsigned int TextureFromFile(const char* path, const string& directory, bool gamma) {
   string filename = string(path);
   filename = directory + '/' + filename;
 

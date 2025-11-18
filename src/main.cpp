@@ -2,7 +2,6 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-#define STB_IMAGE_IMPLEMENTATION
 #include <shader.hpp>
 #include <model.hpp>
 #include <mesh.hpp>
@@ -17,7 +16,7 @@ int main() {
   std::cout << "C++ Standard " << __cplusplus << std::endl;
   std::cout << "KestrelGL" << std::endl;
 
-  App app(800, 600, "test");
+  App app(720, 940, "test");
   app.run();
 
   //TODO:

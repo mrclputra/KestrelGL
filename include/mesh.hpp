@@ -10,6 +10,8 @@
 #include <vector>
 using namespace std;
 
+#include <shader.hpp>
+
 #define MAX_BONE_INFLUENCE 4
 
 struct Vertex {
@@ -48,11 +50,13 @@ public:
   }
 
   // render the mesh
-  void Draw(Shader& shader) {
-    if (textures.empty())
+  void Draw(const Shader& shader) {
+    if (textures.empty()) {
       shader.setBool("hasDiffuseMap", false);
-    else
+    }
+    else {
       shader.setBool("hasDiffuseMap", true);
+    }
 
     // bind appropriate textures
     unsigned int diffuseNr = 1;

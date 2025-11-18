@@ -29,7 +29,7 @@ public:
   float radius, theta, phi;
   float speed, sensitivity, dof; // dof in degrees
 
-  const float PIXEL_TO_RAD = 0.01f;
+  static constexpr float PIXEL_TO_RAD = 0.01f;
 
   // constructor
   Camera(
@@ -75,10 +75,10 @@ public:
 
   void zoom(float offset) {
     radius -= offset * 0.2f;
-    if (radius < 1.0f)
-      radius = 1.0f;
-    if (radius > 2000.0f)
-      radius = 20.0f;
+    if (radius < 0.2f)
+      radius = 0.2f;
+    if (radius > 700.0f)
+      radius = 700.0f;
   }
 
 private:

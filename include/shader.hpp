@@ -14,6 +14,9 @@ class Shader {
 public:
   unsigned int ID;
 
+  // default
+  Shader() : ID(0) {}
+
   // constructor
   Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr) {
     // retrieve source code from file path
