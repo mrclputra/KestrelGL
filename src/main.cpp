@@ -6,9 +6,9 @@
 #include <shader.hpp>
 #include <model.hpp>
 #include <mesh.hpp>
+#include <camera.hpp>
 
 #include "App.hpp"
-
 
 #include <iostream>
 

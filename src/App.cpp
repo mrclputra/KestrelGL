@@ -77,6 +77,10 @@ void App::run() {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // TODO: need to pass these to vertex shader
+    glm::mat4 view = camera.getViewMatrix();
+    glm::mat4 projection = camera.getProjectionMatrix(width, height);
+
     // TODO: draw scene
 
     glfwSwapBuffers(window);
@@ -100,10 +104,23 @@ void App::onFrameBufferSize(int w, int h) {
 
 void App::onCursorPos(double xPos, double yPos) {
   // TODO: handle cursor movement
+  if (firstMouse) {
+    lastX = xPos;
+    lastY = yPos;
+    firstMouse = false;
+  }
+
+  float xOffset = xPos - lastX;
+  float yOffset = lastY - yPos;
+  lastX = xPos;
+  lastY = yPos;
+
+  camera.rotate(xOffset, yOffset);
 }
 
 void App::onScroll(double xOff, double yOff) {
   // TODO: handle scroll (yOff)
+  camera.zoom(yOff);
 }
 
 void App::onKey(int key, int scancode, int action, int mods) {

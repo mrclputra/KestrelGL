@@ -1,6 +1,7 @@
 #pragma once
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <camera.hpp>
 
 class App {
 public:
@@ -23,4 +24,9 @@ private:
   GLFWwindow* window;
   int width, height;
   const char* title;
+
+  Camera camera;
+  float lastX = 0.0f;
+  float lastY = 0.0f;
+  bool firstMouse = true;
 };
