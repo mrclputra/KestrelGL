@@ -11,8 +11,7 @@ const float d_radius = 5.0f; // distance from target
 const float d_theta = 0.0f;
 const float d_phi = 0.0f;
 
-const float d_speed = 2.5f;
-const float d_sensitivity = 0.1f;
+const float d_sensitivity = 0.18f;
 const float d_dof = 45.0f;
 
 const glm::vec3 d_target = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -27,7 +26,7 @@ public:
   glm::vec3 worldUp;
 
   float radius, theta, phi;
-  float speed, sensitivity, dof; // dof in degrees
+  float sensitivity, dof; // dof in degrees
 
   static constexpr float PIXEL_TO_RAD = 0.01f;
 
@@ -37,7 +36,7 @@ public:
     float theta = d_theta,
     float phi = d_phi,
     glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f)
-  ) : speed(d_speed), sensitivity(d_sensitivity), dof(d_dof) {
+  ) : sensitivity(d_sensitivity), dof(d_dof) {
     this->position = calculatePosition(radius, theta, phi);
     this->worldUp = up;
     this->radius = radius;
@@ -74,7 +73,7 @@ public:
   }
 
   void zoom(float offset) {
-    radius -= offset * 0.2f;
+    radius -= offset * 0.32f;
     if (radius < 0.2f)
       radius = 0.2f;
     if (radius > 700.0f)

@@ -136,7 +136,7 @@ void App::run() {
     glm::mat4 modelMatrix(1.0f);
     //modelMatrix = glm::scale(modelMatrix, glm::vec3(0.3f));
     modelMatrix = glm::scale(modelMatrix, glm::vec3(model.getScaleToStandard(5.0f)));
-    //modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.f), glm::vec3(1, 0, 0)); // maya to opengl
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.f), glm::vec3(1, 0, 0)); // maya to opengl
     //modelMatrix = glm::rotate(modelMatrix, glm::radians(-180.f), glm::vec3(1, 0, 0)); // flip 180
     modelMatrix = glm::translate(modelMatrix, -model.getCenter()); // center model at origin
     shader.setMat4("model", modelMatrix);
@@ -154,10 +154,13 @@ void App::loadShaders() {
 
 void App::loadModel() {
   stbi_set_flip_vertically_on_load(true);
-  //model = Model("assets/models/granite-head-of-amenemhat-iii/source/2763163_201492194838/mesh/sculpt.obj");
   //model = Model("assets/models/tibetan-amoghasiddhi-buddha-13th-c-ce/source/mia_031182_Amoghasiddhi_64k.obj");
-  model = Model("assets/models/tibetan-hayagriva-18th-c-ce/source/190614_mia337_132174_402_local_64Kmesh_OBJ.obj");
-  //model = Model("assets/models/teeth.ply");
+  //model = Model("assets/models/tibetan-hayagriva-18th-c-ce/source/190614_mia337_132174_402_local_64Kmesh_OBJ.obj");
+  //model = Model("assets/models/loie_fuller_sculpture_by_joseph_kratina/scene.gltf");
+  model = Model("assets/models/lewis_chess_set/scene.gltf");
+  //model = Model("assets/models/minai_ware_bowl_1200-1299_ce/scene.gltf"); // 180
+  //model = Model("assets/models/earthenware_bowl_14th_c_ce/scene.gltf"); // -90
+  //model = Model("assets/models/teeth.ply"); // 180
 }
 
 void App::setupLighting() {

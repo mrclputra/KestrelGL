@@ -58,6 +58,24 @@ public:
       shader.setBool("hasDiffuseMap", true);
     }
 
+    bool hasNormalMap = false;
+    for (auto& tex : textures) {
+      if (tex.type == "texture_normal") {
+        hasNormalMap = true;
+        break;
+      }
+    }
+    shader.setBool("hasNormalMap", hasNormalMap);
+
+    bool hasSpecularMap = false;
+    for (auto& tex : textures) {
+      if (tex.type == "texture_specular") {
+        hasSpecularMap = true;
+        break;
+      }
+    }
+    shader.setBool("hasSpecularMap", hasSpecularMap);
+
     // bind appropriate textures
     unsigned int diffuseNr = 1;
     unsigned int specularNr = 1;
@@ -69,6 +87,8 @@ public:
       // retrieve texture number (N in diffuse_textureN)
       string number;
       string name = textures[i].type;
+
+      // assign number for shader uniform
       if (name == "texture_diffuse")
         number = std::to_string(diffuseNr++);
       else if (name == "texture_specular")
@@ -78,7 +98,8 @@ public:
       else if (name == "texture_height")
         number = std::to_string(heightNr++);
 
-      glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i); // set sampler to correct texture unit
+      // bind to correct uniform name in shader
+      glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i);
       glBindTexture(GL_TEXTURE_2D, textures[i].id); // bind texture
     }
 
@@ -127,10 +148,10 @@ private:
     // vertex bitangent
     glEnableVertexAttribArray(4);
     glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Bitangent));
+    
     // ids
     glEnableVertexAttribArray(5);
     glVertexAttribIPointer(5, 4, GL_INT, sizeof(Vertex), (void*)offsetof(Vertex, m_BoneIDs));
-
     // weights
     glEnableVertexAttribArray(6);
     glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_Weights));
