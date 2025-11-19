@@ -31,6 +31,9 @@ public:
   bool firstMouse = true;
   bool mousePressed = false;
 
+  bool rotateLights = false;
+  float lightRotateSpeed = 0.4f;
+
   Camera camera;
   Model model;
   Shader shader;

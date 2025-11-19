@@ -58,5 +58,11 @@ void Gui::draw() {
   ImGui::Text("Camera");
   ImGui::DragFloat3("Position", &app->camera.position[0], 0.1f);
 
+  ImGui::Separator();
+  ImGui::Text("Lights");
+
+  ImGui::Checkbox("Rotate", &app->rotateLights);
+  ImGui::SliderFloat("Speed", &app->lightRotateSpeed, 0.0f, 1.0f, "%.2f");
+
   ImGui::End();
 }

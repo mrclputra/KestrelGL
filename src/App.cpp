@@ -193,12 +193,12 @@ void App::setupLighting() {
 void App::update() {
   camera.update();
 
-  // move lights
-  constexpr float angleStep = glm::radians(0.5f);
-  for (auto& light : lights) {
-    glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), angleStep, glm::vec3(0.0f, 1.0f, 0.0f));
-    glm::vec4 rotatedPos = rotation * glm::vec4(light.position, 1.0f);
-    light.position = glm::vec3(rotatedPos);
+  if (rotateLights) {
+    for (auto& light : lights) {
+      glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(lightRotateSpeed), glm::vec3(0.0f, 1.0f, 0.0f));
+      glm::vec4 rotatedPos = rotation * glm::vec4(light.position, 1.0f);
+      light.position = glm::vec3(rotatedPos);
+    }
   }
 }
 
