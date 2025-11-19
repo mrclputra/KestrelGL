@@ -46,9 +46,12 @@ public:
       meshes[i].Draw(shader);
   }
 
+  // gets center of model
+  // uses AABB
   glm::vec3 getCenter() const {
     glm::vec3 minVertex(FLT_MAX), maxVertex(-FLT_MAX);
 
+    // get farthest vertices
     for (const auto& mesh : meshes) {
       for (const auto& vertex : mesh.vertices) {
         minVertex = glm::min(minVertex, vertex.Position);
@@ -56,9 +59,11 @@ public:
       }
     }
 
-    return (minVertex + maxVertex) * 0.5f; // center of model
+    // get center of those 2 vertices
+    return (minVertex + maxVertex) * 0.5f;
   }
 
+  // determines size from AABB
   glm::vec3 getSize() const {
     glm::vec3 minVertex(FLT_MAX), maxVertex(-FLT_MAX);
 
@@ -229,6 +234,12 @@ private:
   // required info is returned as a Texture struct
   vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName) {
     vector<Texture> textures;
+
+    if (mat->GetTextureCount(type) > 0) {
+      std::cout << "[MODEL] Found texture type: " << typeName
+        << " (" << mat->GetTextureCount(type) << " textures)\n";
+    }
+
     for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
       aiString str;
       mat->GetTexture(type, i, &str);

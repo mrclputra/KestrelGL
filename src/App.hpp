@@ -2,10 +2,13 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <iostream>
 
 #include <camera.hpp>
 #include <model.hpp>
 #include <shader.hpp>
+
+#include "gui/Gui.hpp"
 
 struct Light {
   glm::vec3 position;
@@ -28,6 +31,11 @@ public:
   bool firstMouse = true;
   bool mousePressed = false;
 
+  Camera camera;
+  Model model;
+  Shader shader;
+  std::vector<Light> lights;
+
 private:
   void init();
   void setupCallbacks();
@@ -42,13 +50,11 @@ private:
   int width, height;
   const char* title;
 
-  Camera camera;
+  // cursor position
   float lastX = 0.0f;
   float lastY = 0.0f;
 
-  Shader shader;
-  Model model;
-  std::vector<Light> lights;
+  Gui gui;
 
   float deltaTime = 0.0f;
   float lastFrame = 0.0f;

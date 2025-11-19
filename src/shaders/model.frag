@@ -60,7 +60,7 @@ void main() {
     vec3 R = reflect(-L, N);
     vec3 specMap = hasSpecularMap ? texture(texture_specular1, TexCoords).rgb : vec3(0.2);
     float gloss = texture(texture_specular1, TexCoords).a;
-    float spec = pow(max(dot(V, R), 0.0), gloss * 64.0);
+    float spec = pow(max(dot(V, R), 0.0), gloss * 128.0);
     specular += specMap * spec * lights[i].color;
   }
 
@@ -69,8 +69,9 @@ void main() {
   FragColor = vec4(finalColor, 1.0);      // full phong
 //  FragColor = vec4(diffuse, 1.0);         // diffuse only
 //  FragColor = vec4(specular, 1.0);        // specular only
-//vec3 specMap = hasSpecularMap ? texture(texture_specular1, TexCoords).rgb : vec3(0.5);
-//  FragColor = vec4(specMap, 1.0);        // specular only
 //  FragColor = vec4(N * 0.5 + 0.5, 1.0);   // normal
 //  FragColor = vec4(ambient, 1.0);         // ambient only
+
+//  vec3 specMap = hasSpecularMap ? texture(texture_specular1, TexCoords).rgb : vec3(0.2);
+//  FragColor = vec4(specMap, 1.0);        // specular map only
 }

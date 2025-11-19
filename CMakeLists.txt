@@ -13,12 +13,13 @@ project(KestrelGL)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # use vcpkg, set libraries here
-find_package(fmt CONFIG REQUIRED)
+# find_package(fmt CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
 find_package(glad REQUIRED)
-find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(assimp REQUIRED)
-find_package(imgui REQUIRED)
+
 
 # set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -35,11 +36,11 @@ add_custom_target(copy_assets ALL
 add_definitions(-DSHADER_DIR="${CMAKE_SOURCE_DIR}/src/shaders")
 
 # add_executable(KestrelGL "src/main.cpp")
-add_executable(KestrelGL "src/main.cpp" "src/App.cpp")
+add_executable(KestrelGL "src/main.cpp" "src/App.cpp" "src/gui/Gui.cpp")
 
 # link libraries
 target_link_libraries(KestrelGL PRIVATE
-  fmt::fmt
+  # fmt::fmt
   glm::glm
   glad::glad
   glfw

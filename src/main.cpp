@@ -19,17 +19,6 @@ int main() {
   App app(720, 940, "test");
   app.run();
 
-  //TODO:
-  // initialize and configure GLFW
-  // create window
-  // load OpenGL GLAD function pointers
-  
-  // build and compile shader program
-  // load models
-  // setup scene
-  // render loop
-  // cleanup
-
   return 0;
 }
 

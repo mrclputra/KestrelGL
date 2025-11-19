@@ -1,17 +1,19 @@
-
 #define STB_IMAGE_IMPLEMENTATION
 #include "App.hpp"
-#include <iostream>
 
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
   auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
   app->onFrameBufferSize(width, height);
 }
 static void cursor_position_callback(GLFWwindow* window, double xPos, double yPos) {
+  ImGui_ImplGlfw_CursorPosCallback(window, xPos, yPos); // ImGui
+  
   auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
   app->onCursorPos(xPos, yPos);
 }
 static void scroll_callback(GLFWwindow* window, double xOff, double yOff) {
+  ImGui_ImplGlfw_ScrollCallback(window, xOff, yOff); // ImGui
+  
   auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
   app->onScroll(xOff, yOff);
 }
@@ -20,7 +22,11 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
   app->onKey(key, scancode, action, mods);
 }
 static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+  ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods); // ImGui
+  
   auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
+  if (ImGui::GetIO().WantCaptureMouse) return;
+
   if (button == GLFW_MOUSE_BUTTON_LEFT) {
     if (action == GLFW_PRESS) {
       app->mousePressed = true;
@@ -37,10 +43,10 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
 App::App(int w, int h, const char* t) 
   : window(nullptr), width(w), height(h), title(t) {
   init();
-  setupCallbacks();
 }
 
 App::~App() {
+  gui.shutdown();
   cleanup();
 }
 
@@ -78,6 +84,9 @@ void App::init() {
     std::exit(EXIT_FAILURE);
   }
 
+  // initialize Gui
+  gui.init(this, window);
+
   // initial viewport
   int fbWidth, fbHeight;
   glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
@@ -90,6 +99,8 @@ void App::init() {
   loadShaders();
   loadModel();
   setupLighting();
+
+  setupCallbacks();
 }
 
 void App::setupCallbacks() {
@@ -112,17 +123,24 @@ void App::run() {
     lastTime = currentTime;
 
     update();
+    gui.beginFrame();
+    gui.draw();
+
+    if (!ImGui::GetIO().WantCaptureMouse && mousePressed) {
+      double xPos, yPos;
+      glfwGetCursorPos(window, &xPos, &yPos);
+      onCursorPos(xPos, yPos);
+    }
 
     // render
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    //glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // TODO: need to pass these to vertex shader
+    // TODO: move single initialized stuff outside of per-frame loop
     glm::mat4 viewMatrix = camera.getViewMatrix();
     glm::mat4 projectionMatrix = camera.getProjectionMatrix(width, height);
 
-    // TODO: draw scene
+    // draw 3d scene
     shader.use();
     shader.setMat4("view", viewMatrix);
     shader.setMat4("projection", projectionMatrix);
@@ -135,13 +153,15 @@ void App::run() {
 
     glm::mat4 modelMatrix(1.0f);
     //modelMatrix = glm::scale(modelMatrix, glm::vec3(0.3f));
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(model.getScaleToStandard(5.0f)));
-    modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.f), glm::vec3(1, 0, 0)); // maya to opengl
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(model.getScaleToStandard(5.0f))); // standardize scale
+    //modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.f), glm::vec3(1, 0, 0)); // maya to opengl
     //modelMatrix = glm::rotate(modelMatrix, glm::radians(-180.f), glm::vec3(1, 0, 0)); // flip 180
     modelMatrix = glm::translate(modelMatrix, -model.getCenter()); // center model at origin
     shader.setMat4("model", modelMatrix);
 
     model.Draw(shader);
+    
+    gui.endFrame();
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -149,7 +169,7 @@ void App::run() {
 }
 
 void App::loadShaders() {
-  shader = Shader(SHADER_DIR "/vertex.glsl", SHADER_DIR "/fragment.glsl");
+  shader = Shader(SHADER_DIR "/model.vert", SHADER_DIR "/model.frag");
 }
 
 void App::loadModel() {
@@ -157,21 +177,29 @@ void App::loadModel() {
   //model = Model("assets/models/tibetan-amoghasiddhi-buddha-13th-c-ce/source/mia_031182_Amoghasiddhi_64k.obj");
   //model = Model("assets/models/tibetan-hayagriva-18th-c-ce/source/190614_mia337_132174_402_local_64Kmesh_OBJ.obj");
   //model = Model("assets/models/loie_fuller_sculpture_by_joseph_kratina/scene.gltf");
-  model = Model("assets/models/lewis_chess_set/scene.gltf");
-  //model = Model("assets/models/minai_ware_bowl_1200-1299_ce/scene.gltf"); // 180
-  //model = Model("assets/models/earthenware_bowl_14th_c_ce/scene.gltf"); // -90
+  model = Model("assets/models/enshrined_buddha_c._1850_ce/scene.gltf");
+  //model = Model("assets/models/pbr/pbr_materials_test/scene.gltf");
   //model = Model("assets/models/teeth.ply"); // 180
 }
 
 void App::setupLighting() {
   lights.clear();
-  lights.push_back({ glm::vec3(30.0f, 50.0f, 30.0f), glm::vec3(1.0f, 1.0f, 0.95f) });   // key
+  lights.push_back({ glm::vec3(30.0f, 45.0f, 30.0f), glm::vec3(1.0f, 1.0f, 0.95f) });   // key
   lights.push_back({ glm::vec3(-20.0f, 20.0f, 20.0f), glm::vec3(0.7f, 0.7f, 0.75f) });  // fill
   lights.push_back({ glm::vec3(0.0f, 30.0f, -30.0f), glm::vec3(0.6f, 0.6f, 0.65f) });   // back
 }
 
+// put per-frame update stuff here
 void App::update() {
   camera.update();
+
+  // move lights
+  constexpr float angleStep = glm::radians(0.5f);
+  for (auto& light : lights) {
+    glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), angleStep, glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::vec4 rotatedPos = rotation * glm::vec4(light.position, 1.0f);
+    light.position = glm::vec3(rotatedPos);
+  }
 }
 
 void App::cleanup() {
