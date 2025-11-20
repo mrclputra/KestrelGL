@@ -64,5 +64,32 @@ void Gui::draw() {
   ImGui::Checkbox("Rotate", &app->rotateLights);
   ImGui::SliderFloat("Speed", &app->lightRotateSpeed, 0.0f, 1.0f, "%.2f");
 
+  ImGui::Separator();
+  ImGui::Text("Model");
+
+  // input buffer for model path
+  static char modelPath[256] = "assets/models/base/loie_fuller_sculpture_by_joseph_kratina/scene.gltf";
+  ImGui::InputText("Path", modelPath, sizeof(modelPath));
+
+  if (ImGui::Button("Browse...")) {
+    IGFD::FileDialogConfig config;
+    config.path = ".";
+    ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlg", "Choose Model", ".gltf,.obj,.fbx,.ply", config);
+  }
+  //if (ImGui::Button("Load Model")) {
+  //  app->loadModel(modelPath);
+  //}
+
+  // file dialog popup
+  if (ImGuiFileDialog::Instance()->Display("ChooseFileDlg")) {
+    if (ImGuiFileDialog::Instance()->IsOk()) {
+      std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+      strcpy(modelPath, filePathName.c_str());
+
+      app->loadModel(modelPath); // autoload
+    }
+    ImGuiFileDialog::Instance()->Close();
+  }
+
   ImGui::End();
 }

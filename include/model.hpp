@@ -40,6 +40,29 @@ public:
     loadModel(path);
   }
 
+  // destructor
+  ~Model() { cleanup(); }
+
+  // prevent issues with copying
+  Model(const Model&) = delete;
+  Model& operator=(const Model&) = delete;
+
+  // allow move
+  Model(Model&& other) noexcept {
+    *this = std::move(other);
+  }
+
+  Model& operator=(Model&& other) noexcept {
+    if (this != &other) {
+      cleanup();
+      textures_loaded = std::move(other.textures_loaded);
+      meshes = std::move(other.meshes);
+      directory = std::move(other.directory);
+      isGammaCorrection = other.isGammaCorrection;
+    }
+    return *this;
+  }
+
   // draws the model and all it's meshes
   void Draw(const Shader& shader) {
     for (unsigned int i = 0; i < meshes.size(); i++)
@@ -84,6 +107,20 @@ public:
     return standardSize / maxDim; // scaling factor
   }
 
+  void cleanup() {
+    for (auto& texture : textures_loaded) {
+      if (texture.id != 0) {
+        glDeleteTextures(1, &texture.id);
+      }
+    }
+    textures_loaded.clear();
+
+    for (auto& mesh : meshes) {
+      mesh.cleanup();
+    }
+    meshes.clear();
+  }
+
 private:
   // loads a model with supported file extensions w/ ASSIMP
   // stores resulting meshes in the above mesh vector
@@ -97,7 +134,16 @@ private:
     }
 
     // retrieve directory of the file path
-    directory = path.substr(0, path.find_last_of('/'));
+    //directory = path.substr(0, path.find_last_of('/'));
+    size_t lastSlash = path.find_last_of("/\\");
+    if (lastSlash != string::npos) {
+      directory = path.substr(0, lastSlash);
+    }
+    else {
+      directory = ".";
+    }
+
+    std::cout << "Model directory: " << directory << "n"; // debug
 
     // process ASSIMP root node recursively
     processNode(scene->mRootNode, scene);
@@ -207,25 +253,25 @@ private:
     // process materials
     aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
     // we assume a convention for sampler names in the shaders
-    // each diffuse texture should be names as 'texture_diffuseN' where N is a sequential number ranging from 1 to MAX_SAMPLER_NUMBER
+    // each diffuse texture should be names as 'DIFFUSEN' where N is a sequential number ranging from 1 to MAX_SAMPLER_NUMBER
     // same applies to other texture types:
-    // diffuse: texture_diffuseN
-    // specular: texture_specularN
-    // normal: texture_normalN
+    // diffuse: DIFFUSEN
+    // specular: SPECULARN
+    // normal: NORMALN
 
     // in the case of PBR shaders, 
 
     // diffuse maps
-    vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+    vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "DIFFUSE");
     textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
     // specular maps
-    vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+    vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "SPECULAR");
     textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
     // normal maps
-    vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_NORMALS, "texture_normal");
+    vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_NORMALS, "NORMAL");
     textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
     // height maps
-    vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_height");
+    vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "HEIGHT");
     textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
     // return object created from extracted mesh data
@@ -271,7 +317,16 @@ private:
 
 inline unsigned int TextureFromFile(const char* path, const string& directory, bool gamma) {
   string filename = string(path);
-  filename = directory + '/' + filename;
+  //filename = directory + '/' + filename;
+
+  bool isAbsolute = (filename[0] == '/' || filename[0] == '\\' ||
+    (filename.length() > 1 && filename[1] == ':'));
+
+  if (!isAbsolute) {
+    filename = directory + '/' + filename;
+  }
+
+  std::cout << "Loading texture: " << filename << std::endl;
 
   unsigned int textureID;
   glGenTextures(1, &textureID);
@@ -282,10 +337,14 @@ inline unsigned int TextureFromFile(const char* path, const string& directory, b
     GLenum format;
     if (nrChannels == 1)
       format = GL_RED;
+    else if (nrChannels == 2)
+      format = GL_RG; // black and white + alpha
     else if (nrChannels == 3)
       format = GL_RGB;
     else if (nrChannels == 4)
       format = GL_RGBA;
+    else
+      std::cerr << "Warning: Unknown nrChannels=" << nrChannels << " for texture: " << filename << "\n";
 
     glBindTexture(GL_TEXTURE_2D, textureID);
     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);

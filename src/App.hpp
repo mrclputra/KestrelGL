@@ -39,6 +39,8 @@ public:
   Shader shader;
   std::vector<Light> lights;
 
+  void loadModel(const char* path);
+
 private:
   void init();
   void setupCallbacks();

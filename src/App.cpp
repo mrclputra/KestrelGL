@@ -93,6 +93,9 @@ void App::init() {
   glViewport(0, 0, fbWidth, fbHeight);
   glEnable(GL_DEPTH_TEST);
 
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
   //camera = Camera(10.0f, 0.0f, 0.0f);
   camera = Camera(4.0f, 0.0f, 0.0f);
 
@@ -125,7 +128,7 @@ void App::run() {
     lastTime = currentTime;
 
     // check shaders
-    if (currentTime - lastShaderCheck > 5.0f) {
+    if (currentTime - lastShaderCheck > 2.0f) {
       shader.checkAndReload();
       lastShaderCheck = currentTime;
     }
@@ -152,6 +155,7 @@ void App::run() {
     shader.use();
     shader.setMat4("view", viewMatrix);
     shader.setMat4("projection", projectionMatrix);
+    shader.setVec3("viewPos", camera.position);
 
     shader.setInt("numLights", lights.size());
     for (int i = 0; i < (int)lights.size(); i++) {
@@ -161,7 +165,7 @@ void App::run() {
 
     glm::mat4 modelMatrix(1.0f);
     //modelMatrix = glm::scale(modelMatrix, glm::vec3(0.3f));
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(model.getScaleToStandard(5.0f))); // standardize scale
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(model.getScaleToStandard(3.0f))); // standardize scale
     //modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.f), glm::vec3(1, 0, 0)); // maya to opengl
     //modelMatrix = glm::rotate(modelMatrix, glm::radians(-180.f), glm::vec3(1, 0, 0)); // flip 180
     modelMatrix = glm::translate(modelMatrix, -model.getCenter()); // center model at origin
@@ -180,11 +184,19 @@ void App::loadShaders() {
   shader = Shader(SHADER_DIR "/model.vert", SHADER_DIR "/model.frag");
 }
 
+void App::loadModel(const char* path) {
+  stbi_set_flip_vertically_on_load(true);
+  model = Model(path);
+}
+
+// default
 void App::loadModel() {
   stbi_set_flip_vertically_on_load(true);
-  model = Model("assets/models/base/tibetan-hayagriva-18th-c-ce/source/190614_mia337_132174_402_local_64Kmesh_OBJ.obj");
+  //model = Model("assets/models/base/tibetan-hayagriva-18th-c-ce/source/190614_mia337_132174_402_local_64Kmesh_OBJ.obj");
   //model = Model("assets/models/base/loie_fuller_sculpture_by_joseph_kratina/scene.gltf");
   //model = Model("assets/models/base/hercules_after_francesco_da_sant_agata/scene.gltf");
+
+  model = Model("assets/models/sphere.obj");
 }
 
 void App::setupLighting() {

@@ -20,7 +20,6 @@ find_package(glad REQUIRED)
 find_package(glm REQUIRED)
 find_package(assimp REQUIRED)
 
-
 # set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -28,8 +27,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # copy assets to build directory
 add_custom_target(copy_assets ALL
-    COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_BINARY_DIR}/assets"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/assets" "${CMAKE_BINARY_DIR}/assets"
+    COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_CURRENT_BINARY_DIR}/assets"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/assets" "${CMAKE_CURRENT_BINARY_DIR}/assets"
     COMMENT "Resetting assets folder..."
 )
 
@@ -37,6 +36,12 @@ add_definitions(-DSHADER_DIR="${CMAKE_SOURCE_DIR}/src/shaders")
 
 # add_executable(KestrelGL "src/main.cpp")
 add_executable(KestrelGL "src/main.cpp" "src/App.cpp" "src/gui/Gui.cpp")
+add_dependencies(KestrelGL copy_assets)
+
+# build custom ImGuiFileDialog library
+add_library(ImGuiFileDialog STATIC ${PROJECT_SOURCE_DIR}/include/ImGuiFileDialog/ImGuiFileDialog.cpp)
+target_include_directories(ImGuiFileDialog PUBLIC ${PROJECT_SOURCE_DIR}/include/ImGuiFileDialog)
+target_link_libraries(ImGuiFileDialog PUBLIC imgui::imgui)
 
 # link libraries
 target_link_libraries(KestrelGL PRIVATE
@@ -46,6 +51,7 @@ target_link_libraries(KestrelGL PRIVATE
   glfw
   assimp::assimp
   imgui::imgui
+  ImGuiFileDialog
 )
 
 # custom include directories

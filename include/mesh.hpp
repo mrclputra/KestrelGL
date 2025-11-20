@@ -60,7 +60,7 @@ public:
 
     bool hasNormalMap = false;
     for (auto& tex : textures) {
-      if (tex.type == "texture_normal") {
+      if (tex.type == "NORMAL") {
         hasNormalMap = true;
         break;
       }
@@ -69,7 +69,7 @@ public:
 
     bool hasSpecularMap = false;
     for (auto& tex : textures) {
-      if (tex.type == "texture_specular") {
+      if (tex.type == "SPECULAR") {
         hasSpecularMap = true;
         break;
       }
@@ -89,13 +89,13 @@ public:
       string name = textures[i].type;
 
       // assign number for shader uniform
-      if (name == "texture_diffuse")
+      if (name == "DIFFUSE")
         number = std::to_string(diffuseNr++);
-      else if (name == "texture_specular")
+      else if (name == "SPECULAR")
         number = std::to_string(specularNr++);
-      else if (name == "texture_normal")
+      else if (name == "NORMAL")
         number = std::to_string(normalNr++);
-      else if (name == "texture_height")
+      else if (name == "HEIGHT")
         number = std::to_string(heightNr++);
 
       // bind to correct uniform name in shader
@@ -109,6 +109,12 @@ public:
     glBindVertexArray(0);
 
     glActiveTexture(GL_TEXTURE0);
+  }
+
+  void cleanup() {
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
   }
 
 private:

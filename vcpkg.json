@@ -6,8 +6,11 @@
     "glm",
     {
       "name": "imgui",
-      "version>=": "1.91.9",
-      "features": [ "glfw-binding", "opengl3-binding" ]
+      "features": [
+        "glfw-binding",
+        "opengl3-binding"
+      ],
+      "version>=": "1.91.9"
     }
   ]
 }
