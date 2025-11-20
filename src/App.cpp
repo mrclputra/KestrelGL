@@ -117,10 +117,18 @@ void App::setupCallbacks() {
 
 void App::run() {
   float lastTime = 0.0f;
+  float lastShaderCheck = 0.0f;
+
   while (!glfwWindowShouldClose(window)) {
     float currentTime = glfwGetTime();
     float deltaTime = currentTime - lastTime;
     lastTime = currentTime;
+
+    // check shaders
+    if (currentTime - lastShaderCheck > 5.0f) {
+      shader.checkAndReload();
+      lastShaderCheck = currentTime;
+    }
 
     update();
     gui.beginFrame();
@@ -174,12 +182,9 @@ void App::loadShaders() {
 
 void App::loadModel() {
   stbi_set_flip_vertically_on_load(true);
-  //model = Model("assets/models/tibetan-amoghasiddhi-buddha-13th-c-ce/source/mia_031182_Amoghasiddhi_64k.obj");
-  //model = Model("assets/models/tibetan-hayagriva-18th-c-ce/source/190614_mia337_132174_402_local_64Kmesh_OBJ.obj");
-  //model = Model("assets/models/loie_fuller_sculpture_by_joseph_kratina/scene.gltf");
-  model = Model("assets/models/enshrined_buddha_c._1850_ce/scene.gltf");
-  //model = Model("assets/models/pbr/pbr_materials_test/scene.gltf");
-  //model = Model("assets/models/teeth.ply"); // 180
+  model = Model("assets/models/base/tibetan-hayagriva-18th-c-ce/source/190614_mia337_132174_402_local_64Kmesh_OBJ.obj");
+  //model = Model("assets/models/base/loie_fuller_sculpture_by_joseph_kratina/scene.gltf");
+  //model = Model("assets/models/base/hercules_after_francesco_da_sant_agata/scene.gltf");
 }
 
 void App::setupLighting() {
