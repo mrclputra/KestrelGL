@@ -92,6 +92,7 @@ void App::init() {
   glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
   glViewport(0, 0, fbWidth, fbHeight);
   glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LESS);
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -144,7 +145,8 @@ void App::run() {
     }
 
     // render
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // TODO: move single initialized stuff outside of per-frame loop
@@ -171,7 +173,7 @@ void App::run() {
     modelMatrix = glm::translate(modelMatrix, -model.getCenter()); // center model at origin
     shader.setMat4("model", modelMatrix);
 
-    model.Draw(shader);
+    model.Draw(shader, camera.position);
     
     gui.endFrame();
 

@@ -44,14 +44,15 @@ public:
   ~Model() { cleanup(); }
 
   // prevent issues with copying
+  // only one instance allowed
   Model(const Model&) = delete;
   Model& operator=(const Model&) = delete;
 
   // allow move
+  // allow for safe transfer of ownership
   Model(Model&& other) noexcept {
     *this = std::move(other);
   }
-
   Model& operator=(Model&& other) noexcept {
     if (this != &other) {
       cleanup();
@@ -64,9 +65,42 @@ public:
   }
 
   // draws the model and all it's meshes
-  void Draw(const Shader& shader) {
-    for (unsigned int i = 0; i < meshes.size(); i++)
-      meshes[i].Draw(shader);
+  // transparency sorting
+  void Draw(const Shader& shader, const glm::vec3& cameraPos) {
+    vector<size_t> opaqueMeshes;
+    vector<size_t> transparentMeshes;
+
+    for (size_t i = 0; i < meshes.size(); i++) {
+      if (meshes[i].hasTransparency) {
+        transparentMeshes.push_back(i);
+      }
+      else {
+        opaqueMeshes.push_back(i);
+      }
+    }
+
+    // draw opaque meshes first
+    glDepthMask(GL_TRUE);
+    for (size_t idx : opaqueMeshes) {
+      meshes[idx].Draw(shader);
+    }
+
+    // sort transparent meshes
+    // back to front
+    std::sort(transparentMeshes.begin(), transparentMeshes.end(),
+      [this, &cameraPos](size_t a, size_t b) {
+        float distA = glm::length(meshes[a].getCenter() - cameraPos);
+        float distB = glm::length(meshes[b].getCenter() - cameraPos);
+        return distA > distB; // farthest first
+      });
+
+    // draw transparent meshes 
+    // without depth writing
+    glDepthMask(GL_FALSE);
+    for (size_t idx : transparentMeshes) {
+      meshes[idx].Draw(shader);
+    }
+    glDepthMask(GL_TRUE); // restore depth writing
   }
 
   // gets center of model

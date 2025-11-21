@@ -12,16 +12,19 @@ in vec3 Normal;
 in vec3 Tangent;
 in vec3 Bitangent;
 
-uniform sampler2D DIFFUSE1;
-uniform sampler2D NORMAL1;
-uniform sampler2D SPECULAR1;
+uniform sampler2D DIFFUSE[8];
+uniform sampler2D NORMAL[8];
+uniform sampler2D SPECULAR[8];
+uniform sampler2D HEIGHT[8];
+
+uniform int numDiffuse;
+uniform int numNormal;
+uniform int numSpecular;
+uniform int numHeight;
 
 uniform Light lights[3];
 uniform int numLights;
 uniform vec3 viewPos;
-uniform bool hasDiffuseMap;
-uniform bool hasNormalMap;
-uniform bool hasSpecularMap;
 
 void main() {
   // compute normal
@@ -30,16 +33,17 @@ void main() {
   vec3 B = normalize(Bitangent);
   vec3 normalMap = vec3(0.0);
 
-  if (hasNormalMap) {
+  if (numNormal > 0) {
     mat3 TBN = mat3(T, B, N);
-    normalMap = texture(NORMAL1, TexCoords).rgb;
+    normalMap = texture(NORMAL[0], TexCoords).rgb;
     normalMap = normalize(normalMap * 2.0 - 1.0);
     N = TBN * normalMap;
   }
 
   vec3 V = normalize(viewPos - FragPos); // view direction
-  vec3 baseColor = hasDiffuseMap ? texture(DIFFUSE1, TexCoords).rgb : vec3(0.95);
-  float alpha = hasDiffuseMap ? texture(DIFFUSE1, TexCoords).a : 1.0;
+  vec3 baseColor = (numDiffuse > 0) ? texture(DIFFUSE[0], TexCoords).rgb : vec3(0.95);
+  float alpha = (numDiffuse > 0) ? texture(DIFFUSE[0], TexCoords).a : 1.0;
+//  if (alpha < 0.01) discard;
 
   // accumulate components over all lights
   vec3 ambient = vec3(0.0);
@@ -59,8 +63,8 @@ void main() {
 
     // specular
     vec3 R = reflect(-L, N);
-    vec3 specMap = hasSpecularMap ? texture(SPECULAR1, TexCoords).rgb : vec3(0.2);
-    float gloss = texture(SPECULAR1, TexCoords).a;
+    vec3 specMap = (numSpecular > 0) ? texture(SPECULAR[0], TexCoords).rgb : vec3(0.2);
+    float gloss = (numSpecular > 0) ? texture(SPECULAR[0], TexCoords).a : 0.5;
     float spec = pow(max(dot(V, R), 0.0), gloss * 128.0);
     specular += specMap * spec * lights[i].color * 2.0;
   }
@@ -73,6 +77,6 @@ void main() {
 //  FragColor = vec4(N * 0.5 + 0.5, 1.0);   // normal
 //  FragColor = vec4(ambient, 1.0);         // ambient only
 
-//  vec3 specMap = hasSpecularMap ? texture(SPECULAR1, TexCoords).rgb : vec3(0.2);
+//  vec3 specMap = (numSpecular > 0) ? texture(SPECULAR[0], TexCoords).rgb : vec3(0.2);
 //  FragColor = vec4(specMap, 1.0);        // specular map only
 }

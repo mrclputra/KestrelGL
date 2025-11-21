@@ -39,69 +39,49 @@ public:
   vector<unsigned int>  indices;
   vector<Texture>       textures;
   unsigned int VAO;
+  bool hasTransparency;
 
   // constructor
   Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures) {
     this->vertices = vertices;
     this->indices = indices;
     this->textures = textures;
+    this->hasTransparency = checkTransparency();
 
     setupMesh();
   }
 
   // render the mesh
   void Draw(const Shader& shader) {
-    if (textures.empty()) {
-      shader.setBool("hasDiffuseMap", false);
-    }
-    else {
-      shader.setBool("hasDiffuseMap", true);
-    }
-
-    bool hasNormalMap = false;
-    for (auto& tex : textures) {
-      if (tex.type == "NORMAL") {
-        hasNormalMap = true;
-        break;
-      }
-    }
-    shader.setBool("hasNormalMap", hasNormalMap);
-
-    bool hasSpecularMap = false;
-    for (auto& tex : textures) {
-      if (tex.type == "SPECULAR") {
-        hasSpecularMap = true;
-        break;
-      }
-    }
-    shader.setBool("hasSpecularMap", hasSpecularMap);
-
-    // bind appropriate textures
-    unsigned int diffuseNr = 1;
-    unsigned int specularNr = 1;
-    unsigned int normalNr = 1;
-    unsigned int heightNr = 1;
+    // pass to shader as array
+    int diffuseCount = 0;
+    int specularCount = 0;
+    int normalCount = 0;
+    int heightCount = 0;
 
     for (unsigned int i = 0; i < textures.size(); i++) {
-      glActiveTexture(GL_TEXTURE0 + i); // activate texture before binding
-      // retrieve texture number (N in diffuse_textureN)
-      string number;
-      string name = textures[i].type;
+      glActiveTexture(GL_TEXTURE0 + i);
 
-      // assign number for shader uniform
-      if (name == "DIFFUSE")
-        number = std::to_string(diffuseNr++);
-      else if (name == "SPECULAR")
-        number = std::to_string(specularNr++);
-      else if (name == "NORMAL")
-        number = std::to_string(normalNr++);
-      else if (name == "HEIGHT")
-        number = std::to_string(heightNr++);
+      const string& type = textures[i].type;
+      int index = 0;
 
-      // bind to correct uniform name in shader
-      glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i);
-      glBindTexture(GL_TEXTURE_2D, textures[i].id); // bind texture
+      if (type == "DIFFUSE") index = diffuseCount++;
+      else if (type == "SPECULAR") index = specularCount++;
+      else if (type == "NORMAL") index = normalCount++;
+      else if (type == "HEIGHT") index = heightCount++;
+
+      // TODO: switch to bindless textures or sampler2Darray
+      // in shader, call: ex. DIFFUSE[0]
+      string uniformName = type + "[" + std::to_string(index) + "]";
+
+      glUniform1i(glGetUniformLocation(shader.ID, uniformName.c_str()), i);
+      glBindTexture(GL_TEXTURE_2D, textures[i].id);
     }
+
+    shader.setInt("numDiffuse", diffuseCount);
+    shader.setInt("numSpecular", specularCount);
+    shader.setInt("numNormal", normalCount);
+    shader.setInt("numHeight", heightCount);
 
     // draw mesh
     glBindVertexArray(VAO);
@@ -109,6 +89,14 @@ public:
     glBindVertexArray(0);
 
     glActiveTexture(GL_TEXTURE0);
+  }
+
+  glm::vec3 getCenter() const {
+    glm::vec3 center(0.0f);
+    for (const auto& v : vertices) {
+      center += v.Position;
+    }
+    return center / static_cast<float>(vertices.size());
   }
 
   void cleanup() {
@@ -120,6 +108,30 @@ public:
 private:
   // render data
   unsigned int VBO, EBO; // vertex, index buffer
+
+  bool checkTransparency() {
+    for (const auto& tex : textures) {
+      if (tex.type == "DIFFUSE") {
+        // bind and check alpha channel
+        glBindTexture(GL_TEXTURE_2D, tex.id);
+
+        int width, height;
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+
+        // sample a few pixels to check for alpha < 1.0
+        // we assume RGBA textures means having transparency
+        GLint format;
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &format);
+
+        if (format == GL_RGBA || format == GL_RGBA8 || format == GL_RGBA16) {
+          // has alpha channel
+          return true; 
+        }
+      }
+    }
+    return false;
+  }
 
   void setupMesh() {
     // create buffers and arrays
