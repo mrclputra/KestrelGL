@@ -76,9 +76,6 @@ void Gui::draw() {
     config.path = ".";
     ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlg", "Choose Model", ".gltf,.obj,.fbx,.ply", config);
   }
-  //if (ImGui::Button("Load Model")) {
-  //  app->loadModel(modelPath);
-  //}
 
   // file dialog popup
   if (ImGuiFileDialog::Instance()->Display("ChooseFileDlg")) {

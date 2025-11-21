@@ -48,7 +48,6 @@ public:
   Model(const Model&) = delete;
   Model& operator=(const Model&) = delete;
 
-  // allow move
   // allow for safe transfer of ownership
   Model(Model&& other) noexcept {
     *this = std::move(other);
@@ -182,7 +181,7 @@ private:
     // process ASSIMP root node recursively
     processNode(scene->mRootNode, scene);
 
-    std::cout << "Model Successfully Loaded...\n";
+    std::cout << "Model Loaded\n";
   }
 
   // processes current node, and children (if any)

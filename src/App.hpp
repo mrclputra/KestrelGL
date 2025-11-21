@@ -18,7 +18,7 @@ struct Light {
 class App {
 public:
   App(int width, int height, const char* title);
-  ~App();
+  //~App(); // do I need a detructor? should not go out of scope?
 
   void run();
 
@@ -39,17 +39,16 @@ public:
   Shader shader;
   std::vector<Light> lights;
 
-  void loadModel(const char* path);
+  void loadModel(const char* path); // override
 
 private:
-  void init();
+  void init(); // setup
   void setupCallbacks();
   void cleanup();
 
   void loadShaders();
   void loadModel();
   void setupLighting();
-  void update(); // if any per-frame updates
 
   GLFWwindow* window;
   int width, height;

@@ -16,7 +16,7 @@ int main() {
   std::cout << "C++ Standard " << __cplusplus << std::endl;
   std::cout << "KestrelGL" << std::endl;
 
-  App app(720, 940, "test");
+  App app(1080, 720, "KestrelGL");
   app.run();
 
   return 0;

@@ -25,6 +25,8 @@ public:
   glm::vec3 right;
   glm::vec3 worldUp;
 
+  glm::vec3 target;
+
   float radius, theta, phi;
   float sensitivity, dof; // dof in degrees
 
@@ -36,7 +38,7 @@ public:
     float theta = d_theta,
     float phi = d_phi,
     glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f)
-  ) : sensitivity(d_sensitivity), dof(d_dof) {
+  ) : sensitivity(d_sensitivity), dof(d_dof), target(d_target) {
     this->position = calculatePosition(radius, theta, phi);
     this->worldUp = up;
     this->radius = radius;
@@ -52,7 +54,7 @@ public:
 
   // view matrix getter
   glm::mat4 getViewMatrix() {
-    return glm::lookAt(position, glm::vec3(0.0f, 0.0f, 0.0f), up);
+    return glm::lookAt(position, target, up);
   }
   // projection matrix getter
   glm::mat4 getProjectionMatrix(float SCR_WIDTH, float SCR_HEIGHT) {
@@ -78,6 +80,17 @@ public:
       radius = 0.2f;
     if (radius > 700.0f)
       radius = 700.0f;
+  }
+
+  // reset position
+  void reset() {
+    // just reset object values
+    // position should be updated next frame (on next update() call)
+    radius = d_radius;
+    theta = d_theta;
+    phi = d_phi;
+
+    std::cout << "Camera Reset\n";
   }
 
 private:
