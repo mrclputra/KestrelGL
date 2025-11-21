@@ -286,13 +286,6 @@ private:
     // process materials
     aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
     // we assume a convention for sampler names in the shaders
-    // each diffuse texture should be names as 'DIFFUSEN' where N is a sequential number ranging from 1 to MAX_SAMPLER_NUMBER
-    // same applies to other texture types:
-    // diffuse: DIFFUSEN
-    // specular: SPECULARN
-    // normal: NORMALN
-
-    // in the case of PBR shaders, 
 
     // diffuse maps
     vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "DIFFUSE");
@@ -307,6 +300,22 @@ private:
     vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "HEIGHT");
     textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
+    // PBR specific:
+    // GLTF:metallicRoughness
+    vector<Texture> metallicRoughnessMaps = loadMaterialTextures(material, aiTextureType_GLTF_METALLIC_ROUGHNESS, "METALLIC_ROUGHNESS");
+    textures.insert(textures.end(), metallicRoughnessMaps.begin(), metallicRoughnessMaps.end());
+    // metallic maps
+    vector<Texture> metallicMaps = loadMaterialTextures(material, aiTextureType_METALNESS, "METALLIC");
+    textures.insert(textures.end(), metallicMaps.begin(), metallicMaps.end());
+    // roughness maps
+    vector<Texture> roughnessMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE_ROUGHNESS, "ROUGHNESS");
+    textures.insert(textures.end(), roughnessMaps.begin(), roughnessMaps.end());
+    // AO maps
+    vector<Texture> aoMaps = loadMaterialTextures(material, aiTextureType_AMBIENT_OCCLUSION, "AO");
+    textures.insert(textures.end(), aoMaps.begin(), aoMaps.end());
+
+    // TODO: irradiance map
+
     // return object created from extracted mesh data
     return Mesh(vertices, indices, textures);
   }
@@ -316,10 +325,13 @@ private:
   vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName) {
     vector<Texture> textures;
 
-    if (mat->GetTextureCount(type) > 0) {
+    /*if (mat->GetTextureCount(type) > 0) {
       std::cout << "[MODEL] Found texture type: " << typeName
         << " (" << mat->GetTextureCount(type) << " textures)\n";
-    }
+    }*/
+
+    unsigned int count = mat->GetTextureCount(type);
+    std::cout << "[TEXTURE] " << typeName << ": found " << count << " textures\n";
 
     for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
       aiString str;

@@ -12,7 +12,7 @@ const float d_theta = 0.0f;
 const float d_phi = 0.0f;
 
 const float d_sensitivity = 0.18f;
-const float d_dof = 45.0f;
+const float d_dof = 36.0f;
 
 const glm::vec3 d_target = glm::vec3(0.0f, 0.0f, 0.0f);
 

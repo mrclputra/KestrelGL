@@ -12,6 +12,7 @@ in vec3 Normal;
 in vec3 Tangent;
 in vec3 Bitangent;
 
+// GLSL doesnt care if these are unbound if they are not used
 uniform sampler2D DIFFUSE[8];
 uniform sampler2D NORMAL[8];
 uniform sampler2D SPECULAR[8];

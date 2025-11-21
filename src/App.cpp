@@ -191,6 +191,7 @@ void App::run() {
     modelMatrix = glm::translate(modelMatrix, -model.getCenter()); // center model at origin
     shader.setMat4("model", modelMatrix);
 
+    // draw model
     model.Draw(shader, camera.position);
     
     gui.endFrame();
@@ -204,7 +205,8 @@ void App::run() {
 }
 
 void App::loadShaders() {
-  shader = Shader(SHADER_DIR "/model.vert", SHADER_DIR "/model.frag");
+  //shader = Shader(SHADER_DIR "/model.vert", SHADER_DIR "/model.frag");
+  shader = Shader(SHADER_DIR "/model.vert", SHADER_DIR "/model_pbr.frag");
 }
 
 void App::loadModel(const char* path) {
@@ -226,9 +228,9 @@ void App::loadModel() {
 
 void App::setupLighting() {
   lights.clear();
-  lights.push_back({ glm::vec3(30.0f, 45.0f, 30.0f), glm::vec3(1.0f, 1.0f, 0.95f) });   // key
-  lights.push_back({ glm::vec3(-20.0f, 20.0f, 20.0f), glm::vec3(0.7f, 0.7f, 0.75f) });  // fill
-  lights.push_back({ glm::vec3(0.0f, 30.0f, -30.0f), glm::vec3(0.6f, 0.6f, 0.65f) });   // back
+  lights.push_back({ glm::vec3(10.0f, 12.0f, 10.0f), glm::vec3(1.0f, 1.0f, 0.95f) });   // key
+  lights.push_back({ glm::vec3(-10.0f, 10.0f, 10.0f), glm::vec3(0.5f, 0.5f, 0.55f) });  // fill
+  lights.push_back({ glm::vec3(0.0f, 3.0f, -10.0f), glm::vec3(0.3f, 0.3f, 0.35f) });   // back
 }
 
 void App::cleanup() {

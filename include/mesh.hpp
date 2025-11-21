@@ -59,6 +59,12 @@ public:
     int normalCount = 0;
     int heightCount = 0;
 
+    int metallicCount = 0;
+    int roughnessCount = 0;
+    int aoCount = 0;
+
+    int metallicRoughnessCount = 0;
+
     for (unsigned int i = 0; i < textures.size(); i++) {
       glActiveTexture(GL_TEXTURE0 + i);
 
@@ -69,6 +75,10 @@ public:
       else if (type == "SPECULAR") index = specularCount++;
       else if (type == "NORMAL") index = normalCount++;
       else if (type == "HEIGHT") index = heightCount++;
+      else if (type == "METALLIC_ROUGHNESS") index = metallicRoughnessCount++;
+      else if (type == "METALLIC") index = metallicCount++;
+      else if (type == "ROUGHNESS") index = roughnessCount++;
+      else if (type == "AO") index = aoCount++;
 
       // TODO: switch to bindless textures or sampler2Darray
       // in shader, call: ex. DIFFUSE[0]
@@ -82,6 +92,10 @@ public:
     shader.setInt("numSpecular", specularCount);
     shader.setInt("numNormal", normalCount);
     shader.setInt("numHeight", heightCount);
+    shader.setInt("numMetallicRoughness", metallicRoughnessCount);
+    shader.setInt("numMetallic", metallicCount);
+    shader.setInt("numRoughness", roughnessCount);
+    shader.setInt("numAO", aoCount);
 
     // draw mesh
     glBindVertexArray(VAO);
