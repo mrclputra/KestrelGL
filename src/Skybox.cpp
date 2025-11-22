@@ -5,6 +5,8 @@
 Skybox::Skybox() : cubemapTexture(0), initialized(false) {}
 Skybox::~Skybox() { cleanup(); }
 
+Shader& Skybox::getShader() { return shader; }
+
 bool Skybox::load(const std::string& modelPath, const std::vector<std::string>& faces) {
   try {
     // load shaders

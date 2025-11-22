@@ -19,7 +19,7 @@ public:
 
   // get the shader for external use
   // if needed
-  Shader& getShader() { return shader; }
+  Shader& getShader();
 
   unsigned int getCubemapTexture() const { return cubemapTexture; }
 

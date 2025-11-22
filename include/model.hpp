@@ -293,7 +293,7 @@ private:
     // we assume a convention for sampler names in the shaders
     // array of textures
 
-    // GLTF convention
+    // GLTF convention, read:
     // https://www.khronos.org/files/gltf20-reference-guide.pdf
     
     // albedo maps
@@ -314,7 +314,8 @@ private:
     vector<Texture> emissionMaps = loadMaterialTextures(material, aiTextureType_EMISSIVE, "EMISSION");
     textures.insert(textures.end(), emissionMaps.begin(), emissionMaps.end());
 
-    // TODO: handle specular model maps here
+    // TODO: handle specular model maps here (other file types)
+    // only if i want to process them in the shader? which I probably should
     // -
 
     // return object created from extracted mesh data

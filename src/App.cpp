@@ -123,7 +123,6 @@ void App::setupCallbacks() {
 
   // config cursor
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // normal mode
-  //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); 
 }
 
 void App::run() {
@@ -213,7 +212,6 @@ void App::run() {
 }
 
 void App::loadShaders() {
-  //shader = Shader(SHADER_DIR "/model.vert", SHADER_DIR "/model.frag");
   shader = Shader(SHADER_DIR "/model.vert", SHADER_DIR "/model_pbr_v2.frag");
 }
 
