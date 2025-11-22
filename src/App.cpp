@@ -129,6 +129,18 @@ void App::run() {
   float lastTime = 0.0f;
   float lastShaderCheck = 0.0f;
 
+  glm::vec3 lightPositions[] = {
+    glm::vec3(4.0f,  4.0f,  4.0f),  // key
+    glm::vec3(-6.0f, 2.0f,  3.0f),  // fill
+    glm::vec3(0.0f,  1.0f, -4.0f)   // rim
+  };
+  // Bright lights for PBR
+  glm::vec3 lightColors[] = {
+    glm::vec3(1.0f),  // key
+    glm::vec3(0.3f),  // fill
+    glm::vec3(0.5f)   // rim
+  };
+
   // per-frame logic below
   while (!glfwWindowShouldClose(window)) {
     float currentTime = glfwGetTime();
@@ -181,6 +193,16 @@ void App::run() {
     shader.setMat4("view", viewMatrix);
     shader.setMat4("projection", projectionMatrix);
     shader.setVec3("viewPos", camera.position);
+
+    // send lights to shader
+    for (unsigned int i = 0; i < 4; ++i) {
+      // Construct string uniform names "lightPositions[0]", "lightPositions[1]", etc.
+      std::string posName = "lightPositions[" + std::to_string(i) + "]";
+      std::string colName = "lightColors[" + std::to_string(i) + "]";
+
+      shader.setVec3(posName, lightPositions[i]);
+      shader.setVec3(colName, lightColors[i]);
+    }
 
     glActiveTexture(GL_TEXTURE10); // base cubemap
     glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.getCubemapTexture());

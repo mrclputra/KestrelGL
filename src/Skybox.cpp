@@ -213,6 +213,9 @@ unsigned int Skybox::generateIrradianceMap() {
   return irradianceMap;
 }
 
+// TODO: generate specular IBL
+// TODO: BRDF LUT
+
 void Skybox::renderCube() {
   if (cubeVAO == 0) {
     float vertices[] = {

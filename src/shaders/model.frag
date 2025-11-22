@@ -9,6 +9,10 @@ in vec3 Normal;
 in vec3 Tangent;
 in vec3 Bitangent;
 
+// light positions; temporary?
+uniform vec3 lightPositions[4];
+uniform vec3 lightColors[4];
+
 // TODO: switch to bindless textures later
 // GLTF 2.0 convention
 uniform sampler2D ALBEDO[8];
@@ -51,8 +55,33 @@ vec3 toneMapACES(vec3 x) {
     return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
 }
 
-vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
-    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
+// fresnel effect approximation
+// increasing reflectivity as surface angle from view gets steeper
+vec3 fresnelSchlick(float HdotV, vec3 baseReflectivity) {
+  // base reflectivity is in range 0 to 1
+  // returns range of base reflectivity to 1
+  // increases as HdotV increases
+  return baseReflectivity + (1.0 - baseReflectivity) * pow(1.0 - HdotV, 5.0);
+}
+
+// trowbridge-reitz GGX normal distribution
+// how many microfacets are aligned such that reflections bounce off at an angle towards viewer
+float distributionGGX(float NdotH, float roughness) {
+  float a = roughness * roughness;
+  float a2 = a * a;
+  float denom = NdotH * NdotH * (a2 - 1.0) + 1.0;
+  denom = PI * denom * denom;
+  return a2 / max(denom, 0.000001); // prevent divide by 0
+}
+
+// or Smith's method
+// self shadowing function
+float geometrySmith(float NdotV, float NdotL, float roughness) {
+  float r = roughness + 1.0;
+  float k  = (r * r) / 8.0;
+  float ggx1 = NdotV / (NdotV * (1.0 - k) + k); // Schlick GGX
+  float ggx2 = NdotL / (NdotL * (1.0 - k) + k);
+  return ggx1 * ggx2;
 }
 
 void main() {
@@ -62,8 +91,8 @@ void main() {
   // GLTF format
   // B channel is metallic
   // G channel is roughness
-  float metallic = 0.0;
-  float roughness = 1.0;
+  float metallic = 0.0; // default
+  float roughness = 0.7; // default
   if (numMetallicRoughness > 0) {
     vec3 mr = texture(METALLIC_ROUGHNESS[0], TexCoords).rgb;
     metallic = mr.b;
@@ -88,38 +117,60 @@ void main() {
   vec3 V = normalize(viewPos - FragPos); // vector to camera
   vec3 R = reflect(-V, N); // reflection vector for specular
 
-  // base reflectivity at normal incidence (F0)
-  // dielectrics use 0.04, metals use albedo color
-  vec3 F0 = vec3(0.04);
-  F0 = mix(F0, albedo, metallic);
+  // calculate reflectance at normal incidence; if dia-electrics (i.e. plastic) use baseReflectivity
+  // if 0.04 and if its a metal, use the albed color as baseReflectivity
+  vec3 baseReflectivity = mix(vec3(0.04), albedo, metallic);
 
-  // IBL lighting with fresnel
-  vec3 kS = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
-  vec3 kD = 1.0 - kS;
-  kD *= 1.0 - metallic; // metals have no diffuse
+  // reflectance equation
+  vec3 Lo = vec3(0.0);
+  for (int i = 0; i < 3; ++i) {
+    // calculate per-light radiance
+    vec3 L = normalize(lightPositions[i] - FragPos);
+    vec3 H = normalize(V + L);
+    float distance = length(lightPositions[i] - FragPos);
+    float attenuation = 1.0;
+    vec3 radiance = lightColors[i] * attenuation;
 
-  // diffuse IBL
-  vec3 irradianceColor = texture(irradiance, N).rgb;
-  vec3 diffuseIBL = irradianceColor * albedo;
+    // Cook-Torrance BRDF
+    float NdotV = max(dot(N, V), 0.0000001);
+    float NdotL = max(dot(N, L), 0.0000001);
+    float HdotV = max(dot(H, V), 0.0);
+    float NdotH = max(dot(N, H), 0.0);
 
-  // specular IBL
-  // I'm just using skybox for now
-  const float MAX_REFLECTION_LOD = 4.0;
-  vec3 prefilteredColor = textureLod(skybox, R, roughness * MAX_REFLECTION_LOD).rgb;
-  vec3 specularIBL = prefilteredColor * kS;
+    float D = distributionGGX(NdotH, roughness); // larger the more microfacets aligned to H
+    float G = geometrySmith(NdotV, NdotL, roughness); // smaller the more microfacets shadowed by other microfacets
+    vec3 F = fresnelSchlick(HdotV, baseReflectivity);
 
-  // combine ambient occlusion
-  vec3 ambient = (kD * diffuseIBL + specularIBL) * ao;
-  
-  // add emission
-  vec3 color = ambient + emission;
+    vec3 specular = D * G * F;
+    specular /= 4.0 * NdotV * NdotL;
+
+    // energy conservation
+    // diffuse and specular cannot be above 1.0, unless surface emits lights
+    // relationship between diffuse component (kD) should equal to 1.0 - kS
+    vec3 kD = vec3(1.0) - F; // F = kS
+
+    // multiply kD by the inverse metalness such that only non-metals have diffuse lighting
+    // or a linear blend if partially metal
+    // as pure metals have no diffuse light
+    kD *= 1.0 - metallic;
+
+    // note that
+    // - angle of light affects specular as well as diffuse
+    // - albedo is mixed with diffuse, not specular
+    Lo += (kD * albedo / PI + specular) * radiance * NdotL;
+  }
+
+  // ambient lighting
+  // TODO: replace with IBL
+  vec3 ambient = vec3(0.03) * albedo;
+  vec3 color = (ambient + emission + Lo) * ao;
 
   // exposure based on scene luminance
   float avgLuminance = dot(color, vec3(0.2126, 0.7152, 0.0722));
   float exposure = 1.0 / (1.0 + avgLuminance * 2.0);
   color *= exposure;
 
-  // tone mapping
+  // HDR tone mapping
   color = toneMapACES(color);
     
   // sRGB gamma correction
