@@ -52,6 +52,8 @@ App::App(int w, int h, const char* t)
   : window(nullptr), width(w), height(h), title(t) {
   init();
 }
+// destructor
+App::~App() {}
 
 void App::init() {
   // initialize GLFW
@@ -137,7 +139,8 @@ void App::run() {
 
     // check shaders
     if (currentTime - lastShaderCheck > 2.0f) {
-      shader.checkAndReload();
+      shader.checkAndReload(); // update base model shader
+      skybox.getShader().checkAndReload(); // update skybox shader
       lastShaderCheck = currentTime;
     }
 
@@ -168,11 +171,15 @@ void App::run() {
     glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // TODO: move single initialized stuff outside of per-frame loop
+    // TODO: move these single initialized stuff outside of per-frame loop
+    // I just put these here for simplicity
     glm::mat4 viewMatrix = camera.getViewMatrix();
     glm::mat4 projectionMatrix = camera.getProjectionMatrix(width, height);
 
-    // draw 3d scene
+    // draw skybox
+    skybox.draw(viewMatrix, projectionMatrix, camera.position);
+
+    // draw main model
     shader.use();
     shader.setMat4("view", viewMatrix);
     shader.setMat4("projection", projectionMatrix);
@@ -182,7 +189,6 @@ void App::run() {
       shader.setVec3("lights[" + std::to_string(i) + "].position", lights[i].position);
       shader.setVec3("lights[" + std::to_string(i) + "].color", lights[i].color);
     }
-
     // scale -> rotate -> translate
     glm::mat4 modelMatrix(1.0f);
     modelMatrix = glm::scale(modelMatrix, glm::vec3(model.getScaleToStandard(3.0f))); // standardize scale
@@ -190,10 +196,8 @@ void App::run() {
     //modelMatrix = glm::rotate(modelMatrix, glm::radians(-180.f), glm::vec3(1, 0, 0)); // flip 180
     modelMatrix = glm::translate(modelMatrix, -model.getCenter()); // center model at origin
     shader.setMat4("model", modelMatrix);
+    model.Draw(shader, camera.position); // draw model
 
-    // draw model
-    model.Draw(shader, camera.position);
-    
     gui.endFrame();
 
     glfwSwapBuffers(window);
@@ -211,7 +215,7 @@ void App::loadShaders() {
 
 void App::loadModel(const char* path) {
   stbi_set_flip_vertically_on_load(true);
-  model = Model(path);
+  model = Model(path); // update model
 
   camera.reset();
 }
@@ -224,6 +228,14 @@ void App::loadModel() {
   //model = Model("assets/models/base/hercules_after_francesco_da_sant_agata/scene.gltf");
 
   model = Model("assets/models/sphere.obj");
+  
+  // skybox
+  std::vector<std::string> skyboxFaces = {
+    "assets/skybox/px.jpg", "assets/skybox/nx.jpg",
+    "assets/skybox/py.jpg", "assets/skybox/ny.jpg",
+    "assets/skybox/pz.jpg", "assets/skybox/nz.jpg"
+  };
+  skybox.load("assets/skybox/cube.obj", skyboxFaces);
 }
 
 void App::setupLighting() {

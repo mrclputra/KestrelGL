@@ -8,7 +8,8 @@
 #include <model.hpp>
 #include <shader.hpp>
 
-#include "gui/Gui.hpp"
+#include "Gui.hpp"
+#include "Skybox.hpp"
 
 struct Light {
   glm::vec3 position;
@@ -18,7 +19,7 @@ struct Light {
 class App {
 public:
   App(int width, int height, const char* title);
-  //~App(); // do I need a detructor? should not go out of scope?
+  ~App();
 
   void run();
 
@@ -35,9 +36,12 @@ public:
   float lightRotateSpeed = 0.4f;
 
   Camera camera;
-  Model model;
-  Shader shader;
   std::vector<Light> lights;
+
+  Model model;
+  Skybox skybox;
+
+  Shader shader;
 
   void loadModel(const char* path); // override
 

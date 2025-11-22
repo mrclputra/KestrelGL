@@ -1,5 +1,5 @@
 #include "Gui.hpp"
-#include "../App.hpp"
+#include "App.hpp"
 
 Gui::Gui() {};
 Gui::~Gui() {};

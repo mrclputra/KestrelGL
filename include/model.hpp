@@ -65,7 +65,7 @@ public:
 
   // draws the model and all it's meshes
   // transparency sorting
-  void Draw(const Shader& shader, const glm::vec3& cameraPos) {
+  void Draw(const Shader& shader, const glm::vec3& cameraPos, bool enableDepthWrite = true) {
     vector<size_t> opaqueMeshes;
     vector<size_t> transparentMeshes;
 
@@ -79,10 +79,14 @@ public:
     }
 
     // draw opaque meshes first
-    glDepthMask(GL_TRUE);
+    //glDepthMask(GL_TRUE);
+    glDepthMask(enableDepthWrite ? GL_TRUE : GL_FALSE);
     for (size_t idx : opaqueMeshes) {
       meshes[idx].Draw(shader);
     }
+
+    // skyboxes dont need transparency sorting
+    if (!enableDepthWrite) return;
 
     // sort transparent meshes
     // back to front
@@ -176,7 +180,7 @@ private:
       directory = ".";
     }
 
-    std::cout << "Model directory: " << directory << "n"; // debug
+    std::cout << "Model directory: " << directory << "\n"; // debug
 
     // process ASSIMP root node recursively
     processNode(scene->mRootNode, scene);
@@ -256,19 +260,19 @@ private:
       vertices.push_back(vertex);
 
       // debug ----
-      vertexBuffer << "v" << i << ": P(" << vertex.Position.x << "," << vertex.Position.y << "," << vertex.Position.z << ") "
-        << "N(" << vertex.Normal.x << "," << vertex.Normal.y << "," << vertex.Normal.z << ") "
-        << "T(" << vertex.Tangent.x << "," << vertex.Tangent.y << "," << vertex.Tangent.z << ") "
-        << "B(" << vertex.Bitangent.x << "," << vertex.Bitangent.y << "," << vertex.Bitangent.z << ") "
-        << "UV(" << vertex.TexCoords.x << "," << vertex.TexCoords.y << ")\n";
-      counter++;
+      //vertexBuffer << "v" << i << ": P(" << vertex.Position.x << "," << vertex.Position.y << "," << vertex.Position.z << ") "
+      //  << "N(" << vertex.Normal.x << "," << vertex.Normal.y << "," << vertex.Normal.z << ") "
+      //  << "T(" << vertex.Tangent.x << "," << vertex.Tangent.y << "," << vertex.Tangent.z << ") "
+      //  << "B(" << vertex.Bitangent.x << "," << vertex.Bitangent.y << "," << vertex.Bitangent.z << ") "
+      //  << "UV(" << vertex.TexCoords.x << "," << vertex.TexCoords.y << ")\n";
+      //counter++;
 
-      if (counter >= flushInterval) {
-        std::cout << vertexBuffer.str();
-        vertexBuffer.str("");   // clear buffer
-        vertexBuffer.clear();   // reset flags
-        counter = 0;
-      }
+      //if (counter >= flushInterval) {
+      //  std::cout << vertexBuffer.str();
+      //  vertexBuffer.str("");   // clear buffer
+      //  vertexBuffer.clear();   // reset flags
+      //  counter = 0;
+      //}
     }
 
     if (counter > 0) {

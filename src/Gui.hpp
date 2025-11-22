@@ -1,4 +1,5 @@
-#pragma once 
+#ifndef GUI_HPP
+#define GUI_HPP
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -27,3 +28,5 @@ private:
   App* app = nullptr;
   bool active = false; // flag
 };
+
+#endif // !GUI_HPP

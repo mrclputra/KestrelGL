@@ -35,7 +35,12 @@ add_custom_target(copy_assets ALL
 add_definitions(-DSHADER_DIR="${CMAKE_SOURCE_DIR}/src/shaders")
 
 # add_executable(KestrelGL "src/main.cpp")
-add_executable(KestrelGL "src/main.cpp" "src/App.cpp" "src/gui/Gui.cpp")
+add_executable(KestrelGL 
+  "src/main.cpp" 
+  "src/App.cpp" 
+  "src/Gui.cpp"
+  "src/Skybox.cpp"
+)
 add_dependencies(KestrelGL copy_assets)
 
 # build custom ImGuiFileDialog library
