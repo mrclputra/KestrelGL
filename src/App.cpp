@@ -193,9 +193,12 @@ void App::run() {
     if (rotateModel) {
       modelMatrix = glm::rotate(modelMatrix, glm::radians(currentModelRotation), glm::vec3(0.0f, 1.0f, 0.0f));
     }
+
     modelMatrix = glm::scale(modelMatrix, glm::vec3(model.getScaleToStandard(3.0f))); // standardize scale
+    
     //modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.f), glm::vec3(1, 0, 0)); // maya to opengl
     //modelMatrix = glm::rotate(modelMatrix, glm::radians(-180.f), glm::vec3(1, 0, 0)); // flip 180
+    
     modelMatrix = glm::translate(modelMatrix, -model.getCenter()); // center model at origin
 
     shader.setMat4("model", modelMatrix);
@@ -225,39 +228,12 @@ void App::loadModel(const char* path) {
 // loads default model
 void App::loadModel() {
   stbi_set_flip_vertically_on_load(true);
-  //model = Model("assets/models/base/tibetan-hayagriva-18th-c-ce/source/190614_mia337_132174_402_local_64Kmesh_OBJ.obj");
-  //model = Model("assets/models/base/loie_fuller_sculpture_by_joseph_kratina/scene.gltf");
-  //model = Model("assets/models/base/hercules_after_francesco_da_sant_agata/scene.gltf");
-
   model = Model("assets/models/sphere.obj");
-  
-  // skybox
- /* std::vector<std::string> skyboxFaces = {
-    "assets/skybox/px.jpg", "assets/skybox/nx.jpg",
-    "assets/skybox/py.jpg", "assets/skybox/ny.jpg",
-    "assets/skybox/pz.jpg", "assets/skybox/nz.jpg"
-  };
-  skybox.load("assets/skybox/cube.obj", skyboxFaces);*/
 
   skyboxSets = {
-    // set 0: default skybox
-    {
-        "assets/skybox/px.jpg", "assets/skybox/nx.jpg",
-        "assets/skybox/py.jpg", "assets/skybox/ny.jpg",
-        "assets/skybox/pz.jpg", "assets/skybox/nz.jpg"
-    },
-    // set 1
-    {
-        "assets/skybox2/px.png", "assets/skybox2/nx.png",
-        "assets/skybox2/py.png", "assets/skybox2/ny.png",
-        "assets/skybox2/pz.png", "assets/skybox2/nz.png"
-    },
-    // set 2
-    {
-        "assets/skybox3/px.png", "assets/skybox3/nx.png",
-        "assets/skybox3/py.png", "assets/skybox3/ny.png",
-        "assets/skybox3/pz.png", "assets/skybox3/nz.png"
-    }
+    "assets/skybox/farmland_overcast_4k.hdr",
+    "assets/skybox/bambanani_sunset_4k.hdr",
+    "assets/skybox/rogland_clear_night_4k.hdr"
   };
 
   loadCurrentSkybox();
@@ -275,7 +251,7 @@ void App::loadPreviousSkybox() {
 
 void App::loadCurrentSkybox() {
   if (currentSkyboxIndex >= 0 && currentSkyboxIndex < skyboxSets.size()) {
-    skybox.load("assets/skybox/cube.obj", skyboxSets[currentSkyboxIndex]);
+    skybox.load(skyboxSets[currentSkyboxIndex]);
   }
 }
 

@@ -13,25 +13,29 @@ public:
   Skybox();
   ~Skybox();
 
-  bool load(const std::string& modelPath, const std::vector<std::string>& faces);
+  // load HDR file
+  bool load(const std::string& hdrPath);
 
   void draw(const glm::mat4& view, const glm::mat4& projection, const glm::vec3& cameraPos);
 
   // get the shader for external use
   // if needed
   Shader& getShader();
-
   unsigned int getCubemapTexture() const { return cubemapTexture; }
 
   void cleanup();
 
 private:
-  unsigned int loadCubemap(const std::vector<std::string>& faces);
+  unsigned int hdrToCubemap(const std::string& hdrPath);
+  void renderCube();
 
-  Model model;
   Shader shader;
   unsigned int cubemapTexture;
   bool initialized;
+
+  // cube VAO for conversion
+  unsigned int cubeVAO;
+  unsigned int cubeVBO;
 };
 
 #endif // !SKYBOX_HPP

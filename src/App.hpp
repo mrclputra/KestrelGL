@@ -72,7 +72,8 @@ private:
   float lastFrame = 0.0f;
 
   // skybox switching
-  std::vector<std::vector<std::string>> skyboxSets;
+  //std::vector<std::vector<std::string>> skyboxSets;
+  std::vector<std::string> skyboxSets;
   int currentSkyboxIndex = 0;
   void loadCurrentSkybox();
 };
