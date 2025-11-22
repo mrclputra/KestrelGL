@@ -32,11 +32,11 @@ public:
   bool firstMouse = true;
   bool mousePressed = false;
 
-  bool rotateLights = false;
-  float lightRotateSpeed = 0.4f;
-
   Camera camera;
-  std::vector<Light> lights;
+
+  bool rotateModel = false;
+  float modelRotateSpeed = 30.0f; // degrees per second
+  float currentModelRotation = 0.0f;
 
   Model model;
   Skybox skybox;
@@ -45,6 +45,11 @@ public:
 
   void loadModel(const char* path); // override
 
+  // skybox switching
+  void loadNextSkybox();
+  void loadPreviousSkybox();
+  int getCurrentSkyboxIndex() const { return currentSkyboxIndex; }
+
 private:
   void init(); // setup
   void setupCallbacks();
@@ -52,7 +57,6 @@ private:
 
   void loadShaders();
   void loadModel();
-  void setupLighting();
 
   GLFWwindow* window;
   int width, height;
@@ -66,4 +70,9 @@ private:
 
   float deltaTime = 0.0f;
   float lastFrame = 0.0f;
+
+  // skybox switching
+  std::vector<std::vector<std::string>> skyboxSets;
+  int currentSkyboxIndex = 0;
+  void loadCurrentSkybox();
 };

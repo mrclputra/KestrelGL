@@ -58,11 +58,47 @@ void Gui::draw() {
   ImGui::Text("Camera");
   ImGui::DragFloat3("Position", &app->camera.position[0], 0.1f);
 
-  ImGui::Separator();
-  ImGui::Text("Lights");
+  //ImGui::Separator();
+  //ImGui::Text("Lights");
 
-  ImGui::Checkbox("Rotate", &app->rotateLights);
-  ImGui::SliderFloat("Speed", &app->lightRotateSpeed, 0.0f, 1.0f, "%.2f");
+  //ImGui::Checkbox("Rotate", &app->rotateLights);
+  //ImGui::SliderFloat("Speed", &app->lightRotateSpeed, 0.0f, 1.0f, "%.2f");
+
+  ImGui::Separator();
+  ImGui::Text("Model Rotation");
+
+  // moel rotation toggle 
+  // also speed control
+  ImGui::Checkbox("Rotate Model", &app->rotateModel);
+  if (app->rotateModel) {
+    ImGui::SliderFloat("Speed", &app->modelRotateSpeed, 0.0f, 180.0f, "%.1f deg/s");
+    ImGui::Text("Angle: %.1f", app->currentModelRotation);
+
+    if (ImGui::Button("Reset Rotation")) {
+      app->currentModelRotation = 0.0f;
+    }
+  }
+
+  ImGui::Separator();
+  ImGui::Text("Skybox");
+
+  // Skybox switching with arrow buttons
+  ImGui::Text("Current: %d", app->getCurrentSkyboxIndex());
+
+  // Left arrow button
+  if (ImGui::ArrowButton("##skybox_left", ImGuiDir_Left)) {
+    app->loadPreviousSkybox();
+  }
+
+  ImGui::SameLine();
+
+  // Right arrow button  
+  if (ImGui::ArrowButton("##skybox_right", ImGuiDir_Right)) {
+    app->loadNextSkybox();
+  }
+
+  ImGui::SameLine();
+  ImGui::Text("Type");
 
   ImGui::Separator();
   ImGui::Text("Model");

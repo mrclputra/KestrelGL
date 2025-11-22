@@ -260,19 +260,20 @@ private:
       vertices.push_back(vertex);
 
       // debug ----
-      //vertexBuffer << "v" << i << ": P(" << vertex.Position.x << "," << vertex.Position.y << "," << vertex.Position.z << ") "
-      //  << "N(" << vertex.Normal.x << "," << vertex.Normal.y << "," << vertex.Normal.z << ") "
-      //  << "T(" << vertex.Tangent.x << "," << vertex.Tangent.y << "," << vertex.Tangent.z << ") "
-      //  << "B(" << vertex.Bitangent.x << "," << vertex.Bitangent.y << "," << vertex.Bitangent.z << ") "
-      //  << "UV(" << vertex.TexCoords.x << "," << vertex.TexCoords.y << ")\n";
-      //counter++;
+      vertexBuffer << "v" << i
+        << " P[" << vertex.Position.x << " " << vertex.Position.y << " " << vertex.Position.z << "] "
+        << "N[" << vertex.Normal.x << " " << vertex.Normal.y << " " << vertex.Normal.z << "] "
+        << "T[" << vertex.Tangent.x << " " << vertex.Tangent.y << " " << vertex.Tangent.z << "] "
+        << "B[" << vertex.Bitangent.x << " " << vertex.Bitangent.y << " " << vertex.Bitangent.z << "] "
+        << "UV[" << vertex.TexCoords.x << " " << vertex.TexCoords.y << "]\n";
+      counter++;
 
-      //if (counter >= flushInterval) {
-      //  std::cout << vertexBuffer.str();
-      //  vertexBuffer.str("");   // clear buffer
-      //  vertexBuffer.clear();   // reset flags
-      //  counter = 0;
-      //}
+      if (counter >= flushInterval) {
+        std::cout << vertexBuffer.str();
+        vertexBuffer.str("");   // clear buffer
+        vertexBuffer.clear();   // reset flags
+        counter = 0;
+      }
     }
 
     if (counter > 0) {

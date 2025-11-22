@@ -8,11 +8,6 @@
 #version 330 core
 out vec4 FragColor;
 
-struct Light {
-  vec3 position;
-  vec3 color;
-};
-
 // OpenGL Context bindings
 // in this case, passed from the vertex shader
 in vec2 TexCoords;
@@ -41,9 +36,6 @@ uniform int numAO;
 uniform int numMetallicRoughness;
 
 uniform samplerCube skybox;
-
-//uniform Light lights[3];
-//uniform int numLights;
 uniform vec3 viewPos;
 
 const float PI = 3.14159265359;
@@ -150,43 +142,8 @@ void main() {
 
   vec3 color = ambient;
 
-//  // accumulate lighting contribution
-//  vec3 Lo = vec3(0.0);
-//
-//  for (int i = 0; i < numLights; i++) {
-//    vec3 L = normalize(lights[i].position - FragPos);
-//    vec3 H = normalize(V + L);
-//
-//    float distance = length(lights[i].position - FragPos);
-////    float attenuation = 1.0 / (distance * distance); // account for light distance
-//    float attenuation = 1.2;
-//    vec3 radiance = lights[i].color * attenuation;
-//
-//    // Cook-Torrence BRDF
-//    float NDF = DistributionGGX(N, H, roughness);
-//    float G = GeometrySmith(N, V, L, roughness);
-//    vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
-//
-//    vec3 numerator = NDF * G * F;
-//    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
-//    vec3 specular = numerator / denominator;
-//    
-//    // energy conservation law: 
-//    // diffuse + specular can't exceed 1.0
-//    vec3 kS = F;              // specular contribution
-//    vec3 kD = vec3(1.0) - kS; // diffuse contribution
-//    kD *= 1.0 - metallic;     // metals have no diffuse
-//    
-//    float NdotL = max(dot(N, L), 0.0);
-//    Lo += (kD * albedo / PI + specular) * radiance * NdotL;
-//  }
-//
-//  // ambient lighting
-//  vec3 ambient = vec3(0.03) * albedo * ao;
-//  vec3 color = ambient + Lo;
-
   // HDR tonemap
-  color = color / (color + vec3(1.0));
+//  color = color / (color + vec3(1.0));
 
   FragColor = vec4(color, alpha); // combined
 //  FragColor = vec4((numDiffuse > 0) ? texture(DIFFUSE[0], TexCoords).rgb : vec3(0.95), alpha); // albedo

@@ -110,7 +110,6 @@ void App::init() {
   // setup scene
   loadShaders();
   loadModel();
-  setupLighting();
 
   setupCallbacks();
 }
@@ -147,12 +146,11 @@ void App::run() {
     // update camera
     camera.update();
 
-    // update lights
-    if (rotateLights) {
-      for (auto& light : lights) {
-        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(lightRotateSpeed), glm::vec3(0.0f, 1.0f, 0.0f));
-        glm::vec4 rotatedPos = rotation * glm::vec4(light.position, 1.0f);
-        light.position = glm::vec3(rotatedPos);
+    // update model rotation
+    if (rotateModel) {
+      currentModelRotation += modelRotateSpeed * deltaTime;
+      if (currentModelRotation >= 360.0f) {
+        currentModelRotation -= 360.0f;
       }
     }
 
@@ -188,20 +186,19 @@ void App::run() {
     glActiveTexture(GL_TEXTURE10); // 10 btw
     glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.getCubemapTexture());
     shader.setInt("skybox", 10);
-
-    //shader.setInt("numLights", lights.size());
-    //for (int i = 0; i < (int)lights.size(); i++) {
-    //  shader.setVec3("lights[" + std::to_string(i) + "].position", lights[i].position);
-    //  shader.setVec3("lights[" + std::to_string(i) + "].color", lights[i].color);
-    //}
     
     // transform model
     // scale -> rotate -> translate
+
     glm::mat4 modelMatrix(1.0f);
+    if (rotateModel) {
+      modelMatrix = glm::rotate(modelMatrix, glm::radians(currentModelRotation), glm::vec3(0.0f, 1.0f, 0.0f));
+    }
     modelMatrix = glm::scale(modelMatrix, glm::vec3(model.getScaleToStandard(3.0f))); // standardize scale
     //modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.f), glm::vec3(1, 0, 0)); // maya to opengl
     //modelMatrix = glm::rotate(modelMatrix, glm::radians(-180.f), glm::vec3(1, 0, 0)); // flip 180
     modelMatrix = glm::translate(modelMatrix, -model.getCenter()); // center model at origin
+
     shader.setMat4("model", modelMatrix);
     model.Draw(shader, camera.position); // draw model
 
@@ -224,7 +221,7 @@ void App::loadModel(const char* path) {
   stbi_set_flip_vertically_on_load(true);
   model = Model(path); // update model
 
-  camera.reset();
+  //camera.reset();
 }
 
 // loads default model
@@ -237,20 +234,53 @@ void App::loadModel() {
   model = Model("assets/models/sphere.obj");
   
   // skybox
-  std::vector<std::string> skyboxFaces = {
+ /* std::vector<std::string> skyboxFaces = {
     "assets/skybox/px.jpg", "assets/skybox/nx.jpg",
     "assets/skybox/py.jpg", "assets/skybox/ny.jpg",
     "assets/skybox/pz.jpg", "assets/skybox/nz.jpg"
   };
-  skybox.load("assets/skybox/cube.obj", skyboxFaces);
+  skybox.load("assets/skybox/cube.obj", skyboxFaces);*/
+
+  skyboxSets = {
+    // set 0: default skybox
+    {
+        "assets/skybox/px.jpg", "assets/skybox/nx.jpg",
+        "assets/skybox/py.jpg", "assets/skybox/ny.jpg",
+        "assets/skybox/pz.jpg", "assets/skybox/nz.jpg"
+    },
+    // set 1
+    {
+        "assets/skybox2/px.png", "assets/skybox2/nx.png",
+        "assets/skybox2/py.png", "assets/skybox2/ny.png",
+        "assets/skybox2/pz.png", "assets/skybox2/nz.png"
+    },
+    // set 2
+    {
+        "assets/skybox3/px.png", "assets/skybox3/nx.png",
+        "assets/skybox3/py.png", "assets/skybox3/ny.png",
+        "assets/skybox3/pz.png", "assets/skybox3/nz.png"
+    }
+  };
+
+  loadCurrentSkybox();
 }
 
-void App::setupLighting() {
-  lights.clear();
-  lights.push_back({ glm::vec3(10.0f, 12.0f, 10.0f), glm::vec3(1.0f, 1.0f, 0.95f) });   // key
-  lights.push_back({ glm::vec3(-10.0f, 10.0f, 10.0f), glm::vec3(0.5f, 0.5f, 0.55f) });  // fill
-  lights.push_back({ glm::vec3(0.0f, 3.0f, -10.0f), glm::vec3(0.3f, 0.3f, 0.35f) });   // back
+void App::loadNextSkybox() {
+  currentSkyboxIndex = (currentSkyboxIndex + 1) % skyboxSets.size();
+  loadCurrentSkybox();
 }
+
+void App::loadPreviousSkybox() {
+  currentSkyboxIndex = (currentSkyboxIndex - 1 + skyboxSets.size()) % skyboxSets.size();
+  loadCurrentSkybox();
+}
+
+void App::loadCurrentSkybox() {
+  if (currentSkyboxIndex >= 0 && currentSkyboxIndex < skyboxSets.size()) {
+    skybox.load("assets/skybox/cube.obj", skyboxSets[currentSkyboxIndex]);
+  }
+}
+
 
 void App::cleanup() {
   if (window) {
