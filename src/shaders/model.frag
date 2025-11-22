@@ -92,7 +92,7 @@ void main() {
   // B channel is metallic
   // G channel is roughness
   float metallic = 0.0; // default
-  float roughness = 0.7; // default
+  float roughness = 0.5; // default
   if (numMetallicRoughness > 0) {
     vec3 mr = texture(METALLIC_ROUGHNESS[0], TexCoords).rgb;
     metallic = mr.b;
@@ -162,7 +162,10 @@ void main() {
 
   // ambient lighting
   // TODO: replace with IBL
-  vec3 ambient = vec3(0.03) * albedo;
+//  vec3 ambient = vec3(0.03) * albedo;
+  vec3 irradianceColor = texture(irradiance, N).rgb;
+  vec3 diffuseIBL      = irradianceColor * albedo * (1.0 - metallic);
+  vec3 ambient         = diffuseIBL;
   vec3 color = (ambient + emission + Lo) * ao;
 
   // exposure based on scene luminance
@@ -178,6 +181,7 @@ void main() {
   color = pow(color, vec3(1.0/2.2));
 
   FragColor = vec4(color, alpha);
+//  FragColor = vec4(irradianceColor, alpha);
 
 //  vec3 viewDir = normalize(FragPos - viewPos);
 //  vec3 reflectDir = reflect(viewDir, normalize(Normal));
@@ -185,5 +189,5 @@ void main() {
 //  FragColor = vec4(skyboxColor, 1.0);
 
 //  FragColor = vec4(albedo, alpha); // just albedo texture
-//  FragColor = vec4(metallicRoughness, alpha); // other textures
+//  FragColor = vec4(texture(METALLIC_ROUGHNESS[0], TexCoords).rgb, alpha); // metallic roughness
 }

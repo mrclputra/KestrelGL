@@ -148,7 +148,7 @@ unsigned int Skybox::generateIrradianceMap() {
   glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
 
   for (unsigned int i = 0; i < 6; i++) {
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 32, 32, 0, GL_RGB, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 64, 64, 0, GL_RGB, GL_FLOAT, nullptr);
   }
 
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -167,11 +167,11 @@ unsigned int Skybox::generateIrradianceMap() {
   glGenRenderbuffers(1, &captureRBO);
   glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
   glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 64, 64);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRBO);
 
   // convolution shader
-  Shader irradianceShader(SHADER_DIR "/cubemap.vert", SHADER_DIR "/irradiance_convolution.frag");
+  Shader irradianceShader(SHADER_DIR "/cubemap.vert", SHADER_DIR "/irradiance_cv.frag");
 
   irradianceShader.use();
   irradianceShader.setInt("environmentMap", 0);
@@ -181,7 +181,7 @@ unsigned int Skybox::generateIrradianceMap() {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 
-  glViewport(0, 0, 32, 32);
+  glViewport(0, 0, 64, 64);
   glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
 
   glm::mat4 captureViews[] = {
@@ -209,7 +209,6 @@ unsigned int Skybox::generateIrradianceMap() {
   glDeleteFramebuffers(1, &captureFBO);
   glDeleteRenderbuffers(1, &captureRBO);
 
-  std::cout << "Irradiance map generated\n";
   return irradianceMap;
 }
 

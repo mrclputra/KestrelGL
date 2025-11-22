@@ -17,19 +17,19 @@ vec3 toneMapACES(vec3 x) {
 }
 
 void main() {
-    vec3 color = texture(skybox, TexCoords).rgb;
+  vec3 color = texture(skybox, TexCoords).rgb;
     
-    // ez exposure adjustment
-    float avgLuminance = dot(color, vec3(0.2126, 0.7152, 0.0722));
-    float exposure = 1.0 / (1.0 + avgLuminance * 2.0);
-    color *= exposure;
+  // ez exposure adjustment
+  float avgLuminance = dot(color, vec3(0.2126, 0.7152, 0.0722));
+  float exposure = 1.0 / (1.0 + avgLuminance * 2.0);
+  color *= exposure;
 
-    // tone mapping
-    color = toneMapACES(color);
+  // tone mapping
+  color = toneMapACES(color);
     
-    // sRGB gamma correction
-    // should work for most HDRIs
-    color = pow(color, vec3(1.0/2.2));
+  // sRGB gamma correction
+  // should work for most HDRIs
+  color = pow(color, vec3(1.0/2.2));
     
-    FragColor = vec4(color, 1.0);
+  FragColor = vec4(color, 1.0);
 }

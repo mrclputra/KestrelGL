@@ -258,10 +258,9 @@ void App::loadModel() {
 
   skyboxSets = {
     "assets/skybox/empty_play_room_4k.hdr",
-    "assets/skybox/farmland_overcast_4k.hdr",
-    "assets/skybox/evening_field_4k.hdr",
-    "assets/skybox/drackenstein_quarry_puresky_4k.hdr",
-    "assets/skybox/christmas_photo_studio_07_4k.hdr"
+    "assets/skybox/christmas_photo_studio_07_4k.hdr",
+    "assets/skybox/lebombo_4k.hdr",
+    "assets/skybox/farmland_overcast_4k.hdr"
   };
 
   loadCurrentSkybox();
