@@ -20,17 +20,20 @@ public:
 
   // get the shader for external use
   // if needed
-  Shader& getShader();
+  Shader& getShader() { return shader; }
   unsigned int getCubemapTexture() const { return cubemapTexture; }
+  unsigned int getIrradianceMap() const { return irradianceMap; }
 
   void cleanup();
 
 private:
   unsigned int hdrToCubemap(const std::string& hdrPath);
+  unsigned int generateIrradianceMap();
   void renderCube();
 
   Shader shader;
   unsigned int cubemapTexture;
+  unsigned int irradianceMap;
   bool initialized;
 
   // cube VAO for conversion

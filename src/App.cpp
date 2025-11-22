@@ -182,9 +182,13 @@ void App::run() {
     shader.setMat4("projection", projectionMatrix);
     shader.setVec3("viewPos", camera.position);
 
-    glActiveTexture(GL_TEXTURE10); // 10 btw
+    glActiveTexture(GL_TEXTURE10); // base cubemap
     glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.getCubemapTexture());
     shader.setInt("skybox", 10);
+
+    glActiveTexture(GL_TEXTURE11); // base irradiance
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.getIrradianceMap());
+    shader.setInt("irradiance", 11);
     
     // transform model
     // scale -> rotate -> translate
@@ -215,7 +219,7 @@ void App::run() {
 }
 
 void App::loadShaders() {
-  shader = Shader(SHADER_DIR "/model.vert", SHADER_DIR "/model_pbr_v2.frag");
+  shader = Shader(SHADER_DIR "/model.vert", SHADER_DIR "/model.frag");
 }
 
 void App::loadModel(const char* path) {
@@ -232,8 +236,8 @@ void App::loadModel() {
 
   skyboxSets = {
     "assets/skybox/farmland_overcast_4k.hdr",
-    "assets/skybox/bambanani_sunset_4k.hdr",
-    "assets/skybox/rogland_clear_night_4k.hdr"
+    "assets/skybox/evening_field_4k.hdr",
+    "assets/skybox/drackenstein_quarry_puresky_4k.hdr"
   };
 
   loadCurrentSkybox();
