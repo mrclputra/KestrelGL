@@ -114,7 +114,7 @@ private:
 
   bool checkTransparency() {
     for (const auto& tex : textures) {
-      if (tex.type == "DIFFUSE") {
+      if (tex.type == "ALBEDO") {
         // bind and check alpha channel
         glBindTexture(GL_TEXTURE_2D, tex.id);
 
