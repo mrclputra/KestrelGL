@@ -291,35 +291,31 @@ private:
     // process materials
     aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
     // we assume a convention for sampler names in the shaders
+    // array of textures
 
-    // diffuse maps
-    vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "DIFFUSE");
-    textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-    // specular maps
-    vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "SPECULAR");
-    textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+    // GLTF convention
+    // https://www.khronos.org/files/gltf20-reference-guide.pdf
+    
+    // albedo maps
+    vector<Texture> albedoMaps = loadMaterialTextures(material, aiTextureType_BASE_COLOR, "ALBEDO");
+    textures.insert(textures.end(), albedoMaps.begin(), albedoMaps.end());
+    // metallicRoughness maps
+    // encode in shader: metalness = B channel, roughness = G channel; ignore all other channels
+    // https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#_material_pbrmetallicroughness_metallicroughnesstexture
+    vector<Texture> metallicRoughness = loadMaterialTextures(material, aiTextureType_GLTF_METALLIC_ROUGHNESS, "METALLIC_ROUGHNESS");
+    textures.insert(textures.end(), metallicRoughness.begin(), metallicRoughness.end());
     // normal maps
     vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_NORMALS, "NORMAL");
     textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-    // height maps
-    vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "HEIGHT");
-    textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+    // occlusion maps
+    vector<Texture> occlusionMaps = loadMaterialTextures(material, aiTextureType_AMBIENT_OCCLUSION, "OCCLUSION");
+    textures.insert(textures.end(), occlusionMaps.begin(), occlusionMaps.end());
+    // emission maps
+    vector<Texture> emissionMaps = loadMaterialTextures(material, aiTextureType_EMISSIVE, "EMISSION");
+    textures.insert(textures.end(), emissionMaps.begin(), emissionMaps.end());
 
-    // PBR specific:
-    // GLTF:metallicRoughness
-    vector<Texture> metallicRoughnessMaps = loadMaterialTextures(material, aiTextureType_GLTF_METALLIC_ROUGHNESS, "METALLIC_ROUGHNESS");
-    textures.insert(textures.end(), metallicRoughnessMaps.begin(), metallicRoughnessMaps.end());
-    // metallic maps
-    vector<Texture> metallicMaps = loadMaterialTextures(material, aiTextureType_METALNESS, "METALLIC");
-    textures.insert(textures.end(), metallicMaps.begin(), metallicMaps.end());
-    // roughness maps
-    vector<Texture> roughnessMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE_ROUGHNESS, "ROUGHNESS");
-    textures.insert(textures.end(), roughnessMaps.begin(), roughnessMaps.end());
-    // AO maps
-    vector<Texture> aoMaps = loadMaterialTextures(material, aiTextureType_AMBIENT_OCCLUSION, "AO");
-    textures.insert(textures.end(), aoMaps.begin(), aoMaps.end());
-
-    // TODO: irradiance map
+    // TODO: handle specular model maps here
+    // -
 
     // return object created from extracted mesh data
     return Mesh(vertices, indices, textures);

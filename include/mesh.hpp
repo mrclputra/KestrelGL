@@ -51,19 +51,14 @@ public:
     setupMesh();
   }
 
-  // render the mesh
   void Draw(const Shader& shader) {
     // pass to shader as array
-    int diffuseCount = 0;
-    int specularCount = 0;
-    int normalCount = 0;
-    int heightCount = 0;
-
-    int metallicCount = 0;
-    int roughnessCount = 0;
-    int aoCount = 0;
-
+    // GLTF PBR model
+    int albedoCount = 0;
     int metallicRoughnessCount = 0;
+    int normalCount = 0;
+    int occlusionCount = 0;
+    int emissionCount = 0;
 
     for (unsigned int i = 0; i < textures.size(); i++) {
       glActiveTexture(GL_TEXTURE0 + i);
@@ -71,36 +66,30 @@ public:
       const string& type = textures[i].type;
       int index = 0;
 
-      if (type == "DIFFUSE") index = diffuseCount++;
-      else if (type == "SPECULAR") index = specularCount++;
-      else if (type == "NORMAL") index = normalCount++;
-      else if (type == "HEIGHT") index = heightCount++;
+      if (type == "ALBEDO") index = albedoCount++;
       else if (type == "METALLIC_ROUGHNESS") index = metallicRoughnessCount++;
-      else if (type == "METALLIC") index = metallicCount++;
-      else if (type == "ROUGHNESS") index = roughnessCount++;
-      else if (type == "AO") index = aoCount++;
+      else if (type == "NORMAL") index = normalCount++;
+      else if (type == "OCCLUSION") index = occlusionCount++;
+      else if (type == "EMISSION") index = emissionCount++;
 
-      // TODO: switch to bindless textures or sampler2Darray
-      // in shader, call: ex. DIFFUSE[0]
+      // TODO: switch to bindless texture or sampler2Darray down the line
+      // in shader, call: ex. ALBEDO[0]
       string uniformName = type + "[" + std::to_string(index) + "]";
 
       glUniform1i(glGetUniformLocation(shader.ID, uniformName.c_str()), i);
       glBindTexture(GL_TEXTURE_2D, textures[i].id);
     }
 
-    shader.setInt("numDiffuse", diffuseCount);
-    shader.setInt("numSpecular", specularCount);
-    shader.setInt("numNormal", normalCount);
-    shader.setInt("numHeight", heightCount);
+    shader.setInt("numAlbedo", albedoCount);
     shader.setInt("numMetallicRoughness", metallicRoughnessCount);
-    shader.setInt("numMetallic", metallicCount);
-    shader.setInt("numRoughness", roughnessCount);
-    shader.setInt("numAO", aoCount);
+    shader.setInt("numNormal", normalCount);
+    shader.setInt("numOcclusion", occlusionCount);
+    shader.setInt("numEmission", emissionCount);
 
-    // draw mesh
+    // draw
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
+    glBindVertexArray(0); // reset vertex array binding after draw
 
     glActiveTexture(GL_TEXTURE0);
   }
