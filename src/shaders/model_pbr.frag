@@ -40,17 +40,22 @@ uniform int numRoughness;
 uniform int numAO;
 uniform int numMetallicRoughness;
 
-uniform Light lights[3];
-uniform int numLights;
+uniform samplerCube skybox;
+
+//uniform Light lights[3];
+//uniform int numLights;
 uniform vec3 viewPos;
 
 const float PI = 3.14159265359;
 
 // Fresnel-Shlick approximation
 //https://en.wikipedia.org/wiki/Schlick%27s_approximation
-vec3 fresnelSchlick(float cosTheta, vec3 F0) {
-  return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-}
+//vec3 fresnelSchlick(float cosTheta, vec3 F0) {
+//  return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+//}
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
+} // IBL
 
 // GGX/Trowbridge-Reitz normal distribution
 float DistributionGGX(vec3 N, vec3 H, float roughness) {
@@ -95,6 +100,7 @@ void main() {
   }
 
   vec3 V = normalize(viewPos - FragPos); // vector to camera
+  vec3 R = reflect(-V, N); // reflection vector
 
   // sample material properties
   vec3 albedo = (numDiffuse > 0) ? texture(DIFFUSE[0], TexCoords).rgb : vec3(0.95);
@@ -119,40 +125,65 @@ void main() {
   vec3 F0 = vec3(0.04);
   F0 = mix(F0, albedo, metallic);
 
-  // accumulate lighting contribution
-  vec3 Lo = vec3(0.0);
+  // IBL lighting
+  // sample the skybox for ambient lighting
+  // use normal for diffuse (irradiance) and reflection vector for specular
+  vec3 kS = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+  vec3 kD = 1.0 - kS;
+  kD *= 1.0 - metallic;
 
-  for (int i = 0; i < numLights; i++) {
-    vec3 L = normalize(lights[i].position - FragPos);
-    vec3 H = normalize(V + L);
+  // diffuse
+  vec3 irradiance = texture(skybox, N).rgb;
+  vec3 diffuseIBL = irradiance * albedo;
 
-    float distance = length(lights[i].position - FragPos);
-//    float attenuation = 1.0 / (distance * distance); // account for light distance
-    float attenuation = 1.2;
-    vec3 radiance = lights[i].color * attenuation;
+  // specular
+  const float MAX_REFLECTION_LOD = 4.0;
+  vec3 prefilteredColor = textureLod(skybox, R, roughness * MAX_REFLECTION_LOD).rgb;
+  vec3 specularIBL = prefilteredColor * kS; // specular + fresnel
 
-    // Cook-Torrence BRDF
-    float NDF = DistributionGGX(N, H, roughness);
-    float G = GeometrySmith(N, V, L, roughness);
-    vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
+  vec3 ambient = (kD * diffuseIBL + specularIBL) * ao;
 
-    vec3 numerator = NDF * G * F;
-    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
-    vec3 specular = numerator / denominator;
-    
-    // energy conservation law: 
-    // diffuse + specular can't exceed 1.0
-    vec3 kS = F;              // specular contribution
-    vec3 kD = vec3(1.0) - kS; // diffuse contribution
-    kD *= 1.0 - metallic;     // metals have no diffuse
-    
-    float NdotL = max(dot(N, L), 0.0);
-    Lo += (kD * albedo / PI + specular) * radiance * NdotL;
-  }
+  // fallback directional light
+  vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
+  vec3 H = normalize(V + lightDir);
+  float NdotL = max(dot(N, lightDir), 0.0);
 
-  // ambient lighting
-  vec3 ambient = vec3(0.03) * albedo * ao;
-  vec3 color = ambient + Lo;
+  vec3 color = ambient;
+
+//  // accumulate lighting contribution
+//  vec3 Lo = vec3(0.0);
+//
+//  for (int i = 0; i < numLights; i++) {
+//    vec3 L = normalize(lights[i].position - FragPos);
+//    vec3 H = normalize(V + L);
+//
+//    float distance = length(lights[i].position - FragPos);
+////    float attenuation = 1.0 / (distance * distance); // account for light distance
+//    float attenuation = 1.2;
+//    vec3 radiance = lights[i].color * attenuation;
+//
+//    // Cook-Torrence BRDF
+//    float NDF = DistributionGGX(N, H, roughness);
+//    float G = GeometrySmith(N, V, L, roughness);
+//    vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
+//
+//    vec3 numerator = NDF * G * F;
+//    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
+//    vec3 specular = numerator / denominator;
+//    
+//    // energy conservation law: 
+//    // diffuse + specular can't exceed 1.0
+//    vec3 kS = F;              // specular contribution
+//    vec3 kD = vec3(1.0) - kS; // diffuse contribution
+//    kD *= 1.0 - metallic;     // metals have no diffuse
+//    
+//    float NdotL = max(dot(N, L), 0.0);
+//    Lo += (kD * albedo / PI + specular) * radiance * NdotL;
+//  }
+//
+//  // ambient lighting
+//  vec3 ambient = vec3(0.03) * albedo * ao;
+//  vec3 color = ambient + Lo;
 
   // HDR tonemap
   color = color / (color + vec3(1.0));

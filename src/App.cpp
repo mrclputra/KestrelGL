@@ -184,11 +184,18 @@ void App::run() {
     shader.setMat4("view", viewMatrix);
     shader.setMat4("projection", projectionMatrix);
     shader.setVec3("viewPos", camera.position);
-    shader.setInt("numLights", lights.size());
-    for (int i = 0; i < (int)lights.size(); i++) {
-      shader.setVec3("lights[" + std::to_string(i) + "].position", lights[i].position);
-      shader.setVec3("lights[" + std::to_string(i) + "].color", lights[i].color);
-    }
+
+    glActiveTexture(GL_TEXTURE10); // 10 btw
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.getCubemapTexture());
+    shader.setInt("skybox", 10);
+
+    //shader.setInt("numLights", lights.size());
+    //for (int i = 0; i < (int)lights.size(); i++) {
+    //  shader.setVec3("lights[" + std::to_string(i) + "].position", lights[i].position);
+    //  shader.setVec3("lights[" + std::to_string(i) + "].color", lights[i].color);
+    //}
+    
+    // transform model
     // scale -> rotate -> translate
     glm::mat4 modelMatrix(1.0f);
     modelMatrix = glm::scale(modelMatrix, glm::vec3(model.getScaleToStandard(3.0f))); // standardize scale

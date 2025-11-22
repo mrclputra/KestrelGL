@@ -21,6 +21,8 @@ public:
   // if needed
   Shader& getShader() { return shader; }
 
+  unsigned int getCubemapTexture() const { return cubemapTexture; }
+
   void cleanup();
 
 private:
@@ -29,7 +31,7 @@ private:
   Model model;
   Shader shader;
   unsigned int cubemapTexture;
-  bool initialized = true;
+  bool initialized;
 };
 
 #endif // !SKYBOX_HPP
