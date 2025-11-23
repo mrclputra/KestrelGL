@@ -1,5 +1,8 @@
 ﻿cmake_minimum_required(VERSION 3.31)
 
+# project name
+project(KestrelGL)
+
 # Enable Hot Reload for MSVC compilers if supported.
 # dont touch this block
 if (POLICY CMP0141)
@@ -7,23 +10,29 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,\$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,\$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-project(KestrelGL)
-
-# include headers
-include_directories(${PROJECT_SOURCE_DIR}/include)
-
-# use vcpkg, set libraries here
-# find_package(fmt CONFIG REQUIRED)
-find_package(imgui CONFIG REQUIRED)
-find_package(glfw3 CONFIG REQUIRED)
-find_package(glad REQUIRED)
-find_package(glm REQUIRED)
-find_package(assimp REQUIRED)
-
 # set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+# include directories
+include_directories(${PROJECT_SOURCE_DIR}/include)
+
+# external dependencies
+add_subdirectory(external/glad)
+add_subdirectory(external/glfw)
+add_subdirectory(external/glm)
+add_subdirectory(external/imgui)
+add_subdirectory(external/assimp)
+add_subdirectory(external/ImGuiFileDialog)
+
+add_library(imgui::imgui ALIAS imgui) # for imguifiledialog cmakelists
+
+# todo: lookup
+# assimp options
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "" FORCE)
 
 # copy assets to build directory
 add_custom_target(copy_assets ALL
@@ -32,36 +41,36 @@ add_custom_target(copy_assets ALL
     COMMENT "Resetting assets folder..."
 )
 
-add_definitions(-DSHADER_DIR="${CMAKE_SOURCE_DIR}/src/shaders")
-
-# add_executable(KestrelGL "src/main.cpp")
+# define executable
 add_executable(KestrelGL 
-  "src/main.cpp" 
-  "src/App.cpp" 
-  "src/Gui.cpp"
-  "src/Skybox.cpp"
+  src/main.cpp 
+  src/App.cpp 
+  src/Gui.cpp
+  src/Skybox.cpp
 )
 add_dependencies(KestrelGL copy_assets)
 
-# build custom ImGuiFileDialog library
-add_library(ImGuiFileDialog STATIC ${PROJECT_SOURCE_DIR}/include/ImGuiFileDialog/ImGuiFileDialog.cpp)
-target_include_directories(ImGuiFileDialog PUBLIC ${PROJECT_SOURCE_DIR}/include/ImGuiFileDialog)
-target_link_libraries(ImGuiFileDialog PUBLIC imgui::imgui)
-
-# link libraries
-target_link_libraries(KestrelGL PRIVATE
-  # fmt::fmt
-  glm::glm
-  glad::glad
-  glfw
-  assimp::assimp
-  imgui::imgui
-  ImGuiFileDialog
-)
-
-# custom include directories
+# include directories for targets
 target_include_directories(KestrelGL PRIVATE 
   ${PROJECT_SOURCE_DIR}/include
+  ${PROJECT_SOURCE_DIR}/external/glm
+  ${PROJECT_SOURCE_DIR}/external/imgui
+  ${PROJECT_SOURCE_DIR}/external/imgui/backends
+  ${PROJECT_SOURCE_DIR}/external/ImGuiFileDialog
+)
+target_include_directories(ImGuiFileDialog PUBLIC
+  ${PROJECT_SOURCE_DIR}/external/imgui
+  ${PROJECT_SOURCE_DIR}/external/ImGuiFileDialog
+)
+
+# link libraries
+target_link_libraries(ImGuiFileDialog PUBLIC imgui)
+target_link_libraries(KestrelGL PRIVATE
+  glfw
+  glad
+  assimp
+  imgui
+  ImGuiFileDialog
 )
 
 # compiler specific options here
@@ -70,3 +79,4 @@ if (MSVC)
 endif()
 
 # TODO: add tests and install targets if needed.
+add_definitions(-DSHADER_DIR="${CMAKE_SOURCE_DIR}/src/shaders")
