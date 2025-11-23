@@ -34,13 +34,11 @@ public:
 
   Camera camera;
 
-  bool rotateModel = false;
-  float modelRotateSpeed = 30.0f; // degrees per second
-  float currentModelRotation = 0.0f;
+  float currentModelAngle = 0.0f;
+  float lightRotationAngle = 0.0f;
 
   Model model;
   Skybox skybox;
-
   Shader shader;
 
   void loadModel(const char* path); // override

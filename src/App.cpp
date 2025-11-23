@@ -105,7 +105,7 @@ void App::init() {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  camera = Camera(4.0f, 0.0f, 0.0f);
+  camera = Camera(7.0f, 0.0f, 0.0f);
 
   // setup scene
   loadShaders();
@@ -131,14 +131,13 @@ void App::run() {
 
   glm::vec3 lightPositions[] = {
     glm::vec3(4.0f,  4.0f,  4.0f),  // key
-    glm::vec3(-6.0f, 2.0f,  3.0f),  // fill
-    glm::vec3(0.0f,  1.0f, -4.0f)   // rim
+    //glm::vec3(-6.0f, 2.0f,  3.0f),  // fill
+    //glm::vec3(0.0f,  1.0f, -4.0f)   // rim
   };
-  // Bright lights for PBR
   glm::vec3 lightColors[] = {
     glm::vec3(1.0f),  // key
-    glm::vec3(0.3f),  // fill
-    glm::vec3(0.5f)   // rim
+    //glm::vec3(0.3f),  // fill
+    //glm::vec3(0.5f)   // rim
   };
 
   // per-frame logic below
@@ -156,14 +155,6 @@ void App::run() {
 
     // update camera
     camera.update();
-
-    // update model rotation
-    if (rotateModel) {
-      currentModelRotation += modelRotateSpeed * deltaTime;
-      if (currentModelRotation >= 360.0f) {
-        currentModelRotation -= 360.0f;
-      }
-    }
 
     // draw gui
     gui.beginFrame();
@@ -195,13 +186,11 @@ void App::run() {
     shader.setVec3("viewPos", camera.position);
 
     // send lights to shader
-    for (unsigned int i = 0; i < 4; ++i) {
-      // Construct string uniform names "lightPositions[0]", "lightPositions[1]", etc.
-      std::string posName = "lightPositions[" + std::to_string(i) + "]";
-      std::string colName = "lightColors[" + std::to_string(i) + "]";
-
-      shader.setVec3(posName, lightPositions[i]);
-      shader.setVec3(colName, lightColors[i]);
+    glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(lightRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+    for (unsigned int i = 0; i < 1; ++i) {
+      glm::vec4 pos = rotation * glm::vec4(lightPositions[i], 1.0f); // rotate
+      shader.setVec3("lightPositions[" + std::to_string(i) + "]", glm::vec3(pos));
+      shader.setVec3("lightColors[" + std::to_string(i) + "]", lightColors[i]);
     }
 
     glActiveTexture(GL_TEXTURE10); // base cubemap
@@ -216,10 +205,7 @@ void App::run() {
     // scale -> rotate -> translate
 
     glm::mat4 modelMatrix(1.0f);
-    if (rotateModel) {
-      modelMatrix = glm::rotate(modelMatrix, glm::radians(currentModelRotation), glm::vec3(0.0f, 1.0f, 0.0f));
-    }
-
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(currentModelAngle), glm::vec3(0.0f, 1.0f, 0.0f));
     modelMatrix = glm::scale(modelMatrix, glm::vec3(model.getScaleToStandard(3.0f))); // standardize scale
     
     //modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.f), glm::vec3(1, 0, 0)); // maya to opengl
@@ -258,9 +244,10 @@ void App::loadModel() {
 
   skyboxSets = {
     "assets/skybox/empty_play_room_4k.hdr",
-    "assets/skybox/christmas_photo_studio_07_4k.hdr",
-    "assets/skybox/lebombo_4k.hdr",
-    "assets/skybox/farmland_overcast_4k.hdr"
+    "assets/skybox/photo_studio_london_hall_4k.hdr",
+    "assets/skybox/glass_passage_4k.hdr",
+    "assets/skybox/farmland_overcast_4k.hdr",
+    "assets/skybox/rural_evening_road_4k.hdr"
   };
 
   loadCurrentSkybox();

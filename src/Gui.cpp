@@ -65,25 +65,22 @@ void Gui::draw() {
   //ImGui::SliderFloat("Speed", &app->lightRotateSpeed, 0.0f, 1.0f, "%.2f");
 
   ImGui::Separator();
-  ImGui::Text("Model Rotation");
+  ImGui::Text("Model");
 
-  // moel rotation toggle 
-  // also speed control
-  ImGui::Checkbox("Rotate Model", &app->rotateModel);
-  if (app->rotateModel) {
-    ImGui::SliderFloat("Speed", &app->modelRotateSpeed, 0.0f, 180.0f, "%.1f deg/s");
-    ImGui::Text("Angle: %.1f", app->currentModelRotation);
+  // model angle y
+  ImGui::SliderFloat("Model Angle", &app->currentModelAngle, 0.0f, 360.0f, "%.1f deg");
 
-    if (ImGui::Button("Reset Rotation")) {
-      app->currentModelRotation = 0.0f;
-    }
-  }
+  ImGui::Separator();
+  ImGui::Text("Lights");
+
+  // y rotation slider
+  ImGui::SliderFloat("Lights Angle", &app->lightRotationAngle, 0.0f, 360.0f, "%.1f deg");
 
   ImGui::Separator();
   ImGui::Text("Skybox");
 
   // Skybox switching with arrow buttons
-  ImGui::Text("Current: %d", app->getCurrentSkyboxIndex());
+  ImGui::Text("Index: %d", app->getCurrentSkyboxIndex());
 
   // Left arrow button
   if (ImGui::ArrowButton("##skybox_left", ImGuiDir_Left)) {
@@ -110,7 +107,7 @@ void Gui::draw() {
   if (ImGui::Button("Browse...")) {
     IGFD::FileDialogConfig config;
     config.path = ".";
-    ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlg", "Choose Model", ".gltf,.obj,.fbx,.ply", config);
+    ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlg", "Choose Model", ".gltf,.glb,.obj,.fbx,.ply", config);
   }
 
   // file dialog popup

@@ -27,8 +27,17 @@ public:
   void cleanup();
 
 private:
+  struct SHCoefficients {
+    glm::vec3 L00, L1_1, L10, L11;  // l=0 and l=1 (4 coefficients)
+    glm::vec3 L2_2, L2_1, L20, L21, L22;  // l=2 (5 coefficients)
+  };
+  SHCoefficients shCoeffs;
+
+  SHCoefficients computeSHCoefficients(unsigned int cubemap);
+
   unsigned int hdrToCubemap(const std::string& hdrPath);
   unsigned int generateIrradianceMap();
+  unsigned int generateIrradianceMapFromSH();
   void renderCube();
 
   Shader shader;
