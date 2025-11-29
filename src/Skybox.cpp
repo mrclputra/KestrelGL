@@ -11,7 +11,6 @@ bool Skybox::load(const std::string& hdrPath) {
 
     stbi_set_flip_vertically_on_load(true);
     cubemapTexture = hdrToCubemap(hdrPath);
-    //irradianceMap = generateIrradianceMap();
 
     shCoeffs = computeSHCoefficients(cubemapTexture);
     irradianceMap = generateIrradianceMapFromSH();
@@ -142,77 +141,6 @@ unsigned int Skybox::hdrToCubemap(const std::string& hdrPath) {
   glDeleteRenderbuffers(1, &captureRBO);
 
   return cubemap;
-}
-
-unsigned int Skybox::generateIrradianceMap() {
-  // lower resolution should be fine in this case
-  unsigned int irradianceMap;
-  glGenTextures(1, &irradianceMap);
-  glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
-
-  for (unsigned int i = 0; i < 6; i++) {
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 64, 64, 0, GL_RGB, GL_FLOAT, nullptr);
-  }
-
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  // save current viewport
-  GLint viewport[4];
-  glGetIntegerv(GL_VIEWPORT, viewport);
-
-  // setup framebuffer
-  unsigned int captureFBO, captureRBO;
-  glGenFramebuffers(1, &captureFBO);
-  glGenRenderbuffers(1, &captureRBO);
-  glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-  glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 64, 64);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRBO);
-
-  // convolution shader
-  Shader irradianceShader(SHADER_DIR "/cubemap.vert", SHADER_DIR "/irradiance_cv.frag");
-
-  irradianceShader.use();
-  irradianceShader.setInt("environmentMap", 0);
-  glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-  irradianceShader.setMat4("projection", captureProjection);
-
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-
-  glViewport(0, 0, 64, 64);
-  glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-
-  glm::mat4 captureViews[] = {
-    glm::lookAt(glm::vec3(0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-    glm::lookAt(glm::vec3(0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-    glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
-    glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
-    glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-    glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
-  };
-
-  for (unsigned int i = 0; i < 6; i++) {
-    irradianceShader.setMat4("view", captureViews[i]);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap, 0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    renderCube();
-  }
-
-  // restore state
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-
-  // cleanup
-  glDeleteFramebuffers(1, &captureFBO);
-  glDeleteRenderbuffers(1, &captureRBO);
-
-  return irradianceMap;
 }
 
 unsigned int Skybox::generateIrradianceMapFromSH() {

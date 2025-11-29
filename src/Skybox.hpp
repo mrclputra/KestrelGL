@@ -36,7 +36,6 @@ private:
   SHCoefficients computeSHCoefficients(unsigned int cubemap);
 
   unsigned int hdrToCubemap(const std::string& hdrPath);
-  unsigned int generateIrradianceMap();
   unsigned int generateIrradianceMapFromSH();
   void renderCube();
 
