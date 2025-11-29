@@ -21,12 +21,14 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 # external dependencies
 add_subdirectory(external/glad)
 add_subdirectory(external/glfw)
-add_subdirectory(external/glm)
 add_subdirectory(external/imgui)
 add_subdirectory(external/assimp)
-add_subdirectory(external/ImGuiFileDialog)
 
-add_library(imgui::imgui ALIAS imgui) # for imguifiledialog cmakelists
+add_subdirectory(external/ImGuiFileDialog)
+target_include_directories(ImGuiFileDialog PUBLIC
+  # tell ImGuiFileDialog where imgui.h is  
+  ${PROJECT_SOURCE_DIR}/external/imgui
+)
 
 # todo: lookup
 # assimp options
@@ -36,38 +38,30 @@ set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "" FORCE)
 
 # copy assets to build directory
 add_custom_target(copy_assets ALL
-    COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_CURRENT_BINARY_DIR}/assets"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/assets" "${CMAKE_CURRENT_BINARY_DIR}/assets"
-    COMMENT "Resetting assets folder..."
+  COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/assets" "${CMAKE_CURRENT_BINARY_DIR}/assets"
+  COMMENT "Copying assets..."
 )
 
-# define executable
+# executable
 add_executable(KestrelGL 
   src/main.cpp 
   src/App.cpp 
   src/Gui.cpp
   src/Skybox.cpp
 )
+
 add_dependencies(KestrelGL copy_assets)
 
 # include directories for targets
-target_include_directories(KestrelGL PRIVATE 
+target_include_directories(KestrelGL PRIVATE
   ${PROJECT_SOURCE_DIR}/include
   ${PROJECT_SOURCE_DIR}/external/glm
-  ${PROJECT_SOURCE_DIR}/external/imgui
-  ${PROJECT_SOURCE_DIR}/external/imgui/backends
-  ${PROJECT_SOURCE_DIR}/external/ImGuiFileDialog
-)
-target_include_directories(ImGuiFileDialog PUBLIC
-  ${PROJECT_SOURCE_DIR}/external/imgui
-  ${PROJECT_SOURCE_DIR}/external/ImGuiFileDialog
 )
 
 # link libraries
-target_link_libraries(ImGuiFileDialog PUBLIC imgui)
 target_link_libraries(KestrelGL PRIVATE
-  glfw
   glad
+  glfw
   assimp
   imgui
   ImGuiFileDialog
@@ -75,8 +69,8 @@ target_link_libraries(KestrelGL PRIVATE
 
 # compiler specific options here
 if (MSVC)
-    target_compile_options(KestrelGL PRIVATE /Zc:__cplusplus)
+  target_compile_options(KestrelGL PRIVATE /Zc:__cplusplus)
 endif()
 
 # TODO: add tests and install targets if needed.
-add_definitions(-DSHADER_DIR="${CMAKE_SOURCE_DIR}/src/shaders")
+target_compile_definitions(KestrelGL PRIVATE SHADER_DIR="${PROJECT_SOURCE_DIR}/src/shaders")
