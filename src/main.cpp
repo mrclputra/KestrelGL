@@ -1,24 +1,11 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-
-#include <shader.hpp>
-#include <model.hpp>
-#include <mesh.hpp>
-#include <camera.hpp>
-
-#include "App.hpp"
-
 #include <iostream>
 
 int main() {
-  std::cout << "Hello Cmake" << std::endl;
-  std::cout << "C++ Standard " << __cplusplus << std::endl;
-  std::cout << "KestrelGL" << std::endl;
+  std::cout << "Hello CMake\n";
+  std::cout << "C++ Standard " << __cplusplus << "\n";
+  std::cout << "KestrelGL2\n";
 
-  App app(780, 1000, "KestrelGL");
-  app.run();
+  // call app run here
 
   return 0;
 }
-

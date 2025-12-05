@@ -44,10 +44,7 @@ add_custom_target(copy_assets ALL
 
 # executable
 add_executable(KestrelGL 
-  src/main.cpp 
-  src/App.cpp 
-  src/Gui.cpp
-  src/Skybox.cpp
+  "src/main.cpp"
 )
 
 add_dependencies(KestrelGL copy_assets)
