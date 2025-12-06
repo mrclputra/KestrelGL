@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <iostream>
@@ -8,16 +9,16 @@
 #include <vector>
 #include <string>
 
-#include "Scene.h"
-#include "eventbus.h"
+//#include "Scene.h"
+//#include "eventbus.h"
 
 class App {
 public:
     App(int width, int height, const char* title);
     ~App();
-
+    
     void run(); // execution loop
-
+    
     // callback handlers
     void onFrameBufferSize(int width, int height);
     void onCursorPos(double xPos, double yPos);
@@ -26,9 +27,9 @@ public:
 
     bool firstMouse = true;
     bool mousePressed = false;
-
-    std::shared_ptr<Scene> scene;
-    EventBus bus;
+    
+    //std::shared_ptr<Scene> scene;
+    //EventBus bus;
 
 private:
     void init();
@@ -42,7 +43,4 @@ private:
     // cursor position
     float lastX = 0.0f;
     float lastY = 0.0f;
-
-    float deltaTime = 0.0f;
-    float lastFrame = 0.0f;
 };

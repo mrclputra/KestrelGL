@@ -119,10 +119,7 @@ void App::setupCallbacks() {
   glfwSetCursorPosCallback(window, cursor_position_callback);
   glfwSetScrollCallback(window, scroll_callback);
   glfwSetKeyCallback(window, key_callback);
-  glfwSetMouseButtonCallback(window, mouse_button_callback);
-
-  // config cursor
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // normal mode
+  glfwSetMouseButtonCallback(window, mouse_button_callback)
 }
 
 void App::run() {

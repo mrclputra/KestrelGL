@@ -9,7 +9,7 @@
 
 /// <summary>
 /// <para> A type-safe event bus for publishing and subscribing to events. </para>
-/// <para> :: Marcel Putra 2025 </para>
+/// <para>:: Marcel Putra 2025 </para>
 /// </summary>
 class EventBus {
 public:
