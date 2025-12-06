@@ -1,5 +1,10 @@
 #pragma once
 
+#include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <shader.h>
+#include <memory>
+
 // placeholder, ASSIMP logic goes here
 // or maybe put it in a factory?
 
@@ -8,11 +13,20 @@ public:
     Mesh();
     virtual ~Mesh();
 
-    virtual void render();
+    virtual void render(const glm::mat4& model);
 
-    // will be implemented later
+    // each mesh has its own shader
+    std::shared_ptr<Shader> shader;
+
+    // OpenGL stuff here, 
+    // write to VBO, VAO, EBO from some kind of ASSIMP loader
 
 private:
+    unsigned int VAO = 0;
+    unsigned int VBO = 0;
+
+    void triangle(); // debug
+
     // prevent copying
     Mesh(const Mesh&) = delete;
     Mesh& operator=(const Mesh&) = delete;

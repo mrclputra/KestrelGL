@@ -9,8 +9,8 @@
 #include <vector>
 #include <string>
 
-//#include "Scene.h"
-//#include "eventbus.h"
+#include "Scene.h"
+#include "eventbus.h"
 
 class App {
 public:
@@ -28,8 +28,8 @@ public:
     bool firstMouse = true;
     bool mousePressed = false;
     
-    //std::shared_ptr<Scene> scene;
-    //EventBus bus;
+    std::shared_ptr<Scene> scene;
+    EventBus bus;
 
 private:
     void init();

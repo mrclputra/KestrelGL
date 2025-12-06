@@ -85,6 +85,10 @@ void App::init() {
 		std::exit(EXIT_FAILURE);
 	}
 
+	std::cout << "\n";
+	std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << "\n";
+	std::cout << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
+
 	// initialize ImGui
 	// TODO: configure imgui instance
 
@@ -101,6 +105,25 @@ void App::init() {
 
 	// initialize or call scene here
 	// TODO: configure scene instance
+	scene = std::make_shared<Scene>(bus);
+
+	// DEBUG BELOW
+	// create triangle entities
+	auto tri1 = std::make_shared<Entity>("Triangle1");
+	auto tri2 = std::make_shared<Entity>("Triangle2");
+	auto tri3 = std::make_shared<Entity>("Triangle3");
+	// assign a mesh to each entity
+	tri1->meshes.push_back(std::make_shared<Mesh>());
+	tri2->meshes.push_back(std::make_shared<Mesh>());
+	tri3->meshes.push_back(std::make_shared<Mesh>());
+	tri1->translate({ -0.5f, -0.5f, 0.0f });
+	tri2->translate({ 0.0f, 0.0f, 0.0f });
+	tri3->translate({ 0.5f, 0.5f, 0.0f });
+
+	// add to scene
+	scene->addEntity(tri1);
+	scene->addEntity(tri2);
+	scene->addEntity(tri3);
 }
 
 void App::setupCallbacks() {
@@ -132,6 +155,10 @@ void App::run() {
 		// render scene
 		glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		scene->update(deltaTime);
+		scene->render();
+
 		// aka Scene.run() or something
 		// need to pass in the time values from above
 

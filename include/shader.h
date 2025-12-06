@@ -76,7 +76,7 @@ public:
 
 private:
     std::string m_vertexPath, m_fragmentPath, m_geometryPath;
-    time_t m_vertexModTime = 0; m_fragmentModTime = 0, m_geometryModTime = 0;
+    time_t m_vertexModTime = 0, m_fragmentModTime = 0, m_geometryModTime = 0;
 
     int getLocation(const std::string& name) const {
         return glGetUniformLocation(ID, name.c_str());
@@ -115,7 +115,7 @@ private:
         if (!success) {
             GLchar infoLog[1024];
             glGetShaderInfoLog(shader, 1024, nullptr, infoLog);
-            std::cerr << "ERROR::SHADER_COMPILATION_ERROR: " << typename << "\n" << infoLog << "\n";
+            std::cerr << "ERROR::SHADER_COMPILATION_ERROR: " << typeName << "\n" << infoLog << "\n";
         }
 
         return shader;
@@ -140,6 +140,7 @@ private:
         glLinkProgram(ID);
 
         GLint success;
+        glGetProgramiv(ID, GL_LINK_STATUS, &success);
         if (!success) {
             GLchar infoLog[1024];
             glGetProgramInfoLog(ID, 1024, nullptr, infoLog);
