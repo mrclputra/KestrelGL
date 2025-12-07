@@ -4,7 +4,8 @@ Entity::Entity(const std::string& name) : name(name) {}
 Entity::~Entity() {}
 
 void Entity::update(float deltaTime) {
-
+    // DEBUG
+    rotation += glm::vec3(.5f, .5f, .5f) * deltaTime;
 }
 
 void Entity::render(const glm::mat4& view, const glm::mat4& projection) {

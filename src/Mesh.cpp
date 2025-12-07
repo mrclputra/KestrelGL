@@ -93,6 +93,22 @@ void Mesh::render(const glm::mat4& model, const glm::mat4& view, const glm::mat4
     }
     
     glBindVertexArray(VAO);
+    
+    //glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    glEnable(GL_POLYGON_OFFSET_LINE);
+    glPolygonOffset(-1.0f, -1.0f);
+    if (shader) shader->setVec3("color", glm::vec3(0.0f, 0.0f, 0.0f));
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glLineWidth(1.5f);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    // restore
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDisable(GL_POLYGON_OFFSET_LINE);
+
     glBindVertexArray(0);
 }
