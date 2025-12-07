@@ -7,18 +7,30 @@ static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	app->onFrameBufferSize(width, height);
 }
 static void cursor_position_callback(GLFWwindow* window, double xPos, double yPos) {
+	ImGui_ImplGlfw_CursorPosCallback(window, xPos, yPos); // ImGui
+	if (ImGui::GetIO().WantCaptureMouse) return; // if imgui wants mouse position, stop here
+
 	auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
 	app->onCursorPos(xPos, yPos);
 }
 static void scroll_callback(GLFWwindow* window, double xOff, double yOff) {
+	ImGui_ImplGlfw_ScrollCallback(window, xOff, yOff); // ImGui
+	if (ImGui::GetIO().WantCaptureMouse) return; // if imgui wants the scroll, stop here
+
 	auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
 	app->onScroll(xOff, yOff);
 }
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods); // ImGui
+	if (ImGui::GetIO().WantCaptureKeyboard) return; // if imgui wants the keyboard, stop here
+	
 	auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
 	app->onKey(key, scancode, action, mods);
 }
 static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+	ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods); // ImGui
+	if (ImGui::GetIO().WantCaptureMouse) return; // if imgui wants mouse button control, stop here
+	
 	auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
 
 	// lmb
@@ -91,6 +103,7 @@ void App::init() {
 
 	// initialize ImGui
 	// TODO: configure imgui instance
+	gui.init(this, window);
 
 	// initialize viewport
 	int fbWidth, fbHeight;
@@ -107,7 +120,7 @@ void App::init() {
 	// TODO: configure scene instance
 	scene = std::make_shared<Scene>(bus);
 
-	// DEBUG BELOW
+	// DEBUG BELOW, TO BE REPLACED
 	// create triangle entities
 	auto tri1 = std::make_shared<Entity>("Triangle1");
 	auto tri2 = std::make_shared<Entity>("Triangle2");
@@ -130,6 +143,7 @@ void App::setupCallbacks() {
 	// the problem is that we store our callback functions in C++ classes, but glfw requires C functions
 	// workaround is to format as C functions that call into the C++ classes
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwSetCursorPosCallback(window, cursor_position_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
@@ -150,19 +164,21 @@ void App::run() {
 
 		// check shaders (hot reload)
 
-		// draw gui
-
-		// render scene
+		// clear render buffers
 		glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
+
+		// draw gui
+		gui.beginFrame();
+		gui.draw();
+
+		// render and update scene
 		scene->update(deltaTime);
 		scene->render();
 
-		// aka Scene.run() or something
-		// need to pass in the time values from above
-
 		// end frame
+		gui.endFrame();
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}

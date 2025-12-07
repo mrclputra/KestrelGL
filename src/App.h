@@ -10,6 +10,7 @@
 #include <string>
 
 #include "Scene.h"
+#include "Gui.h"
 #include "eventbus.h"
 
 class App {
@@ -39,6 +40,8 @@ private:
     GLFWwindow* window = nullptr;
     int width, height;
     const char* title;
+
+    Gui gui;
 
     // cursor position
     float lastX = 0.0f;

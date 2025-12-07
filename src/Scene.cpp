@@ -17,6 +17,8 @@ void Scene::removeEntity(std::shared_ptr<Entity> entity) {
 }
 
 void Scene::update(float deltaTime) {
+	// TODO: call update camera
+
 	for (auto& e : entities) {
 		e->update(deltaTime);
 	}
