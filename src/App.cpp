@@ -119,24 +119,9 @@ void App::init() {
 	// initialize or call scene here
 	// TODO: configure scene instance
 	scene = std::make_shared<Scene>(bus);
+	scene->camera.setViewport(fbWidth, fbHeight); // tell camera about viewport
 
-	// DEBUG BELOW, TO BE REPLACED
-	// create triangle entities
-	auto tri1 = std::make_shared<Entity>("Triangle1");
-	auto tri2 = std::make_shared<Entity>("Triangle2");
-	auto tri3 = std::make_shared<Entity>("Triangle3");
-	// assign a mesh to each entity
-	tri1->meshes.push_back(std::make_shared<Mesh>());
-	tri2->meshes.push_back(std::make_shared<Mesh>());
-	tri3->meshes.push_back(std::make_shared<Mesh>());
-	tri1->translate({ -0.5f, -0.5f, 0.0f });
-	tri2->translate({ 0.0f, 0.0f, 0.0f });
-	tri3->translate({ 0.5f, 0.5f, 0.0f });
-
-	// add to scene
-	scene->addEntity(tri1);
-	scene->addEntity(tri2);
-	scene->addEntity(tri3);
+	scene->createDebug();
 }
 
 void App::setupCallbacks() {
@@ -163,6 +148,7 @@ void App::run() {
 		// do stuff here
 
 		// check shaders (hot reload)
+		// TODO: implement and call here
 
 		// clear render buffers
 		glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
@@ -199,6 +185,11 @@ void App::onFrameBufferSize(int w, int h) {
 	glViewport(0, 0, w, h);
 	width = w;
 	height = h;
+
+	// update camera viewport
+	if (scene) {
+		scene->camera.setViewport(w, h);
+	}
 }
 
 void App::onCursorPos(double xPos, double yPos) {
@@ -207,9 +198,10 @@ void App::onCursorPos(double xPos, double yPos) {
 	// prevent jumping, set this position to initial
 	// as such, the offsets are 0
 	if (firstMouse) {
-		float lastX = xPos;
-		float lastY = yPos;
+		lastX = xPos;
+		lastY = yPos;
 		firstMouse = false;
+		return; // skip frame
 	}
 
 	float xOffset = xPos - lastX;
@@ -218,6 +210,7 @@ void App::onCursorPos(double xPos, double yPos) {
 	lastY = yPos;
 
 	// TODO: camera.rotate
+	scene->camera.rotate(xOffset, yOffset);
 
 	// wrap cursor
 	int w, h;
@@ -238,6 +231,7 @@ void App::onCursorPos(double xPos, double yPos) {
 
 void App::onScroll(double xOff, double yOff) {
 	// TODO: camera.zoom(yOff);
+	scene->camera.zoom(yOff);
 }
 
 void App::onKey(int key, int scancode, int action, int mods) {

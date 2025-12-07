@@ -15,7 +15,7 @@ public:
 
     // per-frame logic
     virtual void update(float deltaTime);
-    virtual void render();
+    virtual void render(const glm::mat4& view, const glm::mat4& projection);
 
     // relative transformations
     void translate(const glm::vec3& delta);

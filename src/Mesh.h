@@ -13,7 +13,7 @@ public:
     Mesh();
     virtual ~Mesh();
 
-    virtual void render(const glm::mat4& model);
+    virtual void render(const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection);
 
     // each mesh has its own shader
     std::shared_ptr<Shader> shader;
@@ -25,7 +25,7 @@ private:
     unsigned int VAO = 0;
     unsigned int VBO = 0;
 
-    void triangle(); // debug
+    void cube(); // debug
 
     // prevent copying
     Mesh(const Mesh&) = delete;

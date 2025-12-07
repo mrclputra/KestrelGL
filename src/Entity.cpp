@@ -7,13 +7,13 @@ void Entity::update(float deltaTime) {
 
 }
 
-void Entity::render() {
+void Entity::render(const glm::mat4& view, const glm::mat4& projection) {
     glm::mat4 model = getModelMatrix();
 
 	for (auto& m : meshes) {
 		if (m) {
 			// each mesh should handle its own opengl draw calls
-			m->render(model); 
+			m->render(model, view, projection); 
 		}
 	}
 }

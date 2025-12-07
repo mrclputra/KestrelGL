@@ -53,7 +53,7 @@ void Gui::draw() {
     if (!app) return;
 
     // define gui elements here
-    ImGui::SetNextWindowSize(ImVec2(500, 300), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(200, 100));
     ImGui::Begin("Debug");
 
     // TODO: add elements here
