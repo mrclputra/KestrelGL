@@ -6,6 +6,8 @@
 #include <memory>
 #include <string>
 
+#include <logger.h>
+
 #include "mesh.h"
 
 class Entity {

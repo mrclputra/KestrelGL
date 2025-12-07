@@ -11,6 +11,8 @@
 
 #include "Scene.h"
 #include "Gui.h"
+
+#include "logger.h"
 #include "eventbus.h"
 
 class App {

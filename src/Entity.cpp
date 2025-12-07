@@ -1,6 +1,8 @@
 #include "Entity.h"
 
-Entity::Entity(const std::string& name) : name(name) {}
+Entity::Entity(const std::string& name) : name(name) {
+    logger.info("entity created: " + name);
+}
 Entity::~Entity() {}
 
 void Entity::update(float deltaTime) {

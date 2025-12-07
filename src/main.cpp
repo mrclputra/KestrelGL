@@ -2,14 +2,14 @@
 #include "App.h"
 
 int main() {
-  std::cout << "Hello CMake\n";
-  std::cout << "C++ Standard " << __cplusplus << "\n";
-  std::cout << "KestrelGL2\n";
+	logger.info("Hello CMake");
+	logger.info("C++ Standard " + __cplusplus);
+	logger.info("KestrelGL 2");
 
-  // create an App instance
-  // call the app run method 
-  auto app = App(600, 600, "KestrelGL2");
-  app.run();
+	// create an App instance
+	// call the app run method 
+	auto app = App(600, 600, "KestrelGL2");
+	app.run();
 
-  return 0;
+	return 0;
 }

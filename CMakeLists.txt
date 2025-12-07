@@ -6,8 +6,8 @@ project(KestrelGL)
 # Enable Hot Reload for MSVC compilers if supported.
 # dont touch this block
 if (POLICY CMP0141)
-  cmake_policy(SET CMP0141 NEW)
-  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,\$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,\$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+	cmake_policy(SET CMP0141 NEW)
+	set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,\$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,\$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
 # set C++ standard
@@ -26,8 +26,8 @@ add_subdirectory(external/assimp)
 
 add_subdirectory(external/ImGuiFileDialog)
 target_include_directories(ImGuiFileDialog PUBLIC
-  # tell ImGuiFileDialog where imgui.h is  
-  ${PROJECT_SOURCE_DIR}/external/imgui
+	# tell ImGuiFileDialog where imgui.h is  
+	${PROJECT_SOURCE_DIR}/external/imgui
 )
 
 # todo: lookup
@@ -38,36 +38,40 @@ set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "" FORCE)
 
 # copy assets to build directory
 add_custom_target(copy_assets ALL
-  COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/assets" "${CMAKE_CURRENT_BINARY_DIR}/assets"
-  COMMENT "Copying assets..."
+	COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/assets" "${CMAKE_CURRENT_BINARY_DIR}/assets"
+	COMMENT "Copying assets..."
 )
 
 # executable
 add_executable(KestrelGL 
-  "src/main.cpp"
-  "src/App.cpp"
- "src/Scene.cpp" "src/Entity.cpp" "src/Mesh.cpp" "src/Gui.cpp")
+	"src/main.cpp"
+	"src/App.cpp" "src/App.h"
+	"src/Scene.cpp" "src/Scene.h"
+	"src/Entity.cpp" "src/Entity.h" 
+	"src/Mesh.cpp" "src/Mesh.h" 
+	"src/Gui.cpp" "src/Gui.h"
+)
 
 add_dependencies(KestrelGL copy_assets)
 
 # include directories for targets
 target_include_directories(KestrelGL PRIVATE
-  ${PROJECT_SOURCE_DIR}/include
-  ${PROJECT_SOURCE_DIR}/external/glm
+	${PROJECT_SOURCE_DIR}/include
+	${PROJECT_SOURCE_DIR}/external/glm
 )
 
 # link libraries
 target_link_libraries(KestrelGL PRIVATE
-  glad
-  glfw
-  assimp
-  imgui
-  ImGuiFileDialog
+	glad
+	glfw
+	assimp
+	imgui
+	ImGuiFileDialog
 )
 
 # compiler specific options here
 if (MSVC)
-  target_compile_options(KestrelGL PRIVATE /Zc:__cplusplus)
+	target_compile_options(KestrelGL PRIVATE /Zc:__cplusplus)
 endif()
 
 # TODO: add tests and install targets if needed.
