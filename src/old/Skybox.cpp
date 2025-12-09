@@ -9,13 +9,19 @@ bool Skybox::load(const std::string& hdrPath) {
   try {
     shader = Shader(SHADER_DIR "/skybox.vert", SHADER_DIR "/skybox.frag");
 
+    // load skyboox texture
     stbi_set_flip_vertically_on_load(true);
     cubemapTexture = hdrToCubemap(hdrPath);
 
+    // generate diffuse irradiance map
     shCoeffs = computeSHCoefficients(cubemapTexture);
     irradianceMap = generateIrradianceMapFromSH();
 
+    // generate specular map
+
+
     initialized = true;
+
     std::cout << "Skybox loaded from: " << hdrPath << "\n";
     return true;
   }
@@ -34,9 +40,9 @@ void Skybox::draw(const glm::mat4& view, const glm::mat4& projection, const glm:
   // bind cubemap texture
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-  shader.setInt("skybox", 0);
+  shader.setInt("skybox", 0); // base texture
 
-  glm::mat4 skyboxView = glm::mat4(glm::mat3(view)); // remove translation from skybox
+  glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
   shader.setMat4("view", skyboxView);
   shader.setMat4("projection", projection);
 
@@ -240,6 +246,7 @@ void Skybox::renderCube() {
       -1.0f,  1.0f, -1.0f,  1.0f,  1.0f, -1.0f,  1.0f,  1.0f,  1.0f,
        1.0f,  1.0f,  1.0f, -1.0f,  1.0f,  1.0f, -1.0f,  1.0f, -1.0f
     };
+
     glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &cubeVBO);
     glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
@@ -251,7 +258,7 @@ void Skybox::renderCube() {
 
   glBindVertexArray(cubeVAO);
   glDrawArrays(GL_TRIANGLES, 0, 36);
-  glBindVertexArray(0);
+  glBindVertexArray(0); // release
 }
 
 Skybox::SHCoefficients Skybox::computeSHCoefficients(unsigned int cubemap) {
