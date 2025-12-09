@@ -37,7 +37,7 @@ public:
     //std::vector<std::shared_ptr<Texture>> textures;
 
     // DEBUG
-    static std::shared_ptr<Mesh> getDefaultCubeMesh();
+    static std::unique_ptr<Mesh> createDefaultCubeMesh();
 
 private:
     // prevent copying

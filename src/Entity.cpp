@@ -4,7 +4,7 @@
 Entity::Entity(const std::string& name, std::shared_ptr<Shader> shaderPtr) 
     : name(name), shader(shaderPtr) {
 
-    if (!mesh) mesh = getDefaultCubeMesh();
+    if (!mesh) mesh = std::move(createDefaultCubeMesh());
     logger.info("entity created: " + name + ", " +
         "\tshader: " + std::to_string(reinterpret_cast<uintptr_t>(shaderPtr.get())) + ", " +
         "\tmesh: " + std::to_string(reinterpret_cast<uintptr_t>(mesh.get())));
@@ -58,31 +58,26 @@ glm::mat4 Entity::getModelMatrix() const {
 }
 
 // DEBUG
-std::shared_ptr<Mesh> Entity::getDefaultCubeMesh() {
-    static std::shared_ptr<Mesh> defaultMesh = nullptr;
+std::unique_ptr<Mesh> Entity::createDefaultCubeMesh() {
+    using Vertex = Mesh::Vertex;
+    std::vector<Vertex> vertices = {
+        {{-0.5f,-0.5f,-0.5f},{0,0,-1},{0,0,0},{0,0,0},{0,0}},
+        {{0.5f,-0.5f,-0.5f},{0,0,-1},{0,0,0},{0,0,0},{1,0}},
+        {{0.5f,0.5f,-0.5f},{0,0,-1},{0,0,0},{0,0,0},{1,1}},
+        {{-0.5f,0.5f,-0.5f},{0,0,-1},{0,0,0},{0,0,0},{0,1}},
+        {{-0.5f,-0.5f,0.5f},{0,0,1},{0,0,0},{0,0,0},{0,0}},
+        {{0.5f,-0.5f,0.5f},{0,0,1},{0,0,0},{0,0,0},{1,0}},
+        {{0.5f,0.5f,0.5f},{0,0,1},{0,0,0},{0,0,0},{1,1}},
+        {{-0.5f,0.5f,0.5f},{0,0,1},{0,0,0},{0,0,0},{0,1}}
+    };
 
-    if (!defaultMesh) {
-        using Vertex = Mesh::Vertex;
-        std::vector<Vertex> vertices = {
-            {{-0.5f,-0.5f,-0.5f},{0,0,-1},{0,0,0},{0,0,0},{0,0}},
-            {{0.5f,-0.5f,-0.5f},{0,0,-1},{0,0,0},{0,0,0},{1,0}},
-            {{0.5f,0.5f,-0.5f},{0,0,-1},{0,0,0},{0,0,0},{1,1}},
-            {{-0.5f,0.5f,-0.5f},{0,0,-1},{0,0,0},{0,0,0},{0,1}},
-            {{-0.5f,-0.5f,0.5f},{0,0,1},{0,0,0},{0,0,0},{0,0}},
-            {{0.5f,-0.5f,0.5f},{0,0,1},{0,0,0},{0,0,0},{1,0}},
-            {{0.5f,0.5f,0.5f},{0,0,1},{0,0,0},{0,0,0},{1,1}},
-            {{-0.5f,0.5f,0.5f},{0,0,1},{0,0,0},{0,0,0},{0,1}}
-        };
+    std::vector<unsigned int> indices = {
+        0,1,2,2,3,0, 4,5,6,6,7,4,
+        4,5,1,1,0,4, 6,7,3,3,2,6,
+        5,6,2,2,1,5, 4,7,3,3,0,4
+    };
 
-        std::vector<unsigned int> indices = {
-            0,1,2,2,3,0, 4,5,6,6,7,4,
-            4,5,1,1,0,4, 6,7,3,3,2,6,
-            5,6,2,2,1,5, 4,7,3,3,0,4
-        };
-
-        defaultMesh = std::make_shared<Mesh>(vertices, indices);
-        defaultMesh->upload();
-    }
-
-    return defaultMesh;
+    auto newMesh = std::make_unique<Mesh>(vertices, indices);
+    newMesh->upload();
+    return newMesh;
 }
