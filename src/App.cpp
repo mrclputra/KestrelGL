@@ -93,16 +93,19 @@ void App::init() {
 
 	// load GLAD OpenGL function pointers
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		std::cerr << "Failed to initialize GLAD\n";
+		logger.error("Failed to initialize GLAD");
 		std::exit(EXIT_FAILURE);
 	}
 
-	std::cout << "\n";
-	std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << "\n";
-	std::cout << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
+	// TODO: find a way to allow the logger to also parse C-string literals
+	logger.info("OpenGL Version: " + std::string((const char*)glGetString(GL_VERSION)));
+	logger.info("GLSL Version: " + std::string((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION)));
+
+	//std::cout << "\n";
+	//std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << "\n";
+	//std::cout << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
 
 	// initialize ImGui
-	// TODO: configure imgui instance
 	gui.init(this, window);
 
 	// initialize viewport
@@ -116,8 +119,7 @@ void App::init() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	// initialize or call scene here
-	// TODO: configure scene instance
+	// initialize and configure scene instance
 	scene = std::make_shared<Scene>(bus);
 	scene->camera.setViewport(fbWidth, fbHeight); // tell camera about viewport
 
@@ -230,7 +232,6 @@ void App::onCursorPos(double xPos, double yPos) {
 }
 
 void App::onScroll(double xOff, double yOff) {
-	// TODO: camera.zoom(yOff);
 	scene->camera.zoom(yOff);
 }
 

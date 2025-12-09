@@ -53,7 +53,7 @@ void Scene::createDebug() {
                 auto cube = std::make_shared<Entity>(name);
 
                 // give it a mesh
-                cube->meshes.push_back(std::make_shared<Mesh>());
+                cube->mesh = std::make_shared<Mesh>();
 
                 // compute world position
                 glm::vec3 pos(

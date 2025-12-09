@@ -62,7 +62,7 @@ public:
     void error(const std::string& msg) {
         log("ERROR", msg);
     }
-    void warning(const std::string& msg) {
+    void warning(const std::string& msg) {  
         log("WARNING", msg);
     }
 

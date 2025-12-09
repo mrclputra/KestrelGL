@@ -13,11 +13,11 @@
 class Entity {
 public:
     Entity(const std::string& name = "Entity");
-    virtual ~Entity();
+    ~Entity();
 
     // per-frame logic
-    virtual void update(float deltaTime);
-    virtual void render(const glm::mat4& view, const glm::mat4& projection);
+    void update(float deltaTime);
+    void render(const glm::mat4& view, const glm::mat4& projection);
 
     // relative transformations
     void translate(const glm::vec3& delta);
@@ -34,7 +34,7 @@ public:
     glm::vec3 scale = glm::vec3(1.0f);
 
     // meshes
-    std::vector<std::shared_ptr<Mesh>> meshes;
+    std::shared_ptr<Mesh> mesh;
 
 private:
     // prevent copying
