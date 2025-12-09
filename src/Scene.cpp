@@ -3,13 +3,13 @@
 Scene::Scene(EventBus& bus) 
 	: bus(bus), camera(5.0f, 0.0f, 0.0f) { }
 
-void Scene::addEntity(std::shared_ptr<Entity> entity) {
+void Scene::addEntity(std::unique_ptr<Entity> entity) {
 	if (entity) {
-		entities.push_back(entity);
+        entities.push_back(std::move(entity));
 	}
 }
 
-void Scene::removeEntity(std::shared_ptr<Entity> entity) {
+void Scene::removeEntity(std::unique_ptr<Entity> entity) {
 	auto it = std::remove(entities.begin(), entities.end(), entity);
 	if (it != entities.end()) {
 		entities.erase(it, entities.end());
@@ -26,34 +26,26 @@ void Scene::update(float deltaTime) {
 
 void Scene::render() {
 	for (auto& e : entities) {
-		// TODO: see if there is a better way to do this? 
-		// TOOD: is it possible to not pass the matrices in the render function? 
+		// TODO: is it possible to not pass the matrices in the render function? 
+        //  in other words, get it from camera object itself
 		e->render(camera.getViewMatrix(), camera.getProjectionMatrix());
 	}
 }
 
 // TO DELETE LATER
 void Scene::createDebug() {
+    // shared shader
+    // thinking about making a manager for this
+    auto shader = std::make_shared<Shader>(SHADER_DIR "/model.vert", SHADER_DIR "/model.frag");
 
-    const int countX = 3;   // number of cubes along X
-    const int countY = 3;   // number of cubes along Y
-    const int countZ = 3;   // number of cubes along Z
-
-    const float spacing = 2.0f; // distance between cubes
+    const int countX = 2;
+    const int countY = 2;
+    const int countZ = 2;
+    const float spacing = 2.0f;
 
     for (int x = 0; x < countX; x++) {
         for (int y = 0; y < countY; y++) {
             for (int z = 0; z < countZ; z++) {
-
-                std::string name = "Cube_" +
-                    std::to_string(x) + "_" +
-                    std::to_string(y) + "_" +
-                    std::to_string(z);
-
-                auto cube = std::make_shared<Entity>(name);
-
-                // give it a mesh
-                cube->mesh = std::make_shared<Mesh>();
 
                 // compute world position
                 glm::vec3 pos(
@@ -62,9 +54,20 @@ void Scene::createDebug() {
                     (z - countZ / 2) * spacing
                 );
 
+                // entity name
+                std::string name = "Cube_" +
+                    std::to_string(x) + "_" +
+                    std::to_string(y) + "_" +
+                    std::to_string(z);
+                
+                // make entity
+                auto cube = std::make_unique<Entity>(name, shader);
+
+                // move entity
                 cube->translate(pos);
 
-                addEntity(cube);
+                // add to scene
+                addEntity(std::move(cube));
             }
         }
     }

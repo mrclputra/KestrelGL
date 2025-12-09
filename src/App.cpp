@@ -120,7 +120,7 @@ void App::init() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	// initialize and configure scene instance
-	scene = std::make_shared<Scene>(bus);
+	scene = std::make_unique<Scene>(bus);
 	scene->camera.setViewport(fbWidth, fbHeight); // tell camera about viewport
 
 	scene->createDebug();

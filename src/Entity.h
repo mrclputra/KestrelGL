@@ -7,12 +7,13 @@
 #include <string>
 
 #include <logger.h>
+#include <shader.h>
 
 #include "mesh.h"
 
 class Entity {
 public:
-    Entity(const std::string& name = "Entity");
+    Entity(const std::string& name = "Entity", std::shared_ptr<Shader> shaderPtr = nullptr);
     ~Entity();
 
     // per-frame logic
@@ -23,8 +24,6 @@ public:
     void translate(const glm::vec3& delta);
     void rotate(const glm::vec3& delta);
     void rescale(const glm::vec3& factor);
-
-    //
     glm::mat4 getModelMatrix() const;
 
     // public attributes
@@ -33,8 +32,12 @@ public:
     glm::vec3 rotation = glm::vec3(0.0f);
     glm::vec3 scale = glm::vec3(1.0f);
 
-    // meshes
-    std::shared_ptr<Mesh> mesh;
+    std::shared_ptr<Mesh> mesh = nullptr;
+    std::shared_ptr<Shader> shader = nullptr;
+    //std::vector<std::shared_ptr<Texture>> textures;
+
+    // DEBUG
+    static std::shared_ptr<Mesh> getDefaultCubeMesh();
 
 private:
     // prevent copying

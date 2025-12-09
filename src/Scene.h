@@ -7,6 +7,7 @@
 #include <camera.h>
 
 #include "Entity.h"
+#include "Mesh.h"
 
 class Scene {
 public:
@@ -16,13 +17,11 @@ public:
     // single instance
     Scene(const Scene&) = delete;
     Scene& operator=(const Scene&) = delete;
-    Scene(Scene&&) = delete;
-    Scene& operator=(Scene&&) = delete;
 
     Camera camera;
 
-    void addEntity(std::shared_ptr<Entity> entity);
-    void removeEntity(std::shared_ptr<Entity> entity);
+    void addEntity(std::unique_ptr<Entity> entity);
+    void removeEntity(std::unique_ptr<Entity> entity);
 
     void update(float deltaTime);
     void render();
@@ -31,6 +30,6 @@ public:
     void createDebug();
 
 private:
-    std::vector<std::shared_ptr<Entity>> entities;
+    std::vector<std::unique_ptr<Entity>> entities;
     EventBus& bus;
 };

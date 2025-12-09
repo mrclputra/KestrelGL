@@ -31,7 +31,7 @@ public:
     bool firstMouse = true;
     bool mousePressed = false;
     
-    std::shared_ptr<Scene> scene;
+    std::unique_ptr<Scene> scene; // single scene instance
     EventBus bus;
 
 private:

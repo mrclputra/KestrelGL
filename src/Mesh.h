@@ -2,11 +2,13 @@
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
-#include <shader.h>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <string>
+#include <vector>
 #include <memory>
 
-// placeholder, ASSIMP logic goes here
-// or maybe put it in a factory?
+#include <shader.h>
 
 class Mesh {
 public:
@@ -17,18 +19,20 @@ public:
         glm::vec3 bitangent;
         glm::vec2 uv;
     };
+
+    struct Texture {
+        unsigned int id;
+        std::string type;
+        std::string path;
+    };
     
     // constructors
-    Mesh();
-    //Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
-    //Mesh(Mesh&& other) noexcept;
-    //Mesh& operator=(Mesh&& other) noexcept;
+    Mesh() = default;
+    Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
     ~Mesh();
 
-    void render(const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection);
-
-    // each mesh has its own shader
-    std::shared_ptr<Shader> shader;
+    void upload();
+    void render(const Shader& shader);
 
 private:
     std::vector<Vertex> vertices;
@@ -37,10 +41,4 @@ private:
     unsigned int VAO = 0;
     unsigned int VBO = 0;
     unsigned int EBO = 0;
-
-    void cube(); // debug
-
-    //// prevent copying
-    Mesh(const Mesh&) = delete;
-    Mesh& operator=(const Mesh&) = delete;
 };
