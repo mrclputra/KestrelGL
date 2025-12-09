@@ -13,8 +13,9 @@
 
 class Entity {
 public:
+    Entity() = default;
     Entity(const std::string& name = "Entity", std::shared_ptr<Shader> shaderPtr = nullptr);
-    ~Entity();
+    ~Entity() = default;
 
     // per-frame logic
     void update(float deltaTime);
@@ -32,12 +33,9 @@ public:
     glm::vec3 rotation = glm::vec3(0.0f);
     glm::vec3 scale = glm::vec3(1.0f);
 
-    std::shared_ptr<Mesh> mesh = nullptr;
+    std::vector<std::shared_ptr<Mesh>> meshes;
     std::shared_ptr<Shader> shader = nullptr;
     //std::vector<std::shared_ptr<Texture>> textures;
-
-    // DEBUG
-    static std::unique_ptr<Mesh> createDefaultCubeMesh();
 
 private:
     // prevent copying

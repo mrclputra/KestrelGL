@@ -25,7 +25,7 @@ public:
     float fov = 36.0f;
 
     Camera(float radius = 5.0f, float theta = 0.0f, float phi = 0.0f, glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f))
-        : radius(radius), theta(theta), phi(phi), m_worldUp(worldUp) {
+        : radius(radius), theta(glm::radians(theta)), phi(glm::radians(phi)), m_worldUp(worldUp) {
         update(); // first time update
     }
 

@@ -50,7 +50,7 @@ add_executable(KestrelGL
 	"src/Entity.cpp" "src/Entity.h" 
 	"src/Mesh.cpp" "src/Mesh.h" 
 	"src/Gui.cpp" "src/Gui.h"
-)
+ "src/ModelLoader.h" "src/ModelLoader.cpp")
 
 add_dependencies(KestrelGL copy_assets)
 

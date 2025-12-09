@@ -1,15 +1,13 @@
 #include "Entity.h"
+#include <random> // temp
 
 // constructor
-Entity::Entity(const std::string& name, std::shared_ptr<Shader> shaderPtr) 
+Entity::Entity(const std::string& name, std::shared_ptr<Shader> shaderPtr)
     : name(name), shader(shaderPtr) {
-
-    if (!mesh) mesh = std::move(createDefaultCubeMesh());
-    logger.info("entity created: " + name + ", " +
-        "\tshader: " + std::to_string(reinterpret_cast<uintptr_t>(shaderPtr.get())) + ", " +
-        "\tmesh: " + std::to_string(reinterpret_cast<uintptr_t>(mesh.get())));
+    static std::mt19937 rng{ std::random_device{}() };
+    static std::uniform_real_distribution<float> dist(0.0f, glm::two_pi<float>());
+    rotation = glm::vec3(dist(rng), dist(rng), dist(rng));
 }
-Entity::~Entity() {}
 
 void Entity::update(float deltaTime) {
     // DEBUG rotation
@@ -17,14 +15,6 @@ void Entity::update(float deltaTime) {
 }
 
 void Entity::render(const glm::mat4& view, const glm::mat4& projection) {
-    if (!mesh) {
-        logger.error(name + " missing mesh");
-        return;
-    }
-    if (!shader) {
-        logger.error(name + " missing shader");
-        return;
-    }
 
     shader->use();
 
@@ -37,7 +27,9 @@ void Entity::render(const glm::mat4& view, const glm::mat4& projection) {
     shader->setVec3("color", glm::vec3(0.9f, 0.9f, 0.9f));
 
     // maybe not need to pass shaders if mesh doesnt modify shader
-    mesh->render(*shader);
+    for (auto& mesh : meshes) {
+        mesh->render(*shader);
+    }
 
     // TODO: unbind textures
 }
@@ -55,29 +47,4 @@ glm::mat4 Entity::getModelMatrix() const {
     model = glm::rotate(model, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
     model = glm::scale(model, scale);
     return model;
-}
-
-// DEBUG
-std::unique_ptr<Mesh> Entity::createDefaultCubeMesh() {
-    using Vertex = Mesh::Vertex;
-    std::vector<Vertex> vertices = {
-        {{-0.5f,-0.5f,-0.5f},{0,0,-1},{0,0,0},{0,0,0},{0,0}},
-        {{0.5f,-0.5f,-0.5f},{0,0,-1},{0,0,0},{0,0,0},{1,0}},
-        {{0.5f,0.5f,-0.5f},{0,0,-1},{0,0,0},{0,0,0},{1,1}},
-        {{-0.5f,0.5f,-0.5f},{0,0,-1},{0,0,0},{0,0,0},{0,1}},
-        {{-0.5f,-0.5f,0.5f},{0,0,1},{0,0,0},{0,0,0},{0,0}},
-        {{0.5f,-0.5f,0.5f},{0,0,1},{0,0,0},{0,0,0},{1,0}},
-        {{0.5f,0.5f,0.5f},{0,0,1},{0,0,0},{0,0,0},{1,1}},
-        {{-0.5f,0.5f,0.5f},{0,0,1},{0,0,0},{0,0,0},{0,1}}
-    };
-
-    std::vector<unsigned int> indices = {
-        0,1,2,2,3,0, 4,5,6,6,7,4,
-        4,5,1,1,0,4, 6,7,3,3,2,6,
-        5,6,2,2,1,5, 4,7,3,3,0,4
-    };
-
-    auto newMesh = std::make_unique<Mesh>(vertices, indices);
-    newMesh->upload();
-    return newMesh;
 }

@@ -20,8 +20,8 @@ public:
 
     Camera camera;
 
-    void addEntity(std::unique_ptr<Entity> entity);
-    void removeEntity(std::unique_ptr<Entity> entity);
+    void addEntity(std::shared_ptr<Entity> entity);
+    void removeEntity(std::shared_ptr<Entity> entity);
 
     void update(float deltaTime);
     void render();
@@ -30,6 +30,6 @@ public:
     void createDebug();
 
 private:
-    std::vector<std::unique_ptr<Entity>> entities;
+    std::vector<std::shared_ptr<Entity>> entities;
     EventBus& bus;
 };

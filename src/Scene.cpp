@@ -1,15 +1,18 @@
 #include "Scene.h"
+#include "ModelLoader.h"
 
-Scene::Scene(EventBus& bus) 
-	: bus(bus), camera(5.0f, 0.0f, 0.0f) { }
+Scene::Scene(EventBus& bus)
+    : bus(bus), camera(6.0f, 30.0f, 36.0f) {
+    camera.update();
+}
 
-void Scene::addEntity(std::unique_ptr<Entity> entity) {
+void Scene::addEntity(std::shared_ptr<Entity> entity) {
 	if (entity) {
         entities.push_back(std::move(entity));
 	}
 }
 
-void Scene::removeEntity(std::unique_ptr<Entity> entity) {
+void Scene::removeEntity(std::shared_ptr<Entity> entity) {
 	auto it = std::remove(entities.begin(), entities.end(), entity);
 	if (it != entities.end()) {
 		entities.erase(it, entities.end());
@@ -37,11 +40,15 @@ void Scene::createDebug() {
     // shared shader
     // thinking about making a manager for this
     auto shader = std::make_shared<Shader>(SHADER_DIR "/model.vert", SHADER_DIR "/model.frag");
+    //auto sphere = ModelLoader::load("assets/models/sphere.obj", shader);
+    //if (sphere) {
+    //    addEntity(std::move(sphere));
+    //}
 
-    const int countX = 2;
-    const int countY = 2;
-    const int countZ = 2;
-    const float spacing = 2.0f;
+    const int countX = 3;
+    const int countY = 3;
+    const int countZ = 3;
+    const float spacing = 1.0f;
 
     for (int x = 0; x < countX; x++) {
         for (int y = 0; y < countY; y++) {
@@ -55,19 +62,21 @@ void Scene::createDebug() {
                 );
 
                 // entity name
-                std::string name = "Cube_" +
+                std::string name = "Spehre_" +
                     std::to_string(x) + "_" +
                     std::to_string(y) + "_" +
                     std::to_string(z);
                 
                 // make entity
-                auto cube = std::make_unique<Entity>(name, shader);
+                //auto entity = std::make_shared<Entity>(name, shader);
+                auto entity = ModelLoader::load("assets/models/sphere.obj", shader);
 
                 // move entity
-                cube->translate(pos);
+                entity->translate(pos);
+                entity->rescale(glm::vec3(0.5f));
 
                 // add to scene
-                addEntity(std::move(cube));
+                addEntity(std::move(entity));
             }
         }
     }
