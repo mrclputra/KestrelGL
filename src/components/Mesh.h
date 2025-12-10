@@ -19,20 +19,13 @@ public:
         glm::vec3 bitangent;
         glm::vec2 uv;
     };
-
-    struct Texture {
-        unsigned int id;
-        std::string type;
-        std::string path;
-    };
     
     // constructors
-    Mesh() = default;
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
     ~Mesh();
 
     void upload();
-    void render(const Shader& shader);
+    void render();
 
 private:
     std::vector<Vertex> vertices;

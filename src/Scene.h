@@ -7,29 +7,29 @@
 #include <camera.h>
 
 #include "Entity.h"
-#include "Mesh.h"
+#include "components/Mesh.h"
 
 class Scene {
 public:
     Scene(EventBus& bus);
     ~Scene() = default;
 
-    // single instance
-    Scene(const Scene&) = delete;
-    Scene& operator=(const Scene&) = delete;
-
+    // parts of a scene
+    std::vector<std::shared_ptr<Entity>> entities;
     Camera camera;
 
+    // event system
+    EventBus& bus;
+
+    // entity management
     void addEntity(std::shared_ptr<Entity> entity);
     void removeEntity(std::shared_ptr<Entity> entity);
 
     void update(float deltaTime);
     void render();
 
-    // DEBUG
-    void createDebug();
-
 private:
-    std::vector<std::shared_ptr<Entity>> entities;
-    EventBus& bus;
+    // single instance
+    Scene(const Scene&) = delete;
+    Scene& operator=(const Scene&) = delete;
 };

@@ -45,12 +45,12 @@ add_custom_target(copy_assets ALL
 # executable
 add_executable(KestrelGL 
 	"src/main.cpp"
-	"src/App.cpp" "src/App.h"
-	"src/Scene.cpp" "src/Scene.h"
-	"src/Entity.cpp" "src/Entity.h" 
-	"src/Mesh.cpp" "src/Mesh.h" 
-	"src/Gui.cpp" "src/Gui.h"
- "src/ModelLoader.h" "src/ModelLoader.cpp")
+	"src/App.cpp"
+	"src/Scene.cpp" 
+	"src/Entity.cpp" 
+	"src/components/Mesh.cpp" 
+	"src/Gui.cpp" 
+)
 
 add_dependencies(KestrelGL copy_assets)
 

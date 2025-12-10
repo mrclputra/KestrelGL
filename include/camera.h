@@ -10,6 +10,7 @@
 // TODO: define default values outside class definition
 const float PIXEL_TO_RAD = 0.01f;
 
+// TODO: maybe rewrite this class to use the new Transform component
 class Camera {
 public:
     // attributes
@@ -35,6 +36,7 @@ public:
     }
 
     // this should be called when viewport dimensions change
+    // i.e. when window size changes
     void setViewport(int width, int height) {
         m_viewportWidth = width;
         m_viewportHeight = height;

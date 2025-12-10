@@ -44,22 +44,8 @@ void Mesh::upload() {
     glBindVertexArray(0);
 }
 
-void Mesh::render(const Shader& shader) {
+void Mesh::render() {
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
-    
-    glEnable(GL_POLYGON_OFFSET_LINE);
-    glPolygonOffset(-1.0f, -1.0f);
-    
-    shader.setVec3("color", glm::vec3(0.0f, 0.0f, 0.0f));
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glLineWidth(1.5f);
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
-
-    // restore
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDisable(GL_POLYGON_OFFSET_LINE);
-    
     glBindVertexArray(0);
-
 }

@@ -124,7 +124,7 @@ void App::init() {
 	scene = std::make_unique<Scene>(bus);
 	scene->camera.setViewport(fbWidth, fbHeight); // tell camera about viewport
 
-	scene->createDebug();
+	logger.info("ended initialization");
 }
 
 void App::setupCallbacks() {
@@ -138,6 +138,7 @@ void App::setupCallbacks() {
 }
 
 void App::run() {
+	logger.info("running main process...");
 	// main stuff happens in this function here
 	float lastTime = 0.0f;
 

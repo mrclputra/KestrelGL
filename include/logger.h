@@ -56,20 +56,43 @@ public:
 
     // push messages to queue
     // non-blocking
-    void info(const std::string& msg) {
-        log("INFO", msg);
+    void info(const std::string& msg,
+        const char* file = __builtin_FILE(),
+        int line = __builtin_LINE(),
+        const char* func = __builtin_FUNCTION()) {
+        log("INFO", msg, file, line, func);
     }
-    void error(const std::string& msg) {
-        log("ERROR", msg);
+    void warning(const std::string& msg,
+        const char* file = __builtin_FILE(),
+        int line = __builtin_LINE(),
+        const char* func = __builtin_FUNCTION()) {
+        log("WARNING", msg, file, line, func);
     }
-    void warning(const std::string& msg) {  
-        log("WARNING", msg);
+    void error(const std::string& msg,
+        const char* file = __builtin_FILE(),
+        int line = __builtin_LINE(),
+        const char* func = __builtin_FUNCTION()) {
+        log("ERROR", msg, file, line, func);
     }
 
 private:
-    void log(const std::string& level, const std::string& msg) {
+    void log(const std::string& level, const std::string& msg,
+        const char* file, int line, const char* func)
+    {
+        std::string filename(file);
+        auto pos = filename.find_last_of("/\\"); // handle both '/' and '\'
+        if (pos != std::string::npos) {
+            filename = filename.substr(pos + 1);
+        }
+
         std::lock_guard<std::mutex> lock(mtx);
-        msgQueue.push("[" + level + "] - " + msg + "\n");
+        std::string out = "[" + level + "] ";
+        out += filename;
+        out += ":";
+        out += std::to_string(line);
+        out += " | " + std::string(func) + ":: ";
+        out += msg + "\n";
+        msgQueue.push(std::move(out));
         cv.notify_one();
     }
 };
