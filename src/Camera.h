@@ -3,6 +3,9 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <logger.h>
 
 static constexpr float PIXEL_TO_RAD = 0.01f;
 
@@ -21,51 +24,29 @@ public:
 
     glm::vec3 target = glm::vec3(0.0f); // world-center
 
-    // TODO: move function definitions into a Camera.cpp file
-
     // constructor
-    Camera(float radius, float theta, float phi, glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f) 
-        : radius(radius), theta(theta), phi(phi), m_worldUp(m_worldUp) {
-        update();
-    }
+    Camera(float radius, float theta, float pi, glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f));
 
     // this should be called every frame
-    void update() {
-        position = calculatePosition();
-        updateVectors();
-    }
+    void update();
 
-    glm::mat4 getViewMatrix() const {
-        return glm::lookAt(position, target, up);
-    }
-    glm::mat4 getProjectionMatrix(float width, float height) const {
-        return glm::perspective(glm::radians(fov), width / height, 0.1f, 100.0f);
-    }
+    // this should be called when viewport dimensions change
+    // i.e. when window size changes
+    void setViewport(int width, int height);
 
-    void rotate(float xOffset, float yOffset) {
-        theta += xOffset * sensitivity * PIXEL_TO_RAD;
-    }
+    glm::mat4 getViewMatrix() const;
+    glm::mat4 getProjectionMatrix() const;
+
+    void rotate(float xOffset, float yOffset);
+    void zoom(float offset);
+    void reset();
 
 private:
     glm::vec3 m_worldUp;
+    int m_viewportWidth = 800;
+    int m_viewportHeight = 600;
 
-    // TODO: move these function definitions into a Camera.cpp file
-
-    glm::vec3 calculatePosition() const {
-        // just return spherical to cartesian conversion
-        return glm::vec3(
-            radius * cos(phi) * cos(theta),
-            radius * sin(phi),
-            radius * cos(phi) * sin(theta)
-        );
-    }
-
-    // https://www.songho.ca/opengl/gl_camera.html
-    // these vectors are needed for constructing the view matrix
-    void updateVectors() {
-        front = glm::normalize(-position);
-        right = glm::normalize(glm::cross(front, m_worldUp));
-        up = glm::normalize(glm::cross(right, front));
-    }
+    glm::vec3 calculatePosition() const;
+    void updateVectors();
 
 };

@@ -1,8 +1,5 @@
 #include "Gui.h"
 
-Gui::Gui() {}
-Gui::~Gui() {}
-
 void Gui::init(App* appPtr, GLFWwindow* window) {
     if (active) return;
 

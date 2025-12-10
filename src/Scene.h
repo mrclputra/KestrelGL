@@ -4,9 +4,9 @@
 #include <memory>
 
 #include <eventbus.h>
-#include <camera.h>
 
 #include "Entity.h"
+#include "Camera.h"
 #include "components/Mesh.h"
 
 class Scene {
