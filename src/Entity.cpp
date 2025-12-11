@@ -21,11 +21,15 @@ void Entity::render(const glm::mat4& view, const glm::mat4& projection) {
     shader->setMat4("view", view);
     shader->setMat4("projection", projection);
 
-    shader->setVec3("color", glm::vec3(0.9f, 0.9f, 0.9f));
+    // render entity
+    for (size_t i = 0; i < meshes.size(); i++) {
+        if (i < materials.size()) {
+            // apply materials
+            materials[i].apply(*shader);
+        }
 
-    // render mesh
-    for (auto& mesh : meshes) {
-        mesh.render();
+        // render meshes
+        meshes[i].render();
     }
 
     // TODO: unbind textures

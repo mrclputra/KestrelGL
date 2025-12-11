@@ -37,6 +37,11 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
 	// lmb
 	if (button == GLFW_MOUSE_BUTTON_LEFT) {
 		if (action == GLFW_PRESS) {
+			double xPos, yPos;
+			glfwGetCursorPos(window, &xPos, &yPos);
+			app->lastX = xPos;
+			app->lastY = yPos;
+
 			app->mousePressed = true;
 			app->firstMouse = true;
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // hide cursor

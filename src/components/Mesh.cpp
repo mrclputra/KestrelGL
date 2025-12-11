@@ -1,7 +1,9 @@
 #include "Mesh.h"
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) 
-    : vertices(std::move(vertices)), indices(std::move(indices)) { }
+    : vertices(std::move(vertices)), indices(std::move(indices)) {
+    upload();
+}
 
 Mesh::~Mesh() {
     if (EBO) glDeleteBuffers(1, &EBO);

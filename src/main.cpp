@@ -5,7 +5,7 @@ int main() {
 	logger.info("Hello CMake");
 	logger.info("C++ Standard " + std::to_string(__cplusplus));
 	logger.info("KestrelGL 2");
-	logger.info("");
+	logger.spacing();
 
 	// create an App instance
 	// call the app run method 

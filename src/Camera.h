@@ -17,7 +17,7 @@ public:
 
     float radius = 5.0f;    // distance
     float theta = 0.0f;     // horizontal
-    float pi = 0.0f;        // vertical
+    float phi = 0.0f;        // vertical
 
     float sensitivity = 0.18f;
     float fov = 36.0f;

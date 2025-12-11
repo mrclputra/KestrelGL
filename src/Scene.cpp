@@ -1,14 +1,11 @@
 #include "Scene.h"
 
 Scene::Scene(EventBus& bus)
-    : bus(bus), camera(6.0f, 30.0f, 36.0f) {
+    : bus(bus), camera(6.0f, 0.0f, 0.0f) {
 	logger.info("scene created...");
 	camera.update(); // init
 }
 void Scene::update(float deltaTime) {
-	// update camera
-	camera.update();
-
 	// update entities
 	for (auto& entity : entities) {
 		entity->update(deltaTime);

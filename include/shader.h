@@ -9,6 +9,9 @@
 #include <iostream>
 #include <sys/stat.h>
 
+// TODO: move implementation to components folder
+//  and separate into header vs implementation
+
 /// <summary>
 /// This class encapsulates an OpenGL shader program,
 /// handling loading, compiling, and setting uniform variables.
