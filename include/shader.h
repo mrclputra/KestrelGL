@@ -77,6 +77,10 @@ public:
         glUniformMatrix4fv(getLocation(name), 1, GL_FALSE, &m[0][0]);
     }
 
+    //explicit operator bool() const noexcept {
+    //    return ID;
+    //}
+
 private:
     std::string m_vertexPath, m_fragmentPath, m_geometryPath;
     time_t m_vertexModTime = 0, m_fragmentModTime = 0, m_geometryModTime = 0;

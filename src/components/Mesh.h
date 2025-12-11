@@ -8,6 +8,7 @@
 #include <vector>
 #include <memory>
 
+#include <logger.h>
 #include <shader.h>
 
 class Mesh {

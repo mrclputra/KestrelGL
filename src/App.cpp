@@ -2,6 +2,8 @@
 #include <stb_image.h>
 #include "App.h"
 
+#include "debug.h"
+
 // glfw callbacks
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	auto app = static_cast<App*>(glfwGetWindowUserPointer(window)); // is there a way to get this value without casting each time?
@@ -129,6 +131,9 @@ void App::init() {
 	scene = std::make_unique<Scene>(bus);
 	scene->camera.setViewport(fbWidth, fbHeight); // tell camera about viewport
 
+	// open debug scene
+	debugScene(*scene);
+
 	logger.info("ended initialization");
 }
 
@@ -156,7 +161,7 @@ void App::run() {
 
 		// do stuff here
 
-		// check shaders (hot reload)
+		// check if shader files modified? (hot reload)
 		// TODO: implement and call here
 
 		// clear render buffers

@@ -52,8 +52,9 @@ add_executable(KestrelGL
 	"src/Gui.cpp" 
 	"src/Camera.cpp" 
 	"src/components/Material.cpp" 
-	"src/components/Texture.cpp"
-)
+	
+	"src/debug.cpp"
+ "src/ModelLoader.cpp")
 
 add_dependencies(KestrelGL copy_assets)
 
@@ -78,4 +79,4 @@ if (MSVC)
 endif()
 
 # TODO: add tests and install targets if needed.
-target_compile_definitions(KestrelGL PRIVATE SHADER_DIR="${PROJECT_SOURCE_DIR}/src/shaders")
+target_compile_definitions(KestrelGL PRIVATE SHADER_DIR="${PROJECT_SOURCE_DIR}/src/shaders/")

@@ -2,6 +2,7 @@
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) 
     : vertices(std::move(vertices)), indices(std::move(indices)) {
+    // on creating this object, mesh data is filled
     upload();
 }
 
@@ -13,7 +14,10 @@ Mesh::~Mesh() {
 
 // upload to GPU
 void Mesh::upload() {
-    if (VAO) return;
+    if (VAO) {
+        logger.error("VAO already exists; cannot overwrite mesh data");
+        return;
+    }
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -47,6 +51,11 @@ void Mesh::upload() {
 }
 
 void Mesh::render() {
+    if (vertices.empty()) {
+        logger.error("MESH HAS NO VERTICES, CANNOT RENDER");
+        return;
+    }
+
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);

@@ -75,7 +75,7 @@ public:
         log("ERROR", msg, file, line, func);
     }
 
-    void spacing(const std::string& msg = "-----------------------------------",
+    void spacing(const std::string& msg = "",
         const char* file = __builtin_FILE(),
         int line = __builtin_LINE(),
         const char* func = __builtin_FUNCTION()) {
@@ -90,7 +90,7 @@ private:
         const char* func
     ) {
         std::string filename(file);
-        auto pos = filename.find_last_of("/\\"); // handle both '/' and '\'
+        auto pos = filename.find_last_of("/\\");
         if (pos != std::string::npos) {
             filename = filename.substr(pos + 1);
         }
