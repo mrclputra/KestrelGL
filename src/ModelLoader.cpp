@@ -28,13 +28,13 @@ std::shared_ptr<Entity> ModelLoader::load(const std::string& path) {
 
 	logger.info(
 		"Entity created: " + entity->name + " "
-		"meshes: " + std::accumulate(
+		"meshes: " + "[" + std::accumulate(
 			entity->meshes.begin(), entity->meshes.end(), std::string{},
 			[](const std::string& a, const std::shared_ptr<Mesh>& b) {
 				return a.empty() ? ("0x" + std::to_string(reinterpret_cast<uintptr_t>(b.get())))
 					: a + ", 0x" + std::to_string(reinterpret_cast<uintptr_t>(b.get()));
 			}
-		)
+		) + "]"
 	);
 	return entity;
 }

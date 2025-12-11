@@ -15,6 +15,9 @@ void Gui::init(App* appPtr, GLFWwindow* window) {
     ImGui_ImplGlfw_InitForOpenGL(window, false);
     ImGui_ImplOpenGL3_Init("#version 460");
 
+    // set size
+    ImGui::SetNextWindowSize(ImVec2(200, 100));
+
     active = true;
 }
 
@@ -51,7 +54,6 @@ void Gui::draw() {
     if (!app) return;
 
     // define gui elements here
-    ImGui::SetNextWindowSize(ImVec2(200, 100));
     ImGui::Begin("Debug");
 
     // TODO: add elements here

@@ -4,9 +4,11 @@
 #include <string>
 #include <shader.h>
 
+// TODO: should I create some kind of scene factory?
+//	it would be responsible for instantiating and setting up different scenes
+
 void debugScene(Scene& scene) {
-	logger.info("constructing debug scene");
-	logger.info("MAKING STUFF");
+	logger.info("creating spheres-grid test scene");
 
 	auto shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model.frag");
 

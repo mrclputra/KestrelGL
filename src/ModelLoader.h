@@ -20,10 +20,10 @@
 class ModelLoader {
 public:
 	/// <summary>
-	/// Load a model file and return an Entity object with all of it's components
+	/// Loads a 3d model file.
 	/// </summary>
 	/// <param name="path">The path to the model file</param>
-	/// <returns></returns>
+	/// <returns>An Entity object</returns>
 	static std::shared_ptr<Entity> load(const std::string& path);
 
 private:
