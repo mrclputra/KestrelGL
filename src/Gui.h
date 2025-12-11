@@ -12,8 +12,8 @@ class App; // forward declaration
 
 class Gui {
 public:
-    Gui();
-    ~Gui();
+    Gui() = default;
+    ~Gui() = default;
 
     void init(App* appPtr, GLFWwindow* window);
     void shutdown();

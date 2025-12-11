@@ -2,6 +2,8 @@
 #include <stb_image.h>
 #include "App.h"
 
+#include "debug.h"
+
 // glfw callbacks
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	auto app = static_cast<App*>(glfwGetWindowUserPointer(window)); // is there a way to get this value without casting each time?
@@ -37,6 +39,11 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
 	// lmb
 	if (button == GLFW_MOUSE_BUTTON_LEFT) {
 		if (action == GLFW_PRESS) {
+			double xPos, yPos;
+			glfwGetCursorPos(window, &xPos, &yPos);
+			app->lastX = xPos;
+			app->lastY = yPos;
+
 			app->mousePressed = true;
 			app->firstMouse = true;
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // hide cursor
@@ -124,7 +131,10 @@ void App::init() {
 	scene = std::make_unique<Scene>(bus);
 	scene->camera.setViewport(fbWidth, fbHeight); // tell camera about viewport
 
-	scene->createDebug();
+	// open debug scene
+	debugScene(*scene);
+
+	logger.info("ended initialization");
 }
 
 void App::setupCallbacks() {
@@ -138,6 +148,7 @@ void App::setupCallbacks() {
 }
 
 void App::run() {
+	logger.info("running main process...");
 	// main stuff happens in this function here
 	float lastTime = 0.0f;
 
@@ -150,7 +161,7 @@ void App::run() {
 
 		// do stuff here
 
-		// check shaders (hot reload)
+		// check if shader files modified? (hot reload)
 		// TODO: implement and call here
 
 		// clear render buffers

@@ -9,6 +9,9 @@
 #include <iostream>
 #include <sys/stat.h>
 
+// TODO: move implementation to components folder
+//  and separate into header vs implementation
+
 /// <summary>
 /// This class encapsulates an OpenGL shader program,
 /// handling loading, compiling, and setting uniform variables.
@@ -73,6 +76,10 @@ public:
     void setMat4(const std::string& name, const glm::mat4& m) const {
         glUniformMatrix4fv(getLocation(name), 1, GL_FALSE, &m[0][0]);
     }
+
+    //explicit operator bool() const noexcept {
+    //    return ID;
+    //}
 
 private:
     std::string m_vertexPath, m_fragmentPath, m_geometryPath;

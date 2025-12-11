@@ -34,6 +34,10 @@ public:
     std::unique_ptr<Scene> scene; // single scene instance
     EventBus bus;
 
+    // cursor position
+    float lastX = 0.0f;
+    float lastY = 0.0f;
+
 private:
     void init();
     void setupCallbacks();
@@ -44,8 +48,4 @@ private:
     const char* title;
 
     Gui gui;
-
-    // cursor position
-    float lastX = 0.0f;
-    float lastY = 0.0f;
 };

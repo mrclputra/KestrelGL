@@ -1,7 +1,5 @@
 #include "Gui.h"
-
-Gui::Gui() {}
-Gui::~Gui() {}
+#include "App.h"
 
 void Gui::init(App* appPtr, GLFWwindow* window) {
     if (active) return;
@@ -57,6 +55,10 @@ void Gui::draw() {
     ImGui::Begin("Debug");
 
     // TODO: add elements here
+    auto cam = app->scene->camera;
+    ImGui::Text("Camera Position");
+    ImGui::Text("%.2fx, %.2fy, %.2fz,", cam.position.x, cam.position.y, cam.position.z);
+    ImGui::Text("%.2fr, %.2ft, %.2fp,", cam.radius, cam.theta, cam.phi);
 
     ImGui::End();
 }

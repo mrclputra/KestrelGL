@@ -1,50 +1,44 @@
 #include "Entity.h"
-#include <random> // temp
 
 // constructor
-Entity::Entity(const std::string& name, std::shared_ptr<Shader> shaderPtr)
-    : name(name), shader(shaderPtr) {
-    static std::mt19937 rng{ std::random_device{}() };
-    static std::uniform_real_distribution<float> dist(0.0f, glm::two_pi<float>());
-    rotation = glm::vec3(dist(rng), dist(rng), dist(rng));
+Entity::Entity(const std::string& name) {
+    this->name = name;
 }
 
 void Entity::update(float deltaTime) {
     // DEBUG rotation
-    rotation += glm::vec3(.5f, .5f, .5f) * deltaTime;
+    transform.rotate(glm::vec3(.0f, .5f, .0f) * deltaTime * 1.7f);
 }
 
 void Entity::render(const glm::mat4& view, const glm::mat4& projection) {
+    if (shader->ID != 0) {
+        shader->use();
 
-    shader->use();
-
-    // TODO: bind textures if available
-
-    shader->setMat4("model", getModelMatrix());
-    shader->setMat4("view", view);
-    shader->setMat4("projection", projection);
-
-    shader->setVec3("color", glm::vec3(0.9f, 0.9f, 0.9f));
-
-    // maybe not need to pass shaders if mesh doesnt modify shader
-    for (auto& mesh : meshes) {
-        mesh->render(*shader);
+        shader->setMat4("model", transform.getModelMatrix());
+        shader->setMat4("view", view);
+        shader->setMat4("projection", projection);
+    }
+    else {
+        logger.error("SHADER NOT FOUND");
+        std::exit(EXIT_FAILURE);
     }
 
-    // TODO: unbind textures
-}
+    // render entity
+    // TODO: iterate through meshes and materials
 
-// relative transforms
-void Entity::translate(const glm::vec3& delta) { position += delta; }
-void Entity::rotate(const glm::vec3& delta) { rotation += delta; }
-void Entity::rescale(const glm::vec3& factor) { scale *= factor; }
+    // find a better way to do this with safety checks
+    //for (size_t i = 0; i < meshes.size(); i++) {
+    //    if (i < materials.size()) {
+    //        // apply materials
+    //        materials[i]->apply(*shader);
+    //    }
 
-glm::mat4 Entity::getModelMatrix() const {
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, position);
-    model = glm::rotate(model, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-    model = glm::rotate(model, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::rotate(model, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-    model = glm::scale(model, scale);
-    return model;
+    //    // render meshes
+    //    meshes[i]->render();
+    //}
+
+    // temporary solution :) no materials
+    for (auto& mesh : meshes) {
+        mesh->render();
+    }
 }

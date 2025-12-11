@@ -45,12 +45,16 @@ add_custom_target(copy_assets ALL
 # executable
 add_executable(KestrelGL 
 	"src/main.cpp"
-	"src/App.cpp" "src/App.h"
-	"src/Scene.cpp" "src/Scene.h"
-	"src/Entity.cpp" "src/Entity.h" 
-	"src/Mesh.cpp" "src/Mesh.h" 
-	"src/Gui.cpp" "src/Gui.h"
- "src/ModelLoader.h" "src/ModelLoader.cpp")
+	"src/App.cpp"
+	"src/Scene.cpp" 
+	"src/Entity.cpp" 
+	"src/components/Mesh.cpp" 
+	"src/Gui.cpp" 
+	"src/Camera.cpp" 
+	"src/components/Material.cpp" 
+	
+	"src/debug.cpp"
+ "src/ModelLoader.cpp")
 
 add_dependencies(KestrelGL copy_assets)
 
@@ -75,4 +79,4 @@ if (MSVC)
 endif()
 
 # TODO: add tests and install targets if needed.
-target_compile_definitions(KestrelGL PRIVATE SHADER_DIR="${PROJECT_SOURCE_DIR}/src/shaders")
+target_compile_definitions(KestrelGL PRIVATE SHADER_DIR="${PROJECT_SOURCE_DIR}/src/shaders/")

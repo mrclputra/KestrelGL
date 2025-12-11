@@ -2,43 +2,38 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
 #include <memory>
 #include <string>
 
 #include <logger.h>
 #include <shader.h>
 
-#include "mesh.h"
+#include "components/Mesh.h"
+#include "components/Material.h"
+#include "components/Transform.h"
 
+// TODO: make this entity object work even with no shaders, meshes, or materials
 class Entity {
 public:
-    Entity() = default;
-    Entity(const std::string& name = "Entity", std::shared_ptr<Shader> shaderPtr = nullptr);
-    ~Entity() = default;
+	Entity(const std::string& name = "Entity");
+	~Entity() = default;
 
-    // per-frame logic
-    void update(float deltaTime);
-    void render(const glm::mat4& view, const glm::mat4& projection);
+	// per-frame logic
+	void update(float deltaTime);
+	void render(const glm::mat4& view, const glm::mat4& projection);
 
-    // relative transformations
-    void translate(const glm::vec3& delta);
-    void rotate(const glm::vec3& delta);
-    void rescale(const glm::vec3& factor);
-    glm::mat4 getModelMatrix() const;
+	// the components below must be assigned before any draws are made
+	// as such, the modelloader class is responsible for doing this
 
-    // public attributes
-    std::string name;
-    glm::vec3 position = glm::vec3(0.0f);
-    glm::vec3 rotation = glm::vec3(0.0f);
-    glm::vec3 scale = glm::vec3(1.0f);
+	// components, set these externally
+	Transform transform;
+	std::shared_ptr<Shader> shader;
+	std::vector<std::shared_ptr<Mesh>> meshes;
+	std::vector<std::shared_ptr<Material>> materials;
+	// TODO: add more components here
 
-    std::vector<std::shared_ptr<Mesh>> meshes;
-    std::shared_ptr<Shader> shader = nullptr;
-    //std::vector<std::shared_ptr<Texture>> textures;
+	// the main idea is that during the render pass,
+	// we iterate through all components and set shader uniforms
 
-private:
-    // prevent copying
-    Entity(const Entity&) = delete;
-    Entity& operator=(const Entity&) = delete;
+	std::string name;
 };

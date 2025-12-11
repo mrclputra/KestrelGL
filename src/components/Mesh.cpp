@@ -1,7 +1,10 @@
 #include "Mesh.h"
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) 
-    : vertices(std::move(vertices)), indices(std::move(indices)) { }
+    : vertices(std::move(vertices)), indices(std::move(indices)) {
+    // on creating this object, mesh data is filled
+    upload();
+}
 
 Mesh::~Mesh() {
     if (EBO) glDeleteBuffers(1, &EBO);
@@ -11,7 +14,10 @@ Mesh::~Mesh() {
 
 // upload to GPU
 void Mesh::upload() {
-    if (VAO) return;
+    if (VAO) {
+        logger.error("VAO already exists; cannot overwrite mesh data");
+        return;
+    }
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -44,22 +50,13 @@ void Mesh::upload() {
     glBindVertexArray(0);
 }
 
-void Mesh::render(const Shader& shader) {
+void Mesh::render() {
+    if (vertices.empty()) {
+        logger.error("MESH HAS NO VERTICES, CANNOT RENDER");
+        return;
+    }
+
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
-    
-    glEnable(GL_POLYGON_OFFSET_LINE);
-    glPolygonOffset(-1.0f, -1.0f);
-    
-    shader.setVec3("color", glm::vec3(0.0f, 0.0f, 0.0f));
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glLineWidth(1.5f);
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
-
-    // restore
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDisable(GL_POLYGON_OFFSET_LINE);
-    
     glBindVertexArray(0);
-
 }
