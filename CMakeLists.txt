@@ -47,14 +47,14 @@ add_executable(KestrelGL
 	"src/main.cpp"
 	"src/App.cpp"
 	"src/Scene.cpp" 
-	"src/Entity.cpp" 
-	"src/components/Mesh.cpp" 
+	"src/Object.cpp" 
 	"src/Gui.cpp" 
 	"src/Camera.cpp" 
 	"src/components/Material.cpp" 
-	
+	"src/components/Mesh.cpp" 
 	"src/debug.cpp"
- "src/ModelLoader.cpp")
+	"src/ModelLoader.cpp"
+)
 
 add_dependencies(KestrelGL copy_assets)
 

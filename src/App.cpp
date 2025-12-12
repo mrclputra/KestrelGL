@@ -129,6 +129,7 @@ void App::init() {
 
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
+	//glCullFace(GL_FRONT);
 
 	// initialize and configure scene instance
 	scene = std::make_unique<Scene>(bus);

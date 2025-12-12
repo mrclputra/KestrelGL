@@ -5,7 +5,7 @@
 
 #include <eventbus.h>
 
-#include "Entity.h"
+#include "Object.h"
 #include "Camera.h"
 #include "components/Mesh.h"
 
@@ -15,15 +15,15 @@ public:
     ~Scene() = default;
 
     // parts of a scene
-    std::vector<std::shared_ptr<Entity>> entities;
+    std::vector<std::shared_ptr<Object>> entities;
     Camera camera;
 
     // event system
     EventBus& bus;
 
     // entity management
-    void addEntity(std::shared_ptr<Entity> entity);
-    void removeEntity(std::shared_ptr<Entity> entity);
+    void addEntity(std::shared_ptr<Object> entity);
+    void removeEntity(std::shared_ptr<Object> entity);
 
     void update(float deltaTime);
     void render();

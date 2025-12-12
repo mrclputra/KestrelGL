@@ -33,13 +33,13 @@ void Scene::render() {
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-void Scene::addEntity(std::shared_ptr<Entity> entity) {
+void Scene::addEntity(std::shared_ptr<Object> entity) {
 	if (entity) {
 		entities.push_back(std::move(entity));
 	}
 }
 
-void Scene::removeEntity(std::shared_ptr<Entity> entity) {
+void Scene::removeEntity(std::shared_ptr<Object> entity) {
 	auto it = std::remove(entities.begin(), entities.end(), entity);
 	if (it != entities.end()) {
 		entities.erase(it, entities.end());

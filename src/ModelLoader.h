@@ -11,10 +11,10 @@
 
 #include <logger.h>
 
-#include "Entity.h"
+#include "Object.h"
 
 /// <summary>
-/// <para>This class is responsible for constructing Entity instances from files</para>
+/// <para>This class is responsible for constructing Object instances from files</para>
 /// <para>Makes use of ASSIMP to do this.</para>
 /// </summary>
 class ModelLoader {
@@ -23,8 +23,8 @@ public:
 	/// Loads a 3d model file.
 	/// </summary>
 	/// <param name="path">The path to the model file</param>
-	/// <returns>An Entity object</returns>
-	static std::shared_ptr<Entity> load(const std::string& path);
+	/// <returns>An Object object</returns>
+	static std::shared_ptr<Object> load(const std::string& path);
 
 private:
 	/// <summary>
@@ -32,8 +32,8 @@ private:
 	/// </summary>
 	/// <param name="node">The starting node</param>
 	/// <param name="scene">The Assimp Scene instance</param>
-	/// <param name="entity">The Entity which to save data into</param>
-	static void processNode(aiNode* node, const aiScene* scene, Entity& entity);
+	/// <param name="entity">The Object which to save data into</param>
+	static void processNode(aiNode* node, const aiScene* scene, Object& entity);
 
 	/// <summary>
 	/// <para>Convert the Assimp mesh into our mesh format</para>
@@ -45,6 +45,6 @@ private:
 
 	// TODO: in the future, figure out where use of materials falls into all of this
 	//  maybe a new function called processMaterials or something, 
-	//	but dont meshes need to store references to said materials? maybe somehow manage this issue at the Entity level?
+	//	but dont meshes need to store references to said materials? maybe somehow manage this issue at the Object level?
 	//static std::shared_ptr<Material> processMaterial(aiMaterial* material, const aiScene* scene, const std::string& directory);
 };

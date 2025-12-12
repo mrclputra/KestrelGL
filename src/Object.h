@@ -12,11 +12,11 @@
 #include "components/Material.h"
 #include "components/Transform.h"
 
-// TODO: make this entity object work even with no shaders, meshes, or materials
-class Entity {
+// TODO: make this object object work even with no shaders, meshes, or materials
+class Object {
 public:
-	Entity(const std::string& name = "Entity");
-	~Entity() = default;
+	Object(const std::string& name = "Object");
+	~Object() = default;
 
 	// per-frame logic
 	void update(float deltaTime);
@@ -30,7 +30,7 @@ public:
 	std::shared_ptr<Shader> shader;
 	std::vector<std::shared_ptr<Mesh>> meshes;
 	std::vector<std::shared_ptr<Material>> materials;
-	// TODO: add more components here
+	// TODO: add more components here if needed
 
 	// the main idea is that during the render pass,
 	// we iterate through all components and set shader uniforms

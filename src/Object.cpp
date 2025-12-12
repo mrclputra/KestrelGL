@@ -1,16 +1,16 @@
-#include "Entity.h"
+#include "Object.h"
 
 // constructor
-Entity::Entity(const std::string& name) {
+Object::Object(const std::string& name) {
     this->name = name;
 }
 
-void Entity::update(float deltaTime) {
+void Object::update(float deltaTime) {
     // DEBUG rotation
     transform.rotate(glm::vec3(.0f, .5f, .0f) * deltaTime * 1.7f);
 }
 
-void Entity::render(const glm::mat4& view, const glm::mat4& projection) {
+void Object::render(const glm::mat4& view, const glm::mat4& projection) {
     if (shader->ID != 0) {
         shader->use();
 

@@ -1,6 +1,6 @@
 #include "ModelLoader.h"
 
-std::shared_ptr<Entity> ModelLoader::load(const std::string& path) {
+std::shared_ptr<Object> ModelLoader::load(const std::string& path) {
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(path,
 		aiProcess_Triangulate |
@@ -20,14 +20,14 @@ std::shared_ptr<Entity> ModelLoader::load(const std::string& path) {
 	directory = (lastSlash != std::string::npos) ? path.substr(0, lastSlash) : ".";
 
 	// create empty entity object
-	auto entity = std::make_shared<Entity>(path);
+	auto entity = std::make_shared<Object>(path);
 	entity->name = scene->mRootNode->mName.C_Str(); // get name from root node
 
 	// traverse scene graph and populate entity component 
 	processNode(scene->mRootNode, scene, *entity);
 
 	logger.info(
-		"Entity created: " + entity->name + " "
+		"Object created: " + entity->name + " "
 		"meshes: " + "[" + std::accumulate(
 			entity->meshes.begin(), entity->meshes.end(), std::string{},
 			[](const std::string& a, const std::shared_ptr<Mesh>& b) {
@@ -39,7 +39,7 @@ std::shared_ptr<Entity> ModelLoader::load(const std::string& path) {
 	return entity;
 }
 
-void ModelLoader::processNode(aiNode* node, const aiScene* scene, Entity& entity) {
+void ModelLoader::processNode(aiNode* node, const aiScene* scene, Object& entity) {
 	// process current node
 	for (unsigned int i = 0; i < node->mNumMeshes; i++) {
 		aiMesh* assimpMesh = scene->mMeshes[node->mMeshes[i]];
