@@ -87,7 +87,7 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scen
 		if (mesh->mTextureCoords[0]) {
 			vertex.uv = glm::vec2(
 				mesh->mTextureCoords[0][i].x,
-				1.0 - mesh->mTextureCoords[0][i].y // flip
+				mesh->mTextureCoords[0][i].y
 			);
 
 			// tangent

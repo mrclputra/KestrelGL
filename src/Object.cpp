@@ -17,27 +17,28 @@ void Object::render(const glm::mat4& view, const glm::mat4& projection) {
         shader->setMat4("model", transform.getModelMatrix());
         shader->setMat4("view", view);
         shader->setMat4("projection", projection);
+
+        // TODO: handle multiple textures of same type
+        // bind textures
+        unsigned int slot = 0;
+        for (auto& tex : textures) {
+            tex->bind(slot);
+            switch (tex->type) {
+                case Texture::Type::ALBEDO: shader->setInt("albedoMap", slot); break;
+                case Texture::Type::NORMAL: shader->setInt("normalMap", slot); break;
+                case Texture::Type::METALLIC_ROUGHNESS: shader->setInt("metallicRoughnessMap", slot); break;
+                case Texture::Type::OCCLUSION: shader->setInt("aoMap", slot); break;
+                case Texture::Type::EMISSION: shader->setInt("emissionMap", slot); break;
+            }
+            slot++;
+        }
     }
     else {
         logger.error("SHADER NOT FOUND");
         std::exit(EXIT_FAILURE);
     }
 
-    // render entity
-    // TODO: iterate through meshes and materials
-
-    // find a better way to do this with safety checks
-    //for (size_t i = 0; i < meshes.size(); i++) {
-    //    if (i < materials.size()) {
-    //        // apply materials
-    //        materials[i]->apply(*shader);
-    //    }
-
-    //    // render meshes
-    //    meshes[i]->render();
-    //}
-
-    // temporary solution :) no materials
+    // render mesh
     for (auto& mesh : meshes) {
         mesh->render();
     }
