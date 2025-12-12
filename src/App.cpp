@@ -1,5 +1,6 @@
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#include "stb_image.h"
+
 #include "App.h"
 
 #include "debug.h"
@@ -127,8 +128,8 @@ void App::init() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	/*glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);*/
 	//glCullFace(GL_FRONT);
 
 	// initialize and configure scene instance

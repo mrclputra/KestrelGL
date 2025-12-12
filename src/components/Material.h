@@ -4,7 +4,6 @@
 #include <memory>
 #include <vector>
 
-//#include "Texture.h"
 #include "shader.h"
 
 class Material {

@@ -15,7 +15,7 @@ uniform mat4 projection;
 
 void main() {
     FragPos = vec3(model * vec4(aPos, 1.0));
-    Normal = mat3(transpose(inverse(model))) * aNormal;
+    Normal = normalize(mat3(transpose(inverse(model))) * aNormal);
     TexCoords = aTexCoords;
 
     // ORDER MATTERS

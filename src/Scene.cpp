@@ -22,15 +22,15 @@ void Scene::render() {
 	}
 
 	// wireframe pass
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glEnable(GL_POLYGON_OFFSET_LINE);
-	glPolygonOffset(-1.0f, 1.0f);
-	glLineWidth(1.2f);
-	for (auto& entity : entities) {
-		entity->shader->setVec3("albedo", glm::vec3(0.0f));
-		entity->render(camera.getViewMatrix(), camera.getProjectionMatrix());
-	}
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glEnable(GL_POLYGON_OFFSET_LINE);
+	//glPolygonOffset(-1.0f, 1.0f);
+	//glLineWidth(1.2f);
+	//for (auto& entity : entities) {
+	//	entity->shader->setVec3("albedo", glm::vec3(0.0f));
+	//	entity->render(camera.getViewMatrix(), camera.getProjectionMatrix());
+	//}
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void Scene::addEntity(std::shared_ptr<Object> entity) {

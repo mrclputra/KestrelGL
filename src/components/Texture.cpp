@@ -1,6 +1,5 @@
 #include "Texture.h"
-#include <stb_image.h>
-#include <logger.h>
+#include "stb_image.h"
 
 Texture::Texture(const std::string& path, Type type) : type(type), path(path) {
 	loadFromFile(path);

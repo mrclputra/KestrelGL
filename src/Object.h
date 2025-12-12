@@ -9,8 +9,9 @@
 #include <shader.h>
 
 #include "components/Mesh.h"
-#include "components/Material.h"
 #include "components/Transform.h"
+#include "components/Material.h"
+#include "components/Texture.h"
 
 // TODO: make this object object work even with no shaders, meshes, or materials
 class Object {
@@ -30,6 +31,7 @@ public:
 	std::shared_ptr<Shader> shader;
 	std::vector<std::shared_ptr<Mesh>> meshes;
 	std::vector<std::shared_ptr<Material>> materials;
+	std::vector<std::shared_ptr<Texture>> textures;
 	// TODO: add more components here if needed
 
 	// the main idea is that during the render pass,
