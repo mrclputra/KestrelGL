@@ -8,9 +8,6 @@ in vec3 vTangent;
 in vec3 vBitangent;
 in vec2 vTexCoords;
 
-// TODO: modify main loop to handle multiple lights
-uniform vec3 lightDir;
-
 // light struct
 struct Light {
 	vec3 position;
@@ -38,23 +35,40 @@ void main() {
 	vec3 B = normalize(vBitangent);
 	vec3 N = normalize(vNormal);
 	mat3 TBN = mat3(T, B, N);
+//	mat3 TBN = mat3(N, N, N); // test thing
 
 	normal = normalize(TBN * normal); // order matters
 
 	// phong-thing lighting below
 
-	vec3 ambient = 0.17 * albedo;
+	vec3 ambient = 0.1 * albedo;
 	vec3 result = ambient;
 
 	// for every light
 	for (int i = 0; i < numLights; i++) {
 		vec3 lightDir;
-        if (lights[i].type == 0) { // directional
-            lightDir = normalize(-lights[i].direction); // reverse
-        }
+		vec3 diffuse = vec3(0.0);
 
-		float diff = max(dot(normal, lightDir), 0.0);
-        vec3 diffuse = diff * albedo * lights[i].color;
+        if (lights[i].type == 0) {
+            // directional
+			lightDir = normalize(-lights[i].direction); // reverse
+			float diff = max(dot(normal, lightDir), 0.0);
+			diffuse = diff * albedo * lights[i].color;
+
+        } else if (lights[i].type == 1) {
+			// point
+			lightDir = normalize(lights[i].position - vFragPos);
+			float diff = max(dot(normal, lightDir), 0.0);
+			float distance = length(lights[i].position - vFragPos);
+
+//			float attenuation = 1.0 / (distance * distance);
+			float attenuation = 1.0 / distance * 2.0;
+			diffuse = diff * albedo * lights[i].color * attenuation;
+//			diffuse = normalize(diffuse); // cool effect
+
+		} else if (lights[i].type == 2) {
+			// TODO: spot light
+		}
 
         result += diffuse;
 	}

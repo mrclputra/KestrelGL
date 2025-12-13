@@ -1,16 +1,24 @@
 #include "Scene.h"
 #include "lights/DirectionalLight.h"
+#include "lights/PointLight.h"
 
 Scene::Scene(EventBus& bus)
     : bus(bus), camera(6.0f, 0.0f, 0.0f) {
 	logger.info("scene created...");
 	camera.update(); // init
 }
+
 void Scene::update(float deltaTime) {
 	// update entities
 	for (auto& entity : objects) {
 		entity->update(deltaTime);
 	}
+
+	// DEBUG LIGHT ROTATION THING
+	float s = glm::radians(45.0f) * deltaTime;
+	auto& p = lights[3]->transform.position;
+	std::tie(p.x, p.z) = std::make_pair(p.x * cos(s) - p.z * sin(s),
+		p.x * sin(s) + p.z * cos(s));
 }
 
 void Scene::render() {
@@ -40,8 +48,10 @@ void Scene::render() {
 				shaderLights[i].direction = dirLight->direction;
 				shaderLights[i].type = 0;
 			}
-			else if (false) {
+			else if (auto pointLight = std::dynamic_pointer_cast<PointLight>(light)) {
 				// TODO: spot lighting
+				shaderLights[i].position = pointLight->transform.position;
+				shaderLights[i].type = 1;
 			}
 			else if (false) {
 				// TODO: point lighting
@@ -56,12 +66,6 @@ void Scene::render() {
 		}
 
 		object->shader->setInt("numLights", activeLights);
-
-		//// current
-		//auto& debugLight = lights[0];
-		//if (auto light = std::dynamic_pointer_cast<DirectionalLight>(debugLight)) {
-		//	object->shader->setVec3("lightDir", light->direction);
-		//}
 
 		// TODO: is it possible to not pass the matrices in the render function? 
         //  in other words, get it from camera object itself

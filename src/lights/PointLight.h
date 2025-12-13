@@ -5,5 +5,8 @@
 
 // point light
 class PointLight : public Light {
-	// TODO: implement here
+public:
+	PointLight(glm::vec3 pos, glm::vec3 color) : Light(pos) {
+		this->color = color;
+	}
 };
