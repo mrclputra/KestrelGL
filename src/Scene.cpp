@@ -1,4 +1,5 @@
 #include "Scene.h"
+#include "lights/DirectionalLight.h"
 
 Scene::Scene(EventBus& bus)
     : bus(bus), camera(6.0f, 0.0f, 0.0f) {
@@ -7,17 +8,23 @@ Scene::Scene(EventBus& bus)
 }
 void Scene::update(float deltaTime) {
 	// update entities
-	for (auto& entity : entities) {
+	for (auto& entity : objects) {
 		entity->update(deltaTime);
 	}
 }
 
 void Scene::render() {
 	// fill pass
-	for (auto& entity : entities) {
+	for (auto& entity : objects) {
+		// light DEBUG, TODO: remove
+		auto& debugLight = lights[0];
+		if (auto light = std::dynamic_pointer_cast<DirectionalLight>(debugLight)) {
+			entity->shader->setVec3("lightDir", light->direction);
+		}
+
 		// TODO: is it possible to not pass the matrices in the render function? 
         //  in other words, get it from camera object itself
-		entity->shader->setVec3("albedo", glm::vec3(0.98f));
+		//entity->shader->setVec3("albedo", glm::vec3(0.98f));
 		entity->render(camera.getViewMatrix(), camera.getProjectionMatrix());
 	}
 
@@ -33,15 +40,28 @@ void Scene::render() {
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-void Scene::addEntity(std::shared_ptr<Object> entity) {
+void Scene::addObject(std::shared_ptr<Object> entity) {
 	if (entity) {
-		entities.push_back(std::move(entity));
+		objects.push_back(std::move(entity));
 	}
 }
 
-void Scene::removeEntity(std::shared_ptr<Object> entity) {
-	auto it = std::remove(entities.begin(), entities.end(), entity);
-	if (it != entities.end()) {
-		entities.erase(it, entities.end());
+void Scene::removeObject(std::shared_ptr<Object> entity) {
+	auto it = std::remove(objects.begin(), objects.end(), entity);
+	if (it != objects.end()) {
+		objects.erase(it, objects.end());
+	}
+}
+
+void Scene::addLight(std::shared_ptr<Light> light) {
+	if (light) {
+		lights.push_back(std::move(light));
+	}
+}
+
+void Scene::removeLight(std::shared_ptr<Light> light) {
+	auto it = std::remove(lights.begin(), lights.end(), light);
+	if (it != lights.end()) {
+		lights.erase(it, lights.end());
 	}
 }
