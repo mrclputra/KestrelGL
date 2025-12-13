@@ -14,28 +14,72 @@ void Scene::update(float deltaTime) {
 }
 
 void Scene::render() {
+	// TEMPORARY, NEED REFACTORING
+	struct ShaderLight {
+		glm::vec3 position;
+		glm::vec3 direction;
+		glm::vec3 color;
+		int type; // 0=directional, 1=point, 2=spot
+	};
+
 	// fill pass
-	for (auto& entity : objects) {
+	for (auto& object : objects) {
+		// LIGHTS
+		ShaderLight shaderLights[8];  // MAX_LIGHTS
+		int activeLights = std::min<int>(lights.size(), 8);
+
 		// light DEBUG, TODO: remove
-		auto& debugLight = lights[0];
-		if (auto light = std::dynamic_pointer_cast<DirectionalLight>(debugLight)) {
-			entity->shader->setVec3("lightDir", light->direction);
+		for (int i = 0; i < activeLights; ++i) {
+			auto& light = lights[i];
+			
+			shaderLights[i].color = light->color;
+
+			if (auto dirLight = std::dynamic_pointer_cast<DirectionalLight>(light)) {
+				// directional lighting
+				shaderLights[i].position = glm::vec3(0.0f);
+				shaderLights[i].direction = dirLight->direction;
+				shaderLights[i].type = 0;
+			}
+			else if (false) {
+				// TODO: spot lighting
+			}
+			else if (false) {
+				// TODO: point lighting
+			}
+
+			// upload light to shader
+			std::string base = "lights[" + std::to_string(i) + "]";
+			object->shader->setVec3(base + ".position", shaderLights[i].position);
+			object->shader->setVec3(base + ".direction", shaderLights[i].direction);
+			object->shader->setVec3(base + ".color", shaderLights[i].color);
+			object->shader->setInt(base + ".type", shaderLights[i].type);
 		}
+
+		object->shader->setInt("numLights", activeLights);
+
+		//// current
+		//auto& debugLight = lights[0];
+		//if (auto light = std::dynamic_pointer_cast<DirectionalLight>(debugLight)) {
+		//	object->shader->setVec3("lightDir", light->direction);
+		//}
 
 		// TODO: is it possible to not pass the matrices in the render function? 
         //  in other words, get it from camera object itself
-		//entity->shader->setVec3("albedo", glm::vec3(0.98f));
-		entity->render(camera.getViewMatrix(), camera.getProjectionMatrix());
+
+		// RENDER OBJECT
+		object->render(camera.getViewMatrix(), camera.getProjectionMatrix());
 	}
 
-	// wireframe pass
+	// DEPRECATED, need a separate shader if i want to do this again
+	//	
+	// wireframe pass 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	//glEnable(GL_POLYGON_OFFSET_LINE);
 	//glPolygonOffset(-1.0f, 1.0f);
 	//glLineWidth(1.2f);
-	//for (auto& entity : entities) {
-	//	entity->shader->setVec3("albedo", glm::vec3(0.0f));
-	//	entity->render(camera.getViewMatrix(), camera.getProjectionMatrix());
+	//for (auto& object : entities) {
+	//	object->shader->setVec3("albedo", glm::vec3(0.0f));
+	//	object->render(camera.getViewMatrix(), camera.getProjectionMatrix());
 	//}
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }

@@ -9,12 +9,17 @@
 // TODO: should I create some kind of scene factory?
 //	it would be responsible for instantiating and setting up different scenes
 
+// this is my test scene configuration
 void debugScene(Scene& scene) {
 	logger.info("creating debug test scene");
 
 	// ADD LIGHTS
-	auto light = std::make_shared<DirectionalLight>(glm::vec3(0, 0, 0), glm::vec3(-1, -1, -2));
-	scene.addLight(light);
+	auto light1 = std::make_shared<DirectionalLight>(glm::vec3(1, 1, 1), glm::vec3(.5, 0, 0));
+	auto light2 = std::make_shared<DirectionalLight>(glm::vec3(1, -1, -1), glm::vec3(0, 0, .5));
+	auto light3 = std::make_shared<DirectionalLight>(glm::vec3(-1, -0.7, -1.2), glm::vec3(0, .5, 0));
+	scene.addLight(light1);
+	scene.addLight(light2);
+	scene.addLight(light3);
 
 	// ADD ENTITY
 	auto shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model.frag");

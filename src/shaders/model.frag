@@ -8,11 +8,23 @@ in vec3 vTangent;
 in vec3 vBitangent;
 in vec2 vTexCoords;
 
-// TODO: scene lighting input vectors here
+// TODO: modify main loop to handle multiple lights
 uniform vec3 lightDir;
 
-// TODO: modify to follow gltf convention 
-// textures; TODO: should I make this an array
+// light struct
+struct Light {
+	vec3 position;
+	vec3 direction;
+	vec3 color;
+	int type; // 0-directional, 1-point, 2-spot
+};
+
+#define MAX_LIGHTS 8
+uniform Light lights[MAX_LIGHTS];
+uniform int numLights; // active light count
+
+// TODO: add more follow gltf convention, also wondering if I should make these arrays
+// textures
 uniform sampler2D albedoMap;
 uniform sampler2D normalMap;
 
@@ -29,18 +41,28 @@ void main() {
 
 	normal = normalize(TBN * normal); // order matters
 
-	// phong-thing lighting
-	vec3 ambient = 0.17 * albedo;
-	vec3 lightDir = normalize(-lightDir); // reverse
-	float diff = max(dot(normal, lightDir), 0.0);
-	vec3 diffuse = diff * albedo;   
+	// phong-thing lighting below
 
-	vec3 color = ambient + diffuse;
+	vec3 ambient = 0.17 * albedo;
+	vec3 result = ambient;
+
+	// for every light
+	for (int i = 0; i < numLights; i++) {
+		vec3 lightDir;
+        if (lights[i].type == 0) { // directional
+            lightDir = normalize(-lights[i].direction); // reverse
+        }
+
+		float diff = max(dot(normal, lightDir), 0.0);
+        vec3 diffuse = diff * albedo * lights[i].color;
+
+        result += diffuse;
+	}
 
 	// to display the normal map in rgb, remap back to 0-1
 //	FragColor = vec4(normal * 0.5 + 0.5, 1.0);
 
 
 //	FragColor = vec4(albedo, 1.0);
-	FragColor = vec4(color, 1.0);
+	FragColor = vec4(result, 1.0);
 }
