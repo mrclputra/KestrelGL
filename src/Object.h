@@ -10,11 +10,12 @@
 
 #include "components/Mesh.h"
 #include "components/Transform.h"
-#include "components/Material.h"
 #include "components/Texture.h"
 
-// TODO: make this object object work even with no shaders, meshes, or materials
 class Object {
+	// the main idea behind this class is that it acts as sort of a container for attributes;
+	//	during the render pass, we iteratre through all components and set shader uniforms
+
 public:
 	Object(const std::string& name = "Object");
 	~Object() = default;
@@ -23,19 +24,16 @@ public:
 	void update(float deltaTime);
 	void render(const glm::mat4& view, const glm::mat4& projection);
 
-	// the components below must be assigned before any draws are made
+	// the components below must be assigned and valid before any draws are made
 	// as such, the modelloader class is responsible for doing this
 
-	// components, set these externally
+	// object components
 	Transform transform;
 	std::shared_ptr<Shader> shader;
 	std::vector<std::shared_ptr<Mesh>> meshes;
-	std::vector<std::shared_ptr<Material>> materials;
 	std::vector<std::shared_ptr<Texture>> textures;
-	// TODO: add more components here if needed
-
-	// the main idea is that during the render pass,
-	// we iterate through all components and set shader uniforms
+	// TODO: considering moving textures to a global vector at the scene level instead; 
+	//	as multiple meshes may reference the same texture
 
 	std::string name;
 };

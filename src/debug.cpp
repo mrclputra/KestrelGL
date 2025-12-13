@@ -42,14 +42,14 @@ void debugScene(Scene& scene) {
 
 	auto shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model.frag");
 
-	auto object = ModelLoader::load("assets/models/pbr/stanford_dragon_pbr/scene.gltf");
-	object->shader = shader;
-	if (!object) return;
+	auto dragon = ModelLoader::load("assets/models/pbr/stanford_dragon_pbr/scene.gltf");
+	dragon->shader = shader;
+	if (!dragon) return;
 
-	// set transforms
-	object->transform.scale = glm::vec3(0.08f, 0.08f, 0.08f);
-	object->transform.position = glm::vec3(0,-3,0);
-	//object->transform.rotation = glm::vec3(-90, 0, 0);
+	// set initial dragon transforms
+	dragon->transform.scale = glm::vec3(0.08f, 0.08f, 0.08f);
+	dragon->transform.position = glm::vec3(0,-3,0);
+	//dragon->transform.rotation = glm::vec3(0, 90, 0);
 
-	scene.addEntity(object);
+	scene.addEntity(dragon);
 }

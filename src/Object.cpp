@@ -8,6 +8,7 @@ Object::Object(const std::string& name) {
 void Object::update(float deltaTime) {
     // DEBUG rotation
     //transform.rotate(glm::vec3(.0f, .5f, .0f) * deltaTime * 1.7f);
+    shader->checkHotReload();
 }
 
 void Object::render(const glm::mat4& view, const glm::mat4& projection) {
@@ -19,6 +20,7 @@ void Object::render(const glm::mat4& view, const glm::mat4& projection) {
         shader->setMat4("projection", projection);
 
         // TODO: handle multiple textures of same type
+        // TODO: maybe move this to an internal function?
         // bind textures
         unsigned int slot = 0;
         for (auto& tex : textures) {
@@ -34,7 +36,7 @@ void Object::render(const glm::mat4& view, const glm::mat4& projection) {
         }
     }
     else {
-        logger.error("SHADER NOT FOUND");
+        logger.error(name + " SHADER NOT FOUND");
         std::exit(EXIT_FAILURE);
     }
 

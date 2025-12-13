@@ -9,6 +9,8 @@
 #include <iostream>
 #include <sys/stat.h>
 
+#include <logger.h>
+
 // TODO: move implementation to components folder
 //  and separate into header vs implementation
 
@@ -77,6 +79,31 @@ public:
         glUniformMatrix4fv(getLocation(name), 1, GL_FALSE, &m[0][0]);
     }
 
+    // hot reloading
+    bool checkHotReload() {
+        bool modified = false;
+
+        auto getModTime = [](const std::string& path) -> time_t {
+            struct stat st;
+            return (stat(path.c_str(), &st) == 0) ? st.st_mtime : 0;
+        };
+
+        time_t vMod = getModTime(m_vertexPath);
+        time_t fMod = getModTime(m_fragmentPath);
+        time_t gMod = m_geometryPath.empty() ? 0 : getModTime(m_geometryPath);
+
+        if (vMod == m_vertexModTime &&
+            fMod == m_fragmentModTime &&
+            gMod == m_geometryModTime)
+            return false;
+
+        compile();
+        updateModTimes();
+
+        logger.info("shaders reloaded");
+        return true;
+    }
+
     //explicit operator bool() const noexcept {
     //    return ID;
     //}
@@ -103,7 +130,8 @@ private:
     std::string readFile(const std::string& path) {
         std::ifstream file(path);
         if (!file.is_open()) {
-            std::cerr << "ERROR::SHADER_FILE_NOT_FOUND: " << path << "\n";
+            //std::cerr << "ERROR::SHADER_FILE_NOT_FOUND: " << path << "\n";
+            logger.error("SHADER_FILE_NOT_FOUND " + path);
             return "";
         }
         std::stringstream buffer;
@@ -151,7 +179,8 @@ private:
         if (!success) {
             GLchar infoLog[1024];
             glGetProgramInfoLog(ID, 1024, nullptr, infoLog);
-            std::cerr << "ERROR::PROGRAM_LINKING_ERROR\n" << infoLog << "\n";
+            //std::cerr << "ERROR::PROGRAM_LINKING_ERROR\n" << infoLog << "\n";
+            logger.error("PROGRAM_LINKING_ERROR\n" + std::string(infoLog));
         }
 
         glDeleteShader(vertex);

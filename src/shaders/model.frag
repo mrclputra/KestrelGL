@@ -1,26 +1,33 @@
 #version 460 core
 out vec4 FragColor;
 
-in vec3 FragPos;
-in vec3 Normal;
-in vec2 TexCoords;
+// from the vertex shader
+in vec3 vFragPos;
+in vec3 vNormal;
+in vec3 vTangent;
+in vec3 vBitangent;
+in vec2 vTexCoords;
 
-// material properties
-//uniform vec3 albedo; // base color
+// TODO: scene lighting input vectors here
 
+// TODO: modify to follow gltf convention 
+// textures; TODO: should I make this an array
 uniform sampler2D albedoMap;
 uniform sampler2D normalMap;
 
 void main() {
-    // FragColor = vec4(albedo, 1.0); // yay
-    
-    // FragColor = vec4(vec3(TexCoords, 1.0), 1.0);
-    // FragColor = vec4(fract(TexCoords * 5.0), 0.0, 1.0);
+	vec3 albedo = texture(albedoMap, vTexCoords).rgb;
+	vec3 normal = texture(normalMap, vTexCoords).rgb;
+	normal = normal * 2.0 - 1.0; // to (-1, 1)
 
-    //FragColor = vec4(Normal * 0.5 + 0.5, 1.0);
+	// TBN matrix
+	vec3 T = normalize(vTangent);
+	vec3 B = normalize(vBitangent);
+	vec3 N = normalize(vNormal);
+	mat3 TBN = mat3(T, B, N);
 
-    vec3 albedo = texture(albedoMap, TexCoords).rgb;
-    vec3 N = normalize(Normal);
+	normal = normalize(TBN * normal); // order matters
+	FragColor = vec4(normal * 0.5 + 0.5, 1.0); // to display, remap back to 0-1
 
-    FragColor = vec4(albedo, 1.0);
+//	FragColor = vec4(albedo, 1.0);
 }

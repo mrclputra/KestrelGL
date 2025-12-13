@@ -13,6 +13,7 @@ public:
 	void rotate(const glm::vec3& delta) { rotation += delta; }
 	void rescale(const glm::vec3& factor) { scale *= factor; }
 
+    // object space -> world space
     glm::mat4 getModelMatrix() const {
         glm::mat4 model(1.0f);
         model = glm::translate(model, position);
