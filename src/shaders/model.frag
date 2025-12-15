@@ -24,11 +24,19 @@ uniform int numLights; // active light count
 // textures
 uniform sampler2D albedoMap;
 uniform sampler2D normalMap;
+uniform sampler2D metallicRoughnessMap;
+uniform sampler2D aoMap;
+
+// camera position
+uniform vec3 viewPos;
 
 void main() {
 	vec3 albedo = texture(albedoMap, vTexCoords).rgb;
 	vec3 normal = texture(normalMap, vTexCoords).rgb;
+	vec3 metallicRoughness = texture(metallicRoughnessMap, vTexCoords).rgb;
 	normal = normal * 2.0 - 1.0; // to (-1, 1)
+
+	vec3 viewDir = normalize(viewPos - vFragPos);
 
 	// TBN matrix
 	vec3 T = normalize(vTangent);
@@ -70,13 +78,19 @@ void main() {
 			// TODO: spot light
 		}
 
-        result += diffuse;
+		// specular component
+		vec3 halfwayDir = normalize(lightDir + viewDir);
+		float spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);
+		vec3 specular = 0.3 * spec * lights[i].color;
+
+        result += diffuse + specular;
 	}
 
 	// to display the normal map in rgb, remap back to 0-1
 //	FragColor = vec4(normal * 0.5 + 0.5, 1.0);
 
-
+			
 //	FragColor = vec4(albedo, 1.0);
+//	FragColor = vec4(metallicRoughness, 1.0);
 	FragColor = vec4(result, 1.0);
 }

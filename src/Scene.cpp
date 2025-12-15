@@ -67,6 +67,9 @@ void Scene::render() {
 
 		object->shader->setInt("numLights", activeLights);
 
+		// pass camera position to shader, we can calculate the vector later
+		object->shader->setVec3("viewPos", camera.position);
+
 		// TODO: is it possible to not pass the matrices in the render function? 
         //  in other words, get it from camera object itself
 
