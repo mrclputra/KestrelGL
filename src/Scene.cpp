@@ -14,15 +14,14 @@ void Scene::update(float deltaTime) {
 		entity->update(deltaTime);
 	}
 
-	// DEBUG LIGHT ROTATION THING
-	float s = glm::radians(45.0f) * deltaTime;
+	// DEBUG LIGHT ROTATION THINGY!!!
+	static float t = 0;
+	t += deltaTime * 0.5f;
 	if (auto it = std::find_if(lights.begin(), lights.end(),
-		[](auto& l) { return std::dynamic_pointer_cast<PointLight>(l) != nullptr; });
-		it != lights.end())
+		[](auto& l) { return std::dynamic_pointer_cast<PointLight>(l); }); it != lights.end())
 	{
 		auto& p = std::dynamic_pointer_cast<PointLight>(*it)->transform.position;
-		std::tie(p.x, p.z) = std::make_pair(p.x * cos(s) - p.z * sin(s),
-			p.x * sin(s) + p.z * cos(s));
+		p.x = 4.0f * sin(t * glm::two_pi<float>());
 	}
 }
 

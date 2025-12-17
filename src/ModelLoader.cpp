@@ -1,6 +1,8 @@
 #include "ModelLoader.h"
 
-std::shared_ptr<Object> ModelLoader::load(const std::string& path) {
+// TODO: this function should also handle shader assignment
+//	initial transformation should be set here, but optional
+std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::shared_ptr<Shader> shader) {
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(path,
 		aiProcess_Triangulate |
@@ -25,6 +27,22 @@ std::shared_ptr<Object> ModelLoader::load(const std::string& path) {
 
 	// traverse scene graph and populate object component 
 	processNode(scene->mRootNode, scene, *object, directory);
+
+	// set shader
+	if (shader) {
+		// custom shader
+		object->shader = shader;
+	}
+	else {
+		if (object->textures.empty()) {
+			// no textures
+			object->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model_notex.frag");
+		}
+		else {
+			// has textures
+			object->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model.frag");
+		}
+	}
 
 	logger.info(
 		"Object created: " + object->name + " "
@@ -126,29 +144,34 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scen
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
 		// load albedo textures
-		for (unsigned int i = 0; i < material->GetTextureCount(aiTextureType_DIFFUSE); i++) {
-			aiString str;
-			material->GetTexture(aiTextureType_DIFFUSE, i, &str);
-			std::string texPath = directory + "/" + std::string(str.C_Str());
-			loadTexture(texPath, Texture::Type::ALBEDO, object);
+		if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+			for (unsigned int i = 0; i < material->GetTextureCount(aiTextureType_DIFFUSE); i++) {
+				aiString str;
+				material->GetTexture(aiTextureType_DIFFUSE, i, &str);
+				std::string texPath = directory + "/" + std::string(str.C_Str());
+				loadTexture(texPath, Texture::Type::ALBEDO, object);
+			}
 		}
 
 		// load normal maps
-		for (unsigned int i = 0; i < material->GetTextureCount(aiTextureType_NORMALS); i++) {
-			aiString str;
-			material->GetTexture(aiTextureType_NORMALS, i, &str);
-			std::string texPath = directory + "/" + std::string(str.C_Str());
-			loadTexture(texPath, Texture::Type::NORMAL, object);
+		if (material->GetTextureCount(aiTextureType_NORMALS) > 0) {
+			for (unsigned int i = 0; i < material->GetTextureCount(aiTextureType_NORMALS); i++) {
+				aiString str;
+				material->GetTexture(aiTextureType_NORMALS, i, &str);
+				std::string texPath = directory + "/" + std::string(str.C_Str());
+				loadTexture(texPath, Texture::Type::NORMAL, object);
+			}
 		}
 
 		// load metallic roughness maps
-		for (unsigned int i = 0; i < material->GetTextureCount(aiTextureType_GLTF_METALLIC_ROUGHNESS); i++) {
-			aiString str;
-			material->GetTexture(aiTextureType_GLTF_METALLIC_ROUGHNESS, i, &str);
-			std::string texPath = directory + "/" + std::string(str.C_Str());
-			loadTexture(texPath, Texture::Type::METALLIC_ROUGHNESS, object);
+		if (material->GetTextureCount(aiTextureType_GLTF_METALLIC_ROUGHNESS) > 0) {
+			for (unsigned int i = 0; i < material->GetTextureCount(aiTextureType_GLTF_METALLIC_ROUGHNESS); i++) {
+				aiString str;
+				material->GetTexture(aiTextureType_GLTF_METALLIC_ROUGHNESS, i, &str);
+				std::string texPath = directory + "/" + std::string(str.C_Str());
+				loadTexture(texPath, Texture::Type::METALLIC_ROUGHNESS, object);
+			}
 		}
-
 	}
 
 	// return processed mesh

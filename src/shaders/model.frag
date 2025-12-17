@@ -70,7 +70,7 @@ void main() {
 			float distance = length(lights[i].position - vFragPos);
 
 //			float attenuation = 1.0 / (distance * distance);
-			float attenuation = 1.0 / distance * 2.0;
+			float attenuation = 1.0 / distance * 2.2;
 			diffuse = diff * albedo * lights[i].color * attenuation;
 //			diffuse = normalize(diffuse); // cool effect
 

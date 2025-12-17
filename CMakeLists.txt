@@ -52,6 +52,7 @@ add_executable(KestrelGL
     src/components/Mesh.cpp
     src/debug.cpp
     src/ModelLoader.cpp
+    src/Renderer.cpp
 )
 
 # target properties

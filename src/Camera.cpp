@@ -39,7 +39,7 @@ void Camera::rotate(float xOffset, float yOffset) {
 	update();
 }
 void Camera::zoom(float offset) {
-	radius = glm::clamp(radius - offset * 0.32f, 0.2f, 700.0f);
+	radius = glm::clamp(radius - offset * 0.7f, 0.2f, 700.0f);
 	update();
 }
 void Camera::reset() {
