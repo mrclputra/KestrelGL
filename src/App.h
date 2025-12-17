@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 
+#include "Renderer.h"
 #include "Scene.h"
 #include "Gui.h"
 
@@ -32,6 +33,7 @@ public:
     bool mousePressed = false;
     
     std::unique_ptr<Scene> scene; // single scene instance
+    Renderer renderer;
     EventBus bus;
 
     // cursor position

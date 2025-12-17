@@ -41,6 +41,8 @@ public:
     void zoom(float offset);
     void reset();
 
+    void setTarget(const glm::vec3& newTarget);
+
 private:
     glm::vec3 m_worldUp;
     int m_viewportWidth = 800;

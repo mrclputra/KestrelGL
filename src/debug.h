@@ -2,4 +2,4 @@
 //#include "ModelLoader.h"
 #include <logger.h>
 
-void debugScene(Scene& scene);
+void dragonScene(Scene& scene);

@@ -22,7 +22,6 @@ public:
 
 	// per-frame logic
 	void update(float deltaTime);
-	void render(const glm::mat4& view, const glm::mat4& projection);
 
 	// the components below must be assigned and valid before any draws are made
 	// as such, the modelloader class is responsible for doing this

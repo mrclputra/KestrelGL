@@ -32,7 +32,6 @@ public:
     void removeLight(std::shared_ptr<Light> light);
 
     void update(float deltaTime);
-    void render();
 
 private:
     // single instance

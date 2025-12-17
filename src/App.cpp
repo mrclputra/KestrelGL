@@ -137,7 +137,7 @@ void App::init() {
 	scene->camera.setViewport(fbWidth, fbHeight); // tell camera about viewport
 
 	// open debug scene
-	debugScene(*scene);
+	dragonScene(*scene);
 
 	logger.info("ended initialization");
 }
@@ -177,9 +177,11 @@ void App::run() {
 		gui.beginFrame();
 		gui.draw();
 
-		// render and update scene
+		// update scene
 		scene->update(deltaTime);
-		scene->render();
+
+		// render
+		renderer.render(*scene);
 
 		// end frame
 		gui.endFrame();
