@@ -3,3 +3,4 @@
 #include <logger.h>
 
 void dragonScene(Scene& scene);
+void lionScene(Scene& scene);

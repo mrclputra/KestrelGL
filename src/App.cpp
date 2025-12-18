@@ -137,7 +137,8 @@ void App::init() {
 	scene->camera.setViewport(fbWidth, fbHeight); // tell camera about viewport
 
 	// open debug scene
-	dragonScene(*scene);
+	//dragonScene(*scene);
+	lionScene(*scene);
 
 	logger.info("ended initialization");
 }

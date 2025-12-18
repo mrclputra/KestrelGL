@@ -2,7 +2,6 @@
 #include "ModelLoader.h"
 
 #include <string>
-#include <shader.h>
 
 #include "lights/DirectionalLight.h"
 #include "lights/PointLight.h"
@@ -12,7 +11,7 @@
 
 // this is my test scene configuration
 void dragonScene(Scene& scene) {
-	logger.info("creating debug test scene");
+	logger.info("creating dragon debug scene");
 
 	// ADD LIGHTS
 	auto light1 = std::make_shared<DirectionalLight>(glm::vec3(-1.0f, -0.5f, -0.5f), glm::vec3(.7, 0, 0));
@@ -27,7 +26,7 @@ void dragonScene(Scene& scene) {
 	//auto shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model.frag");
 
 	// ADD ENTITY
-	auto dragon = ModelLoader::load("assets/models/pbr/stanford_dragon_pbr/scene.gltf");
+	auto dragon = ModelLoader::load("assets/models/stanford_dragon_pbr/scene.gltf");
 	if (!dragon) return;
 
 	// set initial dragon transforms
@@ -57,7 +56,7 @@ void dragonScene(Scene& scene) {
 	scene.addObject(sphere);
 
 	// angels!!
-	auto angelBase = ModelLoader::load("assets/models/pbr/engel_statue_scan_retopology_gltf/scene.gltf");
+	auto angelBase = ModelLoader::load("assets/models/engel_statue_scan_retopology_gltf/scene.gltf");
 	if (!angelBase) return;
 
 	// angel 1
@@ -73,4 +72,23 @@ void dragonScene(Scene& scene) {
 	angel2->transform.rotation = glm::vec3(90, 0, -42);
 	angel2->transform.position = glm::vec3(-1, 0, -7);
 	scene.addObject(angel2);
+}
+
+void lionScene(Scene& scene) {
+	logger.info("creating lion debug scene");
+
+	// lights
+	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1, -1, -1), glm::vec3(1)));
+
+	// add objects
+	auto lion = ModelLoader::load("assets/models/lion_crushing_a_serpent/scene.gltf");
+	//lion->transform.scale = glm::vec3(.5);
+	lion->transform.rotation = glm::vec3(180, 0, 0);
+	//lion->transform.position = glm::vec3(-3, 5, 5);
+	scene.addObject(lion);
+
+	auto sphere = ModelLoader::load("assets/models/sphere.obj");
+	scene.addObject(sphere);
+
+	scene.camera.setTarget(glm::vec3(7, -6, -10));
 }

@@ -6,11 +6,11 @@
 #include <string>
 
 #include <logger.h>
-#include <shader.h>
 
 #include "components/Mesh.h"
 #include "components/Transform.h"
 #include "components/Texture.h"
+#include "components/Shader.h"
 
 class Object {
 	// the main idea behind this class is that it acts as sort of a container for attributes;

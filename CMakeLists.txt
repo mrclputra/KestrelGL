@@ -53,7 +53,7 @@ add_executable(KestrelGL
     src/debug.cpp
     src/ModelLoader.cpp
     src/Renderer.cpp
-)
+ "src/components/Shader.h")
 
 # target properties
 target_compile_features(KestrelGL PRIVATE cxx_std_17)

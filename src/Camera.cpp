@@ -72,7 +72,7 @@ glm::vec3 Camera::calculatePosition() const {
 
 // https://www.songho.ca/opengl/gl_camera.html
 void Camera::updateVectors() {
-	front = glm::normalize(-position);
+	front = glm::normalize(target - position);
 	right = glm::normalize(glm::cross(front, m_worldUp));
 	up = glm::normalize(glm::cross(right, front));
 }

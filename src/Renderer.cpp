@@ -11,6 +11,8 @@ void Renderer::render(const Scene& scene) {
 
 void Renderer::renderObject(const Scene& scene, const Object& object) {
 	Shader& shader = *object.shader;
+	
+	shader.checkHotReload();
 	shader.use();
 
 	shader.setMat4("model", object.transform.getModelMatrix());
