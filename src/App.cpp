@@ -1,5 +1,6 @@
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#include "stb_image.h"
+
 #include "App.h"
 
 #include "debug.h"
@@ -127,12 +128,17 @@ void App::init() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	/*glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);*/
+	//glCullFace(GL_FRONT);
+
 	// initialize and configure scene instance
 	scene = std::make_unique<Scene>(bus);
 	scene->camera.setViewport(fbWidth, fbHeight); // tell camera about viewport
 
 	// open debug scene
-	debugScene(*scene);
+	//dragonScene(*scene);
+	lionScene(*scene);
 
 	logger.info("ended initialization");
 }
@@ -172,9 +178,11 @@ void App::run() {
 		gui.beginFrame();
 		gui.draw();
 
-		// render and update scene
+		// update scene
 		scene->update(deltaTime);
-		scene->render();
+
+		// render
+		renderer.render(*scene);
 
 		// end frame
 		gui.endFrame();

@@ -15,6 +15,9 @@ void Gui::init(App* appPtr, GLFWwindow* window) {
     ImGui_ImplGlfw_InitForOpenGL(window, false);
     ImGui_ImplOpenGL3_Init("#version 460");
 
+    // set size
+    ImGui::SetNextWindowSize(ImVec2(200, 300));
+
     active = true;
 }
 
@@ -51,14 +54,17 @@ void Gui::draw() {
     if (!app) return;
 
     // define gui elements here
-    ImGui::SetNextWindowSize(ImVec2(200, 100));
     ImGui::Begin("Debug");
 
     // TODO: add elements here
     auto cam = app->scene->camera;
     ImGui::Text("Camera Position");
     ImGui::Text("%.2fx, %.2fy, %.2fz,", cam.position.x, cam.position.y, cam.position.z);
-    ImGui::Text("%.2fr, %.2ft, %.2fp,", cam.radius, cam.theta, cam.phi);
+    ImGui::Spacing();
+    ImGui::Text("rad   : %.2f", cam.radius);
+    ImGui::Text("theta : %.2f", cam.theta);
+    ImGui::Text("phi   : %.2f", cam.phi);
+    //ImGui::Text("%.2fr, %.2ft, %.2fp,", cam.radius, cam.theta, cam.phi);
 
     ImGui::End();
 }

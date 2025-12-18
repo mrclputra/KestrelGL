@@ -9,101 +9,100 @@
 #include <iostream>
 #include <sys/stat.h>
 
-// TODO: move implementation to components folder
-//  and separate into header vs implementation
+#include <logger.h>
 
 /// <summary>
-/// This class encapsulates an OpenGL shader program,
-/// handling loading, compiling, and setting uniform variables.
+/// This class encapsulates an OpenGL shader program; handling, loading, compiling, and setting uniforms
 /// </summary>
 class Shader {
 public:
-    unsigned int ID = 0;
+	unsigned int ID = 0;
 
-    Shader() = default;
+	Shader() = default;
+	Shader(const char* vertexPath, const char* fragmentPath) : m_vertexPath(vertexPath), m_fragmentPath(fragmentPath) {
+		compile();
+	}
 
-    /// <summary>
-    /// Construct a shader program from vertex, fragment, and optional geometry shader files.
-    /// </summary>
-    /// <param name="vertexPath">Path to the vertex shader.</param>
-    /// <param name="fragmentPath">Path to the fragment shader.</param>
-    /// <param name="geometryPath">Optional path to the geometry shader.</param>
-    Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr) 
-        : m_vertexPath(vertexPath), m_fragmentPath(fragmentPath), m_geometryPath(geometryPath ? geometryPath : "") {
-        compile();
-        updateModTimes();
+	/// <summary>
+	/// Run the shader program.
+	/// </summary>
+	void use() const { glUseProgram(ID); }
+
+    // check if shaders have been modified
+    // reload if needed;
+    void checkHotReload() {
+        time_t vMod = getModTime(m_vertexPath);
+        time_t fMod = getModTime(m_fragmentPath);
+
+        if (vMod != m_vertexModTime || fMod != m_fragmentModTime) {
+            compile();
+            updateModTimes();
+            logger.info(std::to_string(ID) +" shader reloaded");
+        }
     }
 
-    /// <summary>
-    /// Run the shader program.
-    /// </summary>
-    void use() const { glUseProgram(ID); }
-
-    // uniform setters
+	// uniform setters
     void setBool(const std::string& name, bool value) const {
-        glUniform1i(getLocation(name), value);
+        glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
     }
     void setInt(const std::string& name, int value) const {
-        glUniform1i(getLocation(name), value);
+        glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
     }
     void setFloat(const std::string& name, float value) const {
-        glUniform1f(getLocation(name), value);
+        glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
     }
     void setVec2(const std::string& name, const glm::vec2& v) const {
-        glUniform2fv(getLocation(name), 1, &v[0]);
+        glUniform2fv(glGetUniformLocation(ID, name.c_str()), 1, &v[0]);
     }
     void setVec2(const std::string& name, float x, float y) const {
-        glUniform2f(getLocation(name), x, y);
+        glUniform2f(glGetUniformLocation(ID, name.c_str()), x, y);
     }
     void setVec3(const std::string& name, const glm::vec3& v) const {
-        glUniform3fv(getLocation(name), 1, &v[0]);
+        glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, &v[0]);
     }
     void setVec3(const std::string& name, float x, float y, float z) const {
-        glUniform3f(getLocation(name), x, y, z);
+        glUniform3f(glGetUniformLocation(ID, name.c_str()), x, y, z);
     }
     void setVec4(const std::string& name, const glm::vec4& v) const {
-        glUniform4fv(getLocation(name), 1, &v[0]);
+        glUniform4fv(glGetUniformLocation(ID, name.c_str()), 1, &v[0]);
     }
     void setVec4(const std::string& name, float x, float y, float z, float w) const {
-        glUniform4f(getLocation(name), x, y, z, w);
+        glUniform4f(glGetUniformLocation(ID, name.c_str()), x, y, z, w);
     }
     void setMat2(const std::string& name, const glm::mat2& m) const {
-        glUniformMatrix2fv(getLocation(name), 1, GL_FALSE, &m[0][0]);
+        glUniformMatrix2fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &m[0][0]);
     }
     void setMat3(const std::string& name, const glm::mat3& m) const {
-        glUniformMatrix3fv(getLocation(name), 1, GL_FALSE, &m[0][0]);
+        glUniformMatrix3fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &m[0][0]);
     }
     void setMat4(const std::string& name, const glm::mat4& m) const {
-        glUniformMatrix4fv(getLocation(name), 1, GL_FALSE, &m[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &m[0][0]);
     }
-
-    //explicit operator bool() const noexcept {
-    //    return ID;
-    //}
 
 private:
-    std::string m_vertexPath, m_fragmentPath, m_geometryPath;
-    time_t m_vertexModTime = 0, m_fragmentModTime = 0, m_geometryModTime = 0;
+	std::string m_vertexPath;
+	std::string m_fragmentPath;
+	
+	time_t m_vertexModTime = 0;
+	time_t m_fragmentModTime = 0;
 
-    int getLocation(const std::string& name) const {
-        return glGetUniformLocation(ID, name.c_str());
-    }
-
+    // get file modification time
     static time_t getModTime(const std::string& path) {
         struct stat st;
         return (stat(path.c_str(), &st) == 0) ? st.st_mtime : 0;
     }
 
+    // store current modification times
     void updateModTimes() {
         m_vertexModTime = getModTime(m_vertexPath);
         m_fragmentModTime = getModTime(m_fragmentPath);
-        m_geometryModTime = m_geometryPath.empty() ? 0 : getModTime(m_geometryPath);
     }
 
+    // read shader source code from file
     std::string readFile(const std::string& path) {
         std::ifstream file(path);
         if (!file.is_open()) {
-            std::cerr << "ERROR::SHADER_FILE_NOT_FOUND: " << path << "\n";
+            logger.error("SHADER_FILE_NOT_FOUND " + path);
             return "";
         }
         std::stringstream buffer;
@@ -111,6 +110,7 @@ private:
         return buffer.str();
     }
 
+    // compile a single shader and check for errors
     unsigned int compileShader(const std::string& source, GLenum type, const char* typeName) {
         unsigned int shader = glCreateShader(type);
         const char* src = source.c_str();
@@ -122,28 +122,23 @@ private:
         if (!success) {
             GLchar infoLog[1024];
             glGetShaderInfoLog(shader, 1024, nullptr, infoLog);
-            std::cerr << "ERROR::SHADER_COMPILATION_ERROR: " << typeName << "\n" << infoLog << "\n";
+            logger.error(std::string("SHADER_COMPILATION_ERROR: ") + typeName + "\n" + infoLog);
         }
 
         return shader;
     }
 
+    // load, compile, and link the shader program
     void compile() {
         std::string vertexCode = readFile(m_vertexPath);
         std::string fragmentCode = readFile(m_fragmentPath);
-        std::string geometryCode = m_geometryPath.empty() ? "" : readFile(m_geometryPath);
 
         unsigned int vertex = compileShader(vertexCode, GL_VERTEX_SHADER, "VERTEX");
         unsigned int fragment = compileShader(fragmentCode, GL_FRAGMENT_SHADER, "FRAGMENT");
-        unsigned int geometry = 0;
-        if (!m_geometryPath.empty()) {
-            geometry = compileShader(geometryCode, GL_GEOMETRY_SHADER, "GEOMETRY");
-        }
 
         ID = glCreateProgram();
         glAttachShader(ID, vertex);
         glAttachShader(ID, fragment);
-        if (geometry) glAttachShader(ID, geometry);
         glLinkProgram(ID);
 
         GLint success;
@@ -151,11 +146,10 @@ private:
         if (!success) {
             GLchar infoLog[1024];
             glGetProgramInfoLog(ID, 1024, nullptr, infoLog);
-            std::cerr << "ERROR::PROGRAM_LINKING_ERROR\n" << infoLog << "\n";
+            logger.error("PROGRAM_LINKING_ERROR\n" + std::string(infoLog));
         }
 
         glDeleteShader(vertex);
         glDeleteShader(fragment);
-        if (geometry) glDeleteShader(geometry);
     }
 };

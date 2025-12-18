@@ -1,7 +1,10 @@
 #pragma once
 
 #include <glad/glad.h>
+//#include "stb_image.h"
 #include <string>
+
+#include <logger.h>
 
 class Texture {
 public:

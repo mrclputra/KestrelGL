@@ -4,7 +4,6 @@
 #include <memory>
 #include <vector>
 
-//#include "Texture.h"
 #include "shader.h"
 
 class Material {
@@ -13,6 +12,7 @@ public:
 	~Material() = default;
 
 	// set shader uniforms
+	[[deprecated("This class is incompatible with current engine architecture")]]
 	void apply(Shader& shader) const;
 
 	// material properties

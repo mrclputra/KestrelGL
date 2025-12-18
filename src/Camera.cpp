@@ -39,7 +39,7 @@ void Camera::rotate(float xOffset, float yOffset) {
 	update();
 }
 void Camera::zoom(float offset) {
-	radius = glm::clamp(radius - offset * 0.32f, 0.2f, 700.0f);
+	radius = glm::clamp(radius - offset * 0.7f, 0.2f, 700.0f);
 	update();
 }
 void Camera::reset() {
@@ -51,9 +51,19 @@ void Camera::reset() {
 	update();
 }
 
+void Camera::setTarget(const glm::vec3& newTarget) {
+	glm::vec3 targetOffset = newTarget - target;
+	target = newTarget;
+
+	// update camera position by adding the offset, to maintain the same relative position/orientation
+	position += targetOffset;
+
+	update();
+}
+
 glm::vec3 Camera::calculatePosition() const {
 	// spherical to cartesian
-	return glm::vec3(
+	return target + glm::vec3(
 		radius * cos(phi) * cos(theta),
 		radius * sin(phi),
 		radius * cos(phi) * sin(theta)
@@ -62,7 +72,7 @@ glm::vec3 Camera::calculatePosition() const {
 
 // https://www.songho.ca/opengl/gl_camera.html
 void Camera::updateVectors() {
-	front = glm::normalize(-position);
+	front = glm::normalize(target - position);
 	right = glm::normalize(glm::cross(front, m_worldUp));
 	up = glm::normalize(glm::cross(right, front));
 }

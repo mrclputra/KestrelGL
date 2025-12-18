@@ -1,6 +1,8 @@
 #include "ModelLoader.h"
 
-std::shared_ptr<Entity> ModelLoader::load(const std::string& path) {
+// TODO: this function should also handle shader assignment
+//	initial transformation should be set here, but optional
+std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::shared_ptr<Shader> shader) {
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(path,
 		aiProcess_Triangulate |
@@ -19,46 +21,59 @@ std::shared_ptr<Entity> ModelLoader::load(const std::string& path) {
 	size_t lastSlash = path.find_last_of("/\\");
 	directory = (lastSlash != std::string::npos) ? path.substr(0, lastSlash) : ".";
 
-	// create empty entity object
-	auto entity = std::make_shared<Entity>(path);
-	entity->name = scene->mRootNode->mName.C_Str(); // get name from root node
+	// create empty object
+	auto object = std::make_shared<Object>(path);
+	object->name = scene->mRootNode->mName.C_Str(); // get name from root node
 
-	// traverse scene graph and populate entity component 
-	processNode(scene->mRootNode, scene, *entity);
+	// traverse scene graph and populate object component 
+	processNode(scene->mRootNode, scene, *object, directory);
+
+	// set shader
+	if (shader) {
+		// custom shader
+		object->shader = shader;
+	}
+	else {
+		if (object->textures.empty()) {
+			// no textures
+			object->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model_notex.frag");
+		}
+		else {
+			// has textures
+			object->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model.frag");
+		}
+	}
 
 	logger.info(
-		"Entity created: " + entity->name + " "
-		"meshes: " + std::accumulate(
-			entity->meshes.begin(), entity->meshes.end(), std::string{},
+		"Object created: " + object->name + " "
+		"meshes: " + "[" + std::accumulate(
+			object->meshes.begin(), object->meshes.end(), std::string{},
 			[](const std::string& a, const std::shared_ptr<Mesh>& b) {
 				return a.empty() ? ("0x" + std::to_string(reinterpret_cast<uintptr_t>(b.get())))
 					: a + ", 0x" + std::to_string(reinterpret_cast<uintptr_t>(b.get()));
 			}
-		)
+		) + "]"
 	);
-	return entity;
+	return object;
 }
 
-void ModelLoader::processNode(aiNode* node, const aiScene* scene, Entity& entity) {
+void ModelLoader::processNode(aiNode* node, const aiScene* scene, Object& object, const std::string& directory) {
 	// process current node
 	for (unsigned int i = 0; i < node->mNumMeshes; i++) {
 		aiMesh* assimpMesh = scene->mMeshes[node->mMeshes[i]];
-		auto mesh = processMesh(assimpMesh, scene);
+		auto mesh = processMesh(assimpMesh, scene, object, directory);
 		if (mesh) {
-			entity.meshes.push_back(mesh);
+			object.meshes.push_back(mesh);
 		}
-
-		// TODO: figure out how materials are stored in ASSIMP
-		//	and then pass it into the entity
 	}
 
 	// process children nodes,
 	for (unsigned int i = 0; i < node->mNumChildren; i++) {
-		processNode(node->mChildren[i], scene, entity);
+		processNode(node->mChildren[i], scene, object, directory);
 	}
 }
 
-std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scene) {
+std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scene, Object& object, const std::string& directory) {
 	std::vector<Mesh::Vertex> vertices;
 	std::vector<unsigned int> indices;
 
@@ -90,7 +105,7 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scen
 		if (mesh->mTextureCoords[0]) {
 			vertex.uv = glm::vec2(
 				mesh->mTextureCoords[0][i].x,
-				1.0 - mesh->mTextureCoords[0][i].y // flip
+				mesh->mTextureCoords[0][i].y
 			);
 
 			// tangent
@@ -124,6 +139,56 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scen
 		}
 	}
 
+	// process materials and textures
+	if (mesh->mMaterialIndex >= 0) {
+		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+
+		// load albedo textures
+		if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+			for (unsigned int i = 0; i < material->GetTextureCount(aiTextureType_DIFFUSE); i++) {
+				aiString str;
+				material->GetTexture(aiTextureType_DIFFUSE, i, &str);
+				std::string texPath = directory + "/" + std::string(str.C_Str());
+				loadTexture(texPath, Texture::Type::ALBEDO, object);
+			}
+		}
+
+		// load normal maps
+		if (material->GetTextureCount(aiTextureType_NORMALS) > 0) {
+			for (unsigned int i = 0; i < material->GetTextureCount(aiTextureType_NORMALS); i++) {
+				aiString str;
+				material->GetTexture(aiTextureType_NORMALS, i, &str);
+				std::string texPath = directory + "/" + std::string(str.C_Str());
+				loadTexture(texPath, Texture::Type::NORMAL, object);
+			}
+		}
+
+		// load metallic roughness maps
+		if (material->GetTextureCount(aiTextureType_GLTF_METALLIC_ROUGHNESS) > 0) {
+			for (unsigned int i = 0; i < material->GetTextureCount(aiTextureType_GLTF_METALLIC_ROUGHNESS); i++) {
+				aiString str;
+				material->GetTexture(aiTextureType_GLTF_METALLIC_ROUGHNESS, i, &str);
+				std::string texPath = directory + "/" + std::string(str.C_Str());
+				loadTexture(texPath, Texture::Type::METALLIC_ROUGHNESS, object);
+			}
+		}
+	}
+
 	// return processed mesh
 	return std::make_shared<Mesh>(vertices, indices);
+}
+
+int ModelLoader::loadTexture(const std::string& path, Texture::Type type, Object& object) {
+	// check if texture is already loaded
+	for (size_t i = 0; i < object.textures.size(); i++) {
+		if (object.textures[i]->path == path) {
+			// texture already exists
+			return static_cast<int>(i); 
+		}
+	}
+
+	// load new texture
+	auto texture = std::make_shared<Texture>(path, type);
+	object.textures.push_back(texture);
+	return static_cast<int>(object.textures.size() - 1);
 }
