@@ -1,9 +1,6 @@
 #include "Renderer.h"
 
 void Renderer::render(const Scene& scene) {
-	//const auto& view = scene.camera.getViewMatrix();
-	//const auto& proj = scene.camera.getProjectionMatrix();
-
 	for (const auto& objPtr : scene.objects) {
 		renderObject(scene, *objPtr);
 	}
@@ -42,26 +39,31 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
 }
 
 void Renderer::uploadLights(const Scene& scene, Shader& shader) {
-	constexpr int MAX_LIGHTS = 8;
-	int count = std::min<int>(scene.lights.size(), MAX_LIGHTS);
+    constexpr int MAX_LIGHTS = 8;
 
-	for (int i = 0; i < count; ++i) {
-		auto& light = scene.lights[i];
-		std::string base = "lights[" + std::to_string(i) + "]";
+    int dirCount = 0;
+    int pointCount = 0;
+    int spotCount = 0;
 
-		shader.setVec3(base + ".color", light->color);
+    for (auto& light : scene.lights) {
+        if (auto dir = std::dynamic_pointer_cast<DirectionalLight>(light)) {
+            if (dirCount >= MAX_LIGHTS) continue;
+            std::string base = "dirLights[" + std::to_string(dirCount) + "]";
+            shader.setVec3(base + ".direction", dir->direction);
+            shader.setVec3(base + ".color", dir->color);
+            dirCount++;
+        }
+        else if (auto point = std::dynamic_pointer_cast<PointLight>(light)) {
+            if (pointCount >= MAX_LIGHTS) continue;
+            std::string base = "pointLights[" + std::to_string(pointCount) + "]";
+            shader.setVec3(base + ".position", point->transform.position);
+            shader.setVec3(base + ".color", point->color);
+            shader.setFloat(base + ".radius", point->radius);
+            pointCount++;
+        }
+    }
 
-		if (auto dir = std::dynamic_pointer_cast<DirectionalLight>(light)) {
-			shader.setVec3(base + ".position", glm::vec3(0.0f));
-			shader.setVec3(base + ".direction", dir->direction);
-			shader.setInt(base + ".type", 0);
-		}
-		else if (auto point = std::dynamic_pointer_cast<PointLight>(light)) {
-			shader.setVec3(base + ".position", point->transform.position);
-			shader.setVec3(base + ".direction", glm::vec3(0.0f));
-			shader.setInt(base + ".type", 1);
-		}
-	}
-
-	shader.setInt("numLights", count);
+    shader.setInt("numDirLights", dirCount);
+    shader.setInt("numPointLights", pointCount);
+    shader.setInt("numSpotLights", spotCount);
 }
