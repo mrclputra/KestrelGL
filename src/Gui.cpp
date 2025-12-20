@@ -68,12 +68,14 @@ void Gui::draw() {
 
     ImGui::End();
 
-    ImGui::SetNextWindowSize(ImVec2(300, 850));
-    ImGui::Begin("Light Space-Depth Buffer", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+
+    // SHADOWMAP FRAMEBUFFER PREVIEW
+    ImGui::Begin("L-Depth Buffers", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
     for (auto light : app->scene->lights) {
         if (auto dir = std::dynamic_pointer_cast<DirectionalLight>(light)) {
-            ImGui::Image((void*)(intptr_t)dir->depthMap, ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
+            //ImGui::Text("Directional Light: %d", dir->depthMap);
+            ImGui::Image((void*)(intptr_t)dir->depthMap, ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0));
         }
     }
 

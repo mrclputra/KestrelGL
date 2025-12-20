@@ -27,8 +27,8 @@ public:
 	float farPlane;
 
 	void updateLightSpaceMatrix() {
-		glm::mat4 lightProj = glm::ortho(-25.0f, 25.0f, -25.0f, 25.0f, nearPlane, farPlane);
-		glm::vec3 lightPos = -direction * 20.0f;
+		glm::mat4 lightProj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, nearPlane, farPlane);
+		glm::vec3 lightPos = -direction * 30.0f;
 		glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f, -2.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		lightSpaceMatrix = lightProj * lightView;
 	}

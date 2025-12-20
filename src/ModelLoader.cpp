@@ -26,7 +26,8 @@ std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::shared_p
 	object->name = scene->mRootNode->mName.C_Str(); // get name from root node
 
 	// traverse scene graph and populate object component 
-	processNode(scene->mRootNode, scene, *object, directory);
+	// start with identity matrix for root transform
+	processNode(scene->mRootNode, scene, *object, directory, glm::mat4(1.0f));
 
 	// set shader
 	if (shader) {
@@ -40,7 +41,7 @@ std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::shared_p
 		}
 		else {
 			// has textures
-			object->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model.frag");
+			object->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model_pbr.frag");
 		}
 	}
 
@@ -57,25 +58,34 @@ std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::shared_p
 	return object;
 }
 
-void ModelLoader::processNode(aiNode* node, const aiScene* scene, Object& object, const std::string& directory) {
-	// process current node
+void ModelLoader::processNode(aiNode* node, const aiScene* scene, Object& object, const std::string& directory, const glm::mat4& parentTransform) {
+	// get this node's transform and combine with parent
+	glm::mat4 nodeTransform = aiMatrixToGlm(node->mTransformation);
+	glm::mat4 accumulatedTransform = parentTransform * nodeTransform;
+
+	// process current node's meshes with accumulated transform
 	for (unsigned int i = 0; i < node->mNumMeshes; i++) {
 		aiMesh* assimpMesh = scene->mMeshes[node->mMeshes[i]];
-		auto mesh = processMesh(assimpMesh, scene, object, directory);
+		auto mesh = processMesh(assimpMesh, scene, object, directory, accumulatedTransform);
 		if (mesh) {
 			object.meshes.push_back(mesh);
 		}
 	}
 
-	// process children nodes,
+	// process children nodes, passing down accumulated transform
 	for (unsigned int i = 0; i < node->mNumChildren; i++) {
-		processNode(node->mChildren[i], scene, object, directory);
+		processNode(node->mChildren[i], scene, object, directory, accumulatedTransform);
 	}
 }
 
-std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scene, Object& object, const std::string& directory) {
+std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scene, Object& object, const std::string& directory, const glm::mat4& transform) {
 	std::vector<Mesh::Vertex> vertices;
 	std::vector<unsigned int> indices;
+	std::vector<int> texIndices;
+
+	// for proper normal transformation
+	// in the event the original mesh is transformed
+	glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(transform)));
 
 	// extract vertex data
 	for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
@@ -83,19 +93,21 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scen
 
 		// "foreach vertex, get the following data:"
 		// position
-		vertex.pos = glm::vec3(
+		vertex.pos = transform * glm::vec4(
 			mesh->mVertices[i].x,
 			mesh->mVertices[i].y,
-			mesh->mVertices[i].z
+			mesh->mVertices[i].z,
+			1.0f
 		);
 
 		// normals
 		if (mesh->HasNormals()) {
-			vertex.normal = glm::vec3(
+			vertex.normal = normalMatrix * glm::vec3(
 				mesh->mNormals[i].x,
 				mesh->mNormals[i].y,
 				mesh->mNormals[i].z
 			);
+			vertex.normal = glm::normalize(vertex.normal);
 		}
 		else {
 			vertex.normal = glm::vec3(0.0f);
@@ -114,6 +126,7 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scen
 				mesh->mTangents[i].y,
 				mesh->mTangents[i].z
 			);
+			vertex.tangent = glm::normalize(vertex.tangent);
 
 			// bitangent
 			vertex.bitangent = glm::vec3(
@@ -121,6 +134,7 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scen
 				mesh->mBitangents[i].y,
 				mesh->mBitangents[i].z
 			);
+			vertex.bitangent = glm::normalize(vertex.bitangent);
 		}
 		else {
 			vertex.uv = glm::vec2(0.0f);
@@ -149,7 +163,8 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scen
 				aiString str;
 				material->GetTexture(aiTextureType_DIFFUSE, i, &str);
 				std::string texPath = directory + "/" + std::string(str.C_Str());
-				loadTexture(texPath, Texture::Type::ALBEDO, object);
+				int idx = loadTexture(texPath, Texture::Type::ALBEDO, object);
+				texIndices.push_back(idx);
 			}
 		}
 
@@ -159,7 +174,8 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scen
 				aiString str;
 				material->GetTexture(aiTextureType_NORMALS, i, &str);
 				std::string texPath = directory + "/" + std::string(str.C_Str());
-				loadTexture(texPath, Texture::Type::NORMAL, object);
+				int idx = loadTexture(texPath, Texture::Type::NORMAL, object);
+				texIndices.push_back(idx);
 			}
 		}
 
@@ -169,13 +185,16 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scen
 				aiString str;
 				material->GetTexture(aiTextureType_GLTF_METALLIC_ROUGHNESS, i, &str);
 				std::string texPath = directory + "/" + std::string(str.C_Str());
-				loadTexture(texPath, Texture::Type::METALLIC_ROUGHNESS, object);
+				int idx = loadTexture(texPath, Texture::Type::METALLIC_ROUGHNESS, object);
+				texIndices.push_back(idx);
 			}
 		}
 	}
 
 	// return processed mesh
-	return std::make_shared<Mesh>(vertices, indices);
+	auto meshPtr = std::make_shared<Mesh>(vertices, indices);
+	meshPtr->textureIndices = texIndices; // should we include this in the constructor
+	return meshPtr;
 }
 
 int ModelLoader::loadTexture(const std::string& path, Texture::Type type, Object& object) {
@@ -183,7 +202,7 @@ int ModelLoader::loadTexture(const std::string& path, Texture::Type type, Object
 	for (size_t i = 0; i < object.textures.size(); i++) {
 		if (object.textures[i]->path == path) {
 			// texture already exists
-			return static_cast<int>(i); 
+			return static_cast<int>(i);
 		}
 	}
 
@@ -191,4 +210,14 @@ int ModelLoader::loadTexture(const std::string& path, Texture::Type type, Object
 	auto texture = std::make_shared<Texture>(path, type);
 	object.textures.push_back(texture);
 	return static_cast<int>(object.textures.size() - 1);
+}
+
+glm::mat4 ModelLoader::aiMatrixToGlm(const aiMatrix4x4& from) {
+	// Assimp uses row-major, GLM uses column-major
+	return glm::mat4(
+		from.a1, from.b1, from.c1, from.d1,
+		from.a2, from.b2, from.c2, from.d2,
+		from.a3, from.b3, from.c3, from.d3,
+		from.a4, from.b4, from.c4, from.d4
+	);
 }

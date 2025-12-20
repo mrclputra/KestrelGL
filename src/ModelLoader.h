@@ -34,7 +34,8 @@ private:
 	/// <param name="scene">The Assimp Scene instance</param>
 	/// <param name="entity">The Object which to save data into</param>
 	/// <param name="directory">Directory where the model file is located</param>
-	static void processNode(aiNode* node, const aiScene* scene, Object& entity, const std::string& directory);
+	/// <param name="transform">Accumulated transformation from parent nodes</param>
+	static void processNode(aiNode* node, const aiScene* scene, Object& entity, const std::string& directory, const glm::mat4& transform);
 
 	/// <summary>
 	/// <para>Convert the Assimp mesh into our mesh format</para>
@@ -42,8 +43,9 @@ private:
 	/// <param name="mesh">The Assimp mesh to parse.</param>
 	/// <param name="scene">The Assimp Scene instance</param>
 	/// <param name="directory">Directory where the model file is located</param>
+	/// <param name="transform">Transformation to bake into vertices</param>
 	/// <returns>Mesh object</returns>
-	static std::shared_ptr<Mesh> processMesh(aiMesh* mesh, const aiScene* scene, Object& object, const std::string& directory);
+	static std::shared_ptr<Mesh> processMesh(aiMesh* mesh, const aiScene* scene, Object& object, const std::string& directory, const glm::mat4& transform);
 
 	// TODO: in the future, figure out where use of materials falls into all of this
 	//  maybe a new function called processMaterials or something, 
@@ -58,4 +60,9 @@ private:
 	/// <param name="object"></param>
 	/// <returns></returns>
 	static int loadTexture(const std::string& path, Texture::Type type, Object& object);
+
+	/// <summary>
+	/// <para>Converts Assimp matrix to GLM matrix</para>
+	/// </summary>
+	static glm::mat4 aiMatrixToGlm(const aiMatrix4x4& from);
 };

@@ -2,5 +2,6 @@
 //#include "ModelLoader.h"
 #include <logger.h>
 
-void dragonScene(Scene& scene);
+void baseScene(Scene& scene);
+void dragonScene2(Scene& scene);
 void lionScene(Scene& scene);

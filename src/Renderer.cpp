@@ -103,7 +103,24 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
         }
     }
 
+    // TODO: refactor the textures binding system for multi-mesh objects
 	for (const auto& mesh : object.meshes) {
+        unsigned int slot = 0;
+
+        // bind only the textures this mesh uses
+        for (int texIdx : mesh->textureIndices) {
+            const auto& tex = object.textures[texIdx];
+            tex->bind(slot);
+            switch (tex->type) {
+                case Texture::Type::ALBEDO: shader.setInt("albedoMap", slot); break;
+                case Texture::Type::NORMAL: shader.setInt("normalMap", slot); break;
+                case Texture::Type::METALLIC_ROUGHNESS: shader.setInt("metallicRoughnessMap", slot); break;
+                case Texture::Type::OCCLUSION: shader.setInt("aoMap", slot); break;
+                case Texture::Type::EMISSION: shader.setInt("emissionMap", slot); break;
+            }
+            ++slot;
+        }
+
 		mesh->render();
 	}
 }

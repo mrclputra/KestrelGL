@@ -19,7 +19,10 @@ public:
         glm::vec3 bitangent;
         glm::vec2 uv;
     };
-    
+
+    // which textures from the object's texture vector this mesh uses
+    std::vector<int> textureIndices;
+
     // constructors
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
     ~Mesh();
