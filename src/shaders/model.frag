@@ -45,6 +45,44 @@ in vec3 vTangent;
 in vec3 vBitangent;
 in vec2 vTexCoords;
 
+// shadows
+uniform sampler2D shadowMaps[MAX_LIGHTS];
+uniform mat4 lightSpaceMatrices[MAX_LIGHTS];
+
+float shadowCalculation(int lightIdx, vec3 normal, vec3 lightDir) {
+    // we calculate light space position on the fly
+    vec4 fragPosLightSpace = lightSpaceMatrices[lightIdx] * vec4(vFragPos, 1.0);
+
+    // perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    if (projCoords.z > 1.0) return 0.0;
+
+    // get closest depth value from light
+    float currentDepth = projCoords.z;
+
+    // acne thing
+    float bias = max(0.02 * (1.0 - dot(normal, lightDir)), 0.0005);
+
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(shadowMaps[lightIdx], 0);
+
+    // shadow check
+//    float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
+//    if(projCoords.z > 1.0) shadow = 0.0;
+//
+//    return shadow;
+
+    // PCF
+    for(int x = -1; x <= 1; ++x) {
+        for(int y = -1; y <= 1; ++y) {
+            float pcfDepth = texture(shadowMaps[lightIdx], projCoords.xy + vec2(x, y) * texelSize).r; 
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+        }    
+    }
+    return shadow / 9.0;
+}
+
 void main() {
 	vec3 albedo = texture(albedoMap, vTexCoords).rgb;
 	vec3 normal = texture(normalMap, vTexCoords).rgb;
@@ -77,7 +115,10 @@ void main() {
         float spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);
         vec3 specular = spec * 0.3 * dirLights[i].color;
 
-        result += diffuse + specular;
+        // shadows
+        float shadow = shadowCalculation(i, N, L);
+
+        result += (1.0 - shadow) * (diffuse + specular);
     }
 
     // point lights

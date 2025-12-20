@@ -9,6 +9,11 @@
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	auto app = static_cast<App*>(glfwGetWindowUserPointer(window)); // is there a way to get this value without casting each time?
 	app->onFrameBufferSize(width, height);
+
+	// update renderer
+	//app->renderer.screenHeight = height;
+	//app->renderer.screenWidth = width;
+
 }
 static void cursor_position_callback(GLFWwindow* window, double xPos, double yPos) {
 	ImGui_ImplGlfw_CursorPosCallback(window, xPos, yPos); // ImGui
@@ -137,8 +142,8 @@ void App::init() {
 	scene->camera.setViewport(fbWidth, fbHeight); // tell camera about viewport
 
 	// open debug scene
-	dragonScene(*scene);
-	//lionScene(*scene);
+	//dragonScene(*scene);
+	lionScene(*scene);
 
 	logger.info("ended initialization");
 }
@@ -157,6 +162,8 @@ void App::run() {
 	logger.info("running main process...");
 	// main stuff happens in this function here
 	float lastTime = 0.0f;
+
+	renderer.init(*scene);
 
 	// main execution loop below
 	// per-frame logic

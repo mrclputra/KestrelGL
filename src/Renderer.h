@@ -8,17 +8,16 @@
 
 class Renderer {
 public:
+	void init(const Scene& scene);
 	void render(const Scene& scene);
+	void renderLightPass(const Scene& scene);
+
+	// TODO: check if storage is necessary
+	//int screenWidth, screenHeight;
 
 private:
-	// TODO: refactor this custom datatype
-	struct ShaderLight {
-		glm::vec3 position;
-		glm::vec3 direction;
-		glm::vec3 color;
-		int type;
-	};
-
 	void uploadLights(const Scene& scene, Shader& shader);
 	void renderObject(const Scene& scene, const Object& object);
+
+	Shader* depthShader = nullptr;
 };

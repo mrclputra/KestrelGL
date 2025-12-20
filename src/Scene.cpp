@@ -17,11 +17,20 @@ void Scene::update(float deltaTime) {
 	// DEBUG LIGHT ROTATION THINGY!!!
 	static float t = 0;
 	t += deltaTime * 0.5f;
-	if (auto it = std::find_if(lights.begin(), lights.end(),
-		[](auto& l) { return std::dynamic_pointer_cast<PointLight>(l); }); it != lights.end())
-	{
-		auto& p = std::dynamic_pointer_cast<PointLight>(*it)->transform.position;
-		p.x = 4.0f * sin(t * glm::two_pi<float>());
+
+	//if (auto it = std::find_if(lights.begin(), lights.end(),
+	//	[](auto& l) { return std::dynamic_pointer_cast<PointLight>(l); }); it != lights.end())
+	//{
+	//	auto& p = std::dynamic_pointer_cast<PointLight>(*it)->transform.position;
+	//	p.x = 4.0f * sin(t * glm::two_pi<float>());
+	//}
+
+	float step = deltaTime * 0.5f;
+	for (auto& light : lights) {
+		if (auto dir = std::dynamic_pointer_cast<DirectionalLight>(light)) {
+			glm::mat3 rotY = glm::rotate(glm::mat4(1.0f), step, glm::vec3(0, 1, 0));
+			dir->direction = glm::normalize(rotY * dir->direction);
+		}
 	}
 }
 

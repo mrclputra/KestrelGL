@@ -9,7 +9,7 @@ int main() {
 
 	// create an App instance
 	// call the app run method 
-	auto app = App(600, 1000, "KestrelGL2");
+	auto app = App(1000, 1000, "KestrelGL2");
 	app.run();
 
 	return 0;

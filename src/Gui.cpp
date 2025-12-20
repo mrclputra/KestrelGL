@@ -67,4 +67,15 @@ void Gui::draw() {
     //ImGui::Text("%.2fr, %.2ft, %.2fp,", cam.radius, cam.theta, cam.phi);
 
     ImGui::End();
+
+    ImGui::SetNextWindowSize(ImVec2(300, 850));
+    ImGui::Begin("Light Space-Depth Buffer", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+
+    for (auto light : app->scene->lights) {
+        if (auto dir = std::dynamic_pointer_cast<DirectionalLight>(light)) {
+            ImGui::Image((void*)(intptr_t)dir->depthMap, ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
+        }
+    }
+
+    ImGui::End();
 }

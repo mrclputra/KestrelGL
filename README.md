@@ -1,11 +1,8 @@
 # KestrelGL
 
-lightweight C++ OpenGL framework for loading and viewing 3D models
-uses ASSIMP and ImGUI
+![lion screenshot](docs/KestrelGL_GABdJiYaBU.gif)
 
-vcpkg + cmake
+This is my repository for figuring out OpenGL and C++.
+No end goal in mind, just having fun
 
-made this project for the learning experience
-
-run the following in project root to get the '.sln':
-cmake -S . -B build -G "Visual Studio 18 2026" -A x64
+Public so my friends can access
