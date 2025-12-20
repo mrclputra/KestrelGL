@@ -7,6 +7,7 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <vector>
 
 class App; // forward declaration
 
@@ -26,4 +27,13 @@ public:
 private:
     App* app = nullptr; // to interact with application processes
     bool active = false; // flag
+
+    // profiler stuff
+    static const int FRAME_HIST_COUNT = 2000;
+    float frameTimeHistory[FRAME_HIST_COUNT] = { 0 };
+    int frameTimeOffset = 0;
+    float maxFrameTime = 0.0f;
+
+    float frameTimeSum = 0.0f;     // running sum; moving average
+    float movingAverage = 0.0f;
 };

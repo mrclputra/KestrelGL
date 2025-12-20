@@ -209,6 +209,8 @@ int ModelLoader::loadTexture(const std::string& path, Texture::Type type, Object
 	// load new texture
 	auto texture = std::make_shared<Texture>(path, type);
 	object.textures.push_back(texture);
+
+	logger.info("retrieved " + path);
 	return static_cast<int>(object.textures.size() - 1);
 }
 

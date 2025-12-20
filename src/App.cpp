@@ -29,6 +29,9 @@ static void scroll_callback(GLFWwindow* window, double xOff, double yOff) {
 	auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
 	app->onScroll(xOff, yOff);
 }
+static void character_callback(GLFWwindow* window, unsigned int codepoint) {
+	ImGui_ImplGlfw_CharCallback(window, codepoint);
+}
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods); // ImGui
 	if (ImGui::GetIO().WantCaptureKeyboard) return; // if imgui wants the keyboard, stop here
@@ -98,6 +101,9 @@ void App::init() {
 	glfwMakeContextCurrent(window);
 	glfwSetWindowUserPointer(window, this);
 
+	// disable vsync >:)
+	glfwSwapInterval(0);
+
 	// setup callbacks
 	setupCallbacks();
 
@@ -156,6 +162,7 @@ void App::setupCallbacks() {
 	glfwSetCursorPosCallback(window, cursor_position_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetCharCallback(window, character_callback);
 }
 
 void App::run() {

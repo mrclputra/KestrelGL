@@ -121,7 +121,7 @@ void main() {
 //    float roughness     = metRough.x;
 //    float metallic      = metRough.y;
     float metallic      = 0.0f; // DEBUG, lets try and attach this to a slider
-    float roughness     = 0.1f;
+    float roughness     = 0.32f;
 
     // world space conversion
     mat3 TBN    = mat3(normalize(vTangent), normalize(vBitangent), normalize(vNormal));

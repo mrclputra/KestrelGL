@@ -3,7 +3,7 @@
 #include "lights/PointLight.h"
 
 Scene::Scene(EventBus& bus)
-    : bus(bus), camera(6.0f, 0.0f, 0.0f) {
+    : bus(bus), camera(20.0f, 90.0f, 30.0f) {
 	logger.info("scene created...");
 	camera.update(); // init
 }

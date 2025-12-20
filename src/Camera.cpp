@@ -1,9 +1,9 @@
 #include "Camera.h"
 
-Camera::Camera(float radius, float theta, float pi, glm::vec3 worldUp ) {
+Camera::Camera(float radius, float theta, float pi, glm::vec3 worldUp) {
 	this->radius = radius;
-	this->theta = theta;
-	this->phi = pi;
+	this->theta = glm::radians(theta);
+	this->phi = glm::radians(pi);
 	this->m_worldUp = worldUp;
 
 	logger.info("camera created - " + std::to_string(m_viewportWidth) + "*" + std::to_string(m_viewportHeight));
