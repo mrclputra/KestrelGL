@@ -63,6 +63,10 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
 	shader.setMat4("projection", scene.camera.getProjectionMatrix());
 	shader.setVec3("viewPos", scene.camera.position);
 
+    // TEMP
+    shader.setFloat("metalnessFac", object.metalnessFac);
+    shader.setFloat("roughnessFac", object.roughnessFac);
+
 	uploadLights(scene, shader);
 
 	// textures

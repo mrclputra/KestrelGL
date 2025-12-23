@@ -107,6 +107,9 @@ float shadowCalculation(int lightIdx, vec3 normal, vec3 lightDir) {
     return shadow / 9.0;
 }
 
+uniform float metalnessFac;
+uniform float roughnessFac;
+
 // ENTRY POINT HERE
 void main() {
     // fetch data
@@ -120,8 +123,11 @@ void main() {
 
 //    float roughness     = metRough.x;
 //    float metallic      = metRough.y;
-    float metallic      = 0.0f; // DEBUG, lets try and attach this to a slider
-    float roughness     = 0.32f;
+//    float metallic      = 1.0f; // DEBUG, lets try and attach this to a slider
+//    float roughness     = 0.32f;
+
+    float metallic      = metalnessFac;
+    float roughness     = roughnessFac;
 
     // world space conversion
     mat3 TBN    = mat3(normalize(vTangent), normalize(vBitangent), normalize(vNormal));
@@ -156,7 +162,7 @@ void main() {
     // gamma correction
     color = pow(color, vec3(1.0/2.2));
 
-    // debug thingy, ez showcase the hot reload
+    // debug conditional thingy
     int mode = 0;
     if      (mode == 1) FragColor = vec4(texAlbedo, 1.0);
     else if (mode == 2) FragColor = vec4(N * 0.5 + 0.5, 1.0);

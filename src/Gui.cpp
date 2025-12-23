@@ -116,6 +116,18 @@ void Gui::draw() {
                         ImGui::TreePop();
                     }
 
+                    if (ImGui::TreeNode("DANGER ZONE :)")) {
+                        ImGui::Text("Metalness");
+                        ImGui::SetNextItemWidth(140.0f);
+                        ImGui::SliderFloat("##MetalnessFac", &obj->metalnessFac, 0.0f, 1.0f);
+
+                        ImGui::Text("Roughness");
+                        ImGui::SetNextItemWidth(140.0f);
+                        ImGui::SliderFloat("##RougnessFac", &obj->roughnessFac, 0.0f, 1.0f);
+
+                        ImGui::TreePop();
+                    }
+
                     ImGui::TreePop(); // close object instance
                 }
             }

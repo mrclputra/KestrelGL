@@ -35,4 +35,6 @@ public:
 	//	as multiple meshes may reference the same texture
 
 	std::string name;
+	float metalnessFac = 0.0f; // TEMPORARY
+	float roughnessFac = 0.32f; // TEMPORARY
 };
