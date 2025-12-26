@@ -7,6 +7,7 @@
 
 #include "Object.h"
 #include "Camera.h"
+#include "Skybox.h"
 #include "lights/Light.h"
 #include "components/Mesh.h"
 
@@ -20,8 +21,14 @@ public:
     std::vector<std::shared_ptr<Light>> lights;
     Camera camera;
 
+    // skybox
+    std::unique_ptr<Skybox> skybox;
+
     // event system
     EventBus& bus;
+
+    // skybox management
+    void setSkybox(const std::string& hdriPath);
 
     // object management
     void addObject(std::shared_ptr<Object> object);

@@ -14,7 +14,10 @@ void baseScene(Scene& scene) {
 	logger.info("creating dragon debug scene");
 
 	// ADD LIGHTS
-	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1), glm::vec3(0.98)));
+	//scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1), glm::vec3(0.98)));
+	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1, -1, -1), glm::vec3(228, 112, 37)));
+	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(1, -1, -1), glm::vec3(239, 192, 112)));
+	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1, -1, 1), glm::vec3(255, 245, 182)));
 
 	// ADD ENTITY
 	auto object = ModelLoader::load("assets/models/stanford_dragon_pbr/scene.gltf");
@@ -22,10 +25,10 @@ void baseScene(Scene& scene) {
 	object->transform.rotation = glm::vec3(0, 0, 0);
 	scene.addObject(object);
 
-	auto floor = ModelLoader::load("assets/models/cube.obj");
-	floor->transform.scale = glm::vec3(20, 0.2, 20);
-	floor->transform.position = glm::vec3(0, -0.2, 0);
-	scene.addObject(floor);
+	//auto floor = ModelLoader::load("assets/models/cube.obj");
+	//floor->transform.scale = glm::vec3(5, 0.2, 3);
+	//floor->transform.position = glm::vec3(0, -0.2, 0);
+	//scene.addObject(floor);
 
 	// camera
 	scene.camera.setTarget(glm::vec3(0, 3, 0));
@@ -117,7 +120,7 @@ void lionScene(Scene& scene) {
 	scene.addObject(sphere);
 
 	auto plane = ModelLoader::load("assets/models/cube.obj");
-	plane->transform.scale = glm::vec3(20, .2, 20);
+	plane->transform.scale = glm::vec3(10, .2, 10);
 	plane->transform.position = glm::vec3(0, -5, 0);
 	scene.addObject(plane);
 

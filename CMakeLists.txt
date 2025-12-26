@@ -47,13 +47,13 @@ add_executable(KestrelGL
     src/Object.cpp
     src/Gui.cpp
     src/Camera.cpp
-    src/components/Material.cpp
+    
     src/components/Texture.cpp
     src/components/Mesh.cpp
     src/debug.cpp
     src/ModelLoader.cpp
     src/Renderer.cpp
- "src/components/Shader.h")
+ "src/Skybox.h" "src/Skybox.cpp")
 
 # target properties
 target_compile_features(KestrelGL PRIVATE cxx_std_17)

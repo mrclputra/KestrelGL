@@ -13,6 +13,15 @@ void Renderer::render(const Scene& scene) {
 	for (const auto& objPtr : scene.objects) {
 		renderObject(scene, *objPtr);
 	}
+
+    if (scene.skybox) {
+        scene.skybox->draw(scene.camera.getViewMatrix(),
+            scene.camera.getProjectionMatrix(),
+            scene.camera.position);
+    }
+    else {
+        logger.error("NO SKYBOX FOR RENDERER");
+    }
 }
 
 void Renderer::renderLightPass(const Scene& scene) {

@@ -3,9 +3,16 @@
 #include "lights/PointLight.h"
 
 Scene::Scene(EventBus& bus)
-    : bus(bus), camera(20.0f, 90.0f, 30.0f) {
+    : bus(bus), camera(20.0f, 90.0f, 30.0f), skybox(std::make_unique<Skybox>()) {
 	logger.info("scene created...");
 	camera.update(); // init
+}
+
+void Scene::setSkybox(const std::string& hdriPath) {
+	//if (!skybox) {
+	//	skybox = std::make_unique<Skybox>();
+	//}
+	skybox->load(hdriPath);
 }
 
 void Scene::update(float deltaTime) {

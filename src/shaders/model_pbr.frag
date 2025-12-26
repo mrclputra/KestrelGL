@@ -121,13 +121,11 @@ void main() {
     // TOLOOKUP: did they change the color convention for metallic roughness maps? gltf 2.0
     // https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#metallic-roughness-material
 
-//    float roughness     = metRough.x;
-//    float metallic      = metRough.y;
-//    float metallic      = 1.0f; // DEBUG, lets try and attach this to a slider
-//    float roughness     = 0.32f;
+    float roughness     = metRough.x;
+    float metallic      = metRough.y;
 
-    float metallic      = metalnessFac;
-    float roughness     = roughnessFac;
+//    float metallic      = metalnessFac;
+//    float roughness     = roughnessFac;
 
     // world space conversion
     mat3 TBN    = mat3(normalize(vTangent), normalize(vBitangent), normalize(vNormal));
