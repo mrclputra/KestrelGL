@@ -28,16 +28,43 @@ set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "" FORCE)
 set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
 
 # external dependencies
-add_subdirectory(external/glad)
 add_subdirectory(external/glfw)
-add_subdirectory(external/imgui)
 add_subdirectory(external/assimp)
 add_subdirectory(external/ImGuiFileDialog)
+
+# ImGui static library
+set(IMGUI_SOURCES
+    external/imgui/imgui.cpp
+    external/imgui/imgui_demo.cpp
+    external/imgui/imgui_draw.cpp
+    external/imgui/imgui_tables.cpp
+    external/imgui/imgui_widgets.cpp
+    external/imgui/backends/imgui_impl_glfw.cpp
+    external/imgui/backends/imgui_impl_opengl3.cpp
+    # to add additional when needed
+)
+add_library(imgui STATIC ${IMGUI_SOURCES})
+target_include_directories(imgui PUBLIC
+    external/imgui
+    external/imgui/backends
+)
+target_link_libraries(imgui PUBLIC glfw)
+add_library(imgui::imgui ALIAS imgui) # convenience
 
 # tell ImGuiFileDialog where imgui lives
 target_include_directories(ImGuiFileDialog PUBLIC
     ${PROJECT_SOURCE_DIR}/external/imgui
 )
+
+# glad static library
+add_library(glad STATIC external/glad/src/glad.c)
+target_include_directories(glad PUBLIC external/glad/include)
+
+if(WIN32)
+    target_link_libraries(glad PUBLIC opengl32)
+else()
+    target_link_libraries(glad PUBLIC GL)
+endif()
 
 # MAIN executable
 add_executable(KestrelGL
