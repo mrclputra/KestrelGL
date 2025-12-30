@@ -27,6 +27,9 @@ uniform sampler2D aoMap;
 uniform sampler2D shadowMaps[MAX_LIGHTS];
 uniform mat4 lightSpaceMatrices[MAX_LIGHTS];
 
+// irradiance test
+uniform vec3 shCoefficients[9];
+
 // attributes from the vertex shader
 in vec3 vFragPos;
 in vec3 vNormal;
@@ -110,6 +113,43 @@ float shadowCalculation(int lightIdx, vec3 normal, vec3 lightDir) {
 uniform float metalnessFac;
 uniform float roughnessFac;
 
+// irradiance calculation
+vec3 evaluateSHIrradiance(vec3 n)
+{
+    float x = n.x, y = n.y, z = n.z;
+
+    // Lambert convolution constants
+    const float A0 = 3.14159265;   // pi
+    const float A1 = 2.09439510;   // 2pi/3
+    const float A2 = 0.78539816;   // pi/4
+
+    // SH basis (real, orthonormal)
+    float b0 = 0.282095;
+    float b1 = 0.488603 * y;
+    float b2 = 0.488603 * z;
+    float b3 = 0.488603 * x;
+
+    float b4 = 1.092548 * x * y;
+    float b5 = 1.092548 * y * z;
+    float b6 = 0.315392 * (3.0 * z * z - 1.0);
+    float b7 = 1.092548 * x * z;
+    float b8 = 0.546274 * (x * x - y * y);
+
+    vec3 L0 = shCoefficients[0] * b0;
+    vec3 L1 =
+          shCoefficients[1] * b1
+        + shCoefficients[2] * b2
+        + shCoefficients[3] * b3;
+    vec3 L2 =
+          shCoefficients[4] * b4
+        + shCoefficients[5] * b5
+        + shCoefficients[6] * b6
+        + shCoefficients[7] * b7
+        + shCoefficients[8] * b8;
+
+    return max(L0 * A0 + L1 * A1 + L2 * A2, vec3(0.0));
+}
+
 // ENTRY POINT HERE
 void main() {
     // fetch data
@@ -121,13 +161,14 @@ void main() {
     // TOLOOKUP: did they change the color convention for metallic roughness maps? gltf 2.0
     // https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#metallic-roughness-material
 
-    float roughness     = metRough.x;
-    float metallic      = metRough.y;
+//    float roughness     = metRough.x;
+//    float metallic      = metRough.y;
 
-//    float metallic      = metalnessFac;
-//    float roughness     = roughnessFac;
+    float metallic      = metalnessFac;
+    float roughness     = roughnessFac;
 
     // world space conversion
+//    mat3 TBN    = mat3(normalize(vNormal), normalize(vNormal), normalize(vNormal));
     mat3 TBN    = mat3(normalize(vTangent), normalize(vBitangent), normalize(vNormal));
     vec3 N      = normalize(TBN * texNormal);
     vec3 V      = normalize(viewPos - vFragPos);
@@ -152,7 +193,8 @@ void main() {
     }
 
     // now I put it all together :)
-    vec3 ambient = vec3(0.03) * texAlbedo * texAO;
+    vec3 irradiance = evaluateSHIrradiance(N);
+    vec3 ambient = irradiance * texAlbedo * (1.0 - metallic) * texAO;
     vec3 color = ambient + Lo;
 
     // tonemapping
@@ -164,8 +206,9 @@ void main() {
     int mode = 0;
     if      (mode == 1) FragColor = vec4(texAlbedo, 1.0);
     else if (mode == 2) FragColor = vec4(N * 0.5 + 0.5, 1.0);
-    else if (mode == 3) FragColor = vec4(vec3(roughness), 1.0);
-    else if (mode == 4) FragColor = vec4(vec3(metallic), 1.0);
-    else if (mode == 5) FragColor = vec4(vec3(0.0, metRough), 1.0);
+    else if (mode == 3) FragColor = vec4(vec3(0.0, metRough), 1.0);
+    else if (mode == 4) FragColor = vec4(vec3(roughness), 1.0);
+    else if (mode == 5) FragColor = vec4(vec3(metallic), 1.0);
+    else if (mode == 6) FragColor = vec4(vec3(ambient), 1.0);
     else                FragColor = vec4(color, 1.0);
 }

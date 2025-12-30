@@ -3,8 +3,6 @@
 void Renderer::init(const Scene& scene) {
     // set the depth shader
 	depthShader = new Shader(SHADER_DIR "depth.vert", SHADER_DIR "depth.frag");
-
-    // here is the question; do we need a separate shader instance for every light source?
 }
 
 void Renderer::render(const Scene& scene) {
@@ -32,7 +30,8 @@ void Renderer::renderLightPass(const Scene& scene) {
             // I just put it here for now cuz it's more related to rendering
             dirLight->updateLightSpaceMatrix();
         
-            // NOTE: whenever framebuffers are used again in the future, try to use the following pattern for viewport handling
+            // NOTE: whenever framebuffers are used again in the future, 
+            // try to use the pattern below for viewport handling:
 
             // backup current viewport
             GLint viewport[4];
@@ -116,6 +115,12 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
         }
     }
 
+    // upload irradiance from the skybox
+    // in the future, this should be irradiance generated from the scene instead
+    if (scene.skybox && !scene.skybox->shCoefficients.empty()) {
+        glUniform3fv(glGetUniformLocation(shader.ID, "shCoefficients"), 9, &scene.skybox->shCoefficients[0].x);
+    }
+
     // TODO: refactor the textures binding system for multi-mesh objects
 	for (const auto& mesh : object.meshes) {
         unsigned int slot = 0;
@@ -139,7 +144,7 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
 }
 
 void Renderer::uploadLights(const Scene& scene, Shader& shader) {
-    constexpr int MAX_LIGHTS = 8;
+    constexpr int MAX_LIGHTS = 8; // this is arbitrary
 
     int dirCount = 0;
     int pointCount = 0;
@@ -148,19 +153,24 @@ void Renderer::uploadLights(const Scene& scene, Shader& shader) {
     for (auto& light : scene.lights) {
         if (auto dir = std::dynamic_pointer_cast<DirectionalLight>(light)) {
             if (dirCount >= MAX_LIGHTS) continue;
+
             std::string base = "dirLights[" + std::to_string(dirCount) + "]";
             shader.setVec3(base + ".direction", dir->direction);
             shader.setVec3(base + ".color", dir->color);
+
             dirCount++;
         }
         else if (auto point = std::dynamic_pointer_cast<PointLight>(light)) {
             if (pointCount >= MAX_LIGHTS) continue;
+
             std::string base = "pointLights[" + std::to_string(pointCount) + "]";
             shader.setVec3(base + ".position", point->transform.position);
             shader.setVec3(base + ".color", point->color);
             shader.setFloat(base + ".radius", point->radius);
+
             pointCount++;
         }
+        // TODO: spot lights
     }
 
     shader.setInt("numDirLights", dirCount);

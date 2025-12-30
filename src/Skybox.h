@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <string>
 #include <memory>
 #include <vector>
@@ -16,6 +17,8 @@ public:
 	void load(const std::string& path);
 	void draw(const glm::mat4& view, const glm::mat4& projection, const glm::vec3& cameraPos);
 
+	std::vector<glm::vec3> shCoefficients;
+
 private:
 	unsigned int m_CubemapID;
 	unsigned int m_SkyboxVAO;
@@ -23,6 +26,9 @@ private:
 
 	void setupGeometry();
 	unsigned int convertHDRItoCubemap(const std::string& path);
+	
+	// reuse the cubemapID, to generate the irradiance map
+	void computeIrradiance(); 
 
 	// shaders
 	std::shared_ptr<Shader> m_SkyboxShader;		// this is for rendering

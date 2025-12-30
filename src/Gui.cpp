@@ -116,17 +116,17 @@ void Gui::draw() {
                         ImGui::TreePop();
                     }
 
-                    //if (ImGui::TreeNode("DANGER ZONE :)")) {
-                    //    ImGui::Text("Metalness");
-                    //    ImGui::SetNextItemWidth(140.0f);
-                    //    ImGui::SliderFloat("##MetalnessFac", &obj->metalnessFac, 0.0f, 1.0f);
+                    if (ImGui::TreeNode("DANGER ZONE :)")) {
+                        ImGui::Text("Metalness");
+                        ImGui::SetNextItemWidth(140.0f);
+                        ImGui::SliderFloat("##MetalnessFac", &obj->metalnessFac, 0.0f, 1.0f);
 
-                    //    ImGui::Text("Roughness");
-                    //    ImGui::SetNextItemWidth(140.0f);
-                    //    ImGui::SliderFloat("##RougnessFac", &obj->roughnessFac, 0.0f, 1.0f);
+                        ImGui::Text("Roughness");
+                        ImGui::SetNextItemWidth(140.0f);
+                        ImGui::SliderFloat("##RougnessFac", &obj->roughnessFac, 0.0f, 1.0f);
 
-                    //    ImGui::TreePop();
-                    //}
+                        ImGui::TreePop();
+                    }
 
                     ImGui::TreePop(); // close object instance
                 }
@@ -228,5 +228,41 @@ void Gui::draw() {
             ImGui::Image((void*)(intptr_t)dir->depthMap, ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0));
         }
     }
+    ImGui::End();
+
+    // IRRADIANCE SKYBOX LIGHTING
+    ImGui::Begin("Irradiance", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+
+    if (app->scene->skybox && !app->scene->skybox->shCoefficients.empty()) {
+        ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.4f, 1.0f), "SH Coefficients");
+        ImGui::Separator();
+
+        auto& sh = app->scene->skybox->shCoefficients;
+
+        if (ImGui::BeginTable("SH_Grid", 3, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoSavedSettings)) {
+
+            for (int i = 0; i < 9; i++) {
+                ImGui::TableNextColumn();
+
+                ImGui::PushID(i); 
+                //ImGui::ColorEdit3("##col", &sh[i][0], ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+                ImGui::ColorButton("##col",
+                    ImVec4(sh[i][0], sh[i][1], sh[i][2], 1.0f),
+                    ImGuiColorEditFlags_NoTooltip,
+                    ImVec2(20.0f, 20.0f));
+
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("Index: %d", i);
+                }
+                ImGui::PopID();
+            }
+
+            ImGui::EndTable();
+        }
+    }
+    else {
+        ImGui::TextDisabled("No SH data available for current skybox.");
+    }
+
     ImGui::End();
 }

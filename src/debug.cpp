@@ -16,8 +16,8 @@ void baseScene(Scene& scene) {
 	// ADD LIGHTS
 	//scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1), glm::vec3(0.98)));
 	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1, -1, -1), glm::vec3(228, 112, 37)));
-	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(1, -1, -1), glm::vec3(239, 192, 112)));
-	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1, -1, 1), glm::vec3(255, 245, 182)));
+	//scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(1, -1, -1), glm::vec3(239, 192, 112)));
+	//scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1, -1, 1), glm::vec3(255, 245, 182)));
 
 	// ADD ENTITY
 	auto object = ModelLoader::load("assets/models/stanford_dragon_pbr/scene.gltf");
@@ -31,7 +31,7 @@ void baseScene(Scene& scene) {
 	//scene.addObject(floor);
 
 	// camera
-	scene.camera.setTarget(glm::vec3(0, 3, 0));
+	scene.camera.setTarget(glm::vec3(0, 4, 0));
 }
 
 void dragonScene2(Scene& scene) {
@@ -100,18 +100,20 @@ void lionScene(Scene& scene) {
 	logger.info("creating lion debug scene");
 
 	// lights
-	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1, -1, -1), glm::vec3(0, 1, 0)));
-	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(1, -1, -1), glm::vec3(1, 0, 0)));
-	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1, -1, 1), glm::vec3(0, 0, 1)));
+	// RGB :)
+	//scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1, -1, -1), glm::vec3(0, 1, 0)));
+	//scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(1, -1, -1), glm::vec3(1, 0, 0)));
+	//scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1, -1, 1), glm::vec3(0, 0, 1)));
 
-	/*scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1, -1, -1), glm::vec3(228, 112, 37)));
-	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(1, -1, -1), glm::vec3(239, 192, 112)));
-	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1, -1, 1), glm::vec3(255, 245, 182)));*/
+	//scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1, -1, -1), glm::vec3(228, 112, 37)));
+	//scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(1, -1, -1), glm::vec3(239, 192, 112)));
+	//scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1, -1, 1), glm::vec3(255, 245, 182)));
+
+	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1, -1, -1), glm::vec3(242, 238, 228)));
 
 	// add objects
 	auto lion = ModelLoader::load("assets/models/lion_crushing_a_serpent/scene.gltf");
 	lion->transform.scale = glm::vec3(.8);
-	//lion->transform.rotation = glm::vec3(180, 0, 0);
 	lion->transform.position = glm::vec3(1, 0, -20);
 	scene.addObject(lion);
 
@@ -119,10 +121,10 @@ void lionScene(Scene& scene) {
 	sphere->transform.position = glm::vec3(-7, 6, -5);
 	scene.addObject(sphere);
 
-	auto plane = ModelLoader::load("assets/models/cube.obj");
-	plane->transform.scale = glm::vec3(10, .2, 10);
-	plane->transform.position = glm::vec3(0, -5, 0);
-	scene.addObject(plane);
+	//auto plane = ModelLoader::load("assets/models/cube.obj");
+	//plane->transform.scale = glm::vec3(10, .2, 10);
+	//plane->transform.position = glm::vec3(0, -5, 0);
+	//scene.addObject(plane);
 
 	scene.camera.setTarget(glm::vec3(0, 2, 0));
 	//scene.camera.setTarget(glm::vec3(7, -6, -10));

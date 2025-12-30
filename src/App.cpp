@@ -9,11 +9,6 @@
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	auto app = static_cast<App*>(glfwGetWindowUserPointer(window)); // is there a way to get this value without casting each time?
 	app->onFrameBufferSize(width, height);
-
-	// update renderer
-	//app->renderer.screenHeight = height;
-	//app->renderer.screenWidth = width;
-
 }
 static void cursor_position_callback(GLFWwindow* window, double xPos, double yPos) {
 	ImGui_ImplGlfw_CursorPosCallback(window, xPos, yPos); // ImGui
@@ -121,10 +116,6 @@ void App::init() {
 	logger.info("OpenGL Version: " + std::string((const char*)glGetString(GL_VERSION)));
 	logger.info("GLSL Version: " + std::string((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION)));
 
-	//std::cout << "\n";
-	//std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << "\n";
-	//std::cout << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
-
 	// initialize ImGui
 	gui.init(this, window);
 
@@ -147,9 +138,9 @@ void App::init() {
 	scene = std::make_unique<Scene>(bus);
 	scene->camera.setViewport(fbWidth, fbHeight); // tell camera about viewport
 
-	// open debug scene
-	baseScene(*scene);
-	//lionScene(*scene);
+	// open a debug scene
+	//baseScene(*scene);
+	lionScene(*scene);
 
 	logger.info("ended initialization");
 }
@@ -178,11 +169,6 @@ void App::run() {
 		float currentTime = glfwGetTime();
 		float deltaTime = currentTime - lastTime;
 		lastTime = currentTime;
-
-		// do stuff here
-
-		// check if shader files modified? (hot reload)
-		// TODO: implement and call here
 
 		// clear render buffers
 		glClearColor(0.05f, 0.05f, 0.05f, 1.0f);

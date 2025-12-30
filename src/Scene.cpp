@@ -25,13 +25,6 @@ void Scene::update(float deltaTime) {
 	static float t = 0;
 	t += deltaTime * 0.5f;
 
-	//if (auto it = std::find_if(lights.begin(), lights.end(),
-	//	[](auto& l) { return std::dynamic_pointer_cast<PointLight>(l); }); it != lights.end())
-	//{
-	//	auto& p = std::dynamic_pointer_cast<PointLight>(*it)->transform.position;
-	//	p.x = 4.0f * sin(t * glm::two_pi<float>());
-	//}
-
 	float step = deltaTime * 0.5f;
 	for (auto& light : lights) {
 		if (auto dir = std::dynamic_pointer_cast<DirectionalLight>(light)) {
