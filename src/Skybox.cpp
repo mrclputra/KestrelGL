@@ -5,10 +5,14 @@ Skybox::Skybox() : m_CubemapID(0), m_SkyboxVAO(0), m_SkyboxVBO(0) {
 	setupGeometry();
 	m_SkyboxShader = std::make_shared<Shader>(SHADER_DIR "skybox.vert", SHADER_DIR "skybox.frag");
 	m_EquiToCubeShader = std::make_shared<Shader>(SHADER_DIR "equi_to_cube.vert", SHADER_DIR "equi_to_cube.frag");
+	m_PrefilterShader = std::make_shared<Shader>(SHADER_DIR "prefilter.vert", SHADER_DIR "prefilter.frag");
+
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
 	// TODO: move this out of the constructor
 	load("assets/skybox/artist_workshop_4k.hdr");
 	computeIrradiance();
+	computePrefilterMap();
 }
 
 Skybox::~Skybox() {
@@ -215,4 +219,117 @@ void Skybox::computeIrradiance() {
 	for (int i = 0; i < 9; ++i) {
 		shCoefficients[i] *= (4.0f * 3.14159f) / totalWeight;
 	}
+}
+
+void Skybox::computePrefilterMap() {
+	// create cubemap that will store prefiltered mipmaps
+	// -> allocate cubemap
+	// -> gl_rgb16f
+	// -> generate multiple mipmap levels, glTexImage2D in a loop
+	// -> set filtering
+	//		-> gl linear mipmap linear
+	//		-> gl linear
+	//		-> gl clamp to edge
+
+	// create cubemap
+	glGenTextures(1, &m_PrefilterMap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_PrefilterMap);
+
+	for (unsigned int i = 0; i < 6; ++i) {
+		// faces of the cubemap
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 128, 128, 0, GL_RGB, GL_FLOAT, nullptr);
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+
+	// setup framebuffer and renderbuffer
+	// -> fbo for rendering each face of the cube
+	// -> depth RBO
+	// -> bind FBO and attach RBO for depth
+
+	unsigned int captureFBO, captureRBO;
+	glGenFramebuffers(1, &captureFBO);
+	glGenRenderbuffers(1, &captureRBO);
+
+	// todo: this piece of code is used multiple times in different functions
+	//	I should move it and similar functions to a dedicated utilities file or even a class
+	glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+	glm::mat4 captureViews[] = {
+	   glm::lookAt(glm::vec3(0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+	   glm::lookAt(glm::vec3(0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+	   glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
+	   glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
+	   glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+	   glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
+	};
+
+
+	// use the prefilter shader
+	// bind cubemap
+	// set shader uniforms
+	//		-> environmentMap (reuse from the skybox albedo)
+	//		-> roughness
+	// activate
+
+	m_PrefilterShader->use();
+	m_PrefilterShader->setMat4("projection", captureProjection);
+	
+	// we want to generate the mipmaps using the existing albedo map
+	// as such, this function should only be called AFTER that is initialized
+	// same applies for the irradiance map
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_CubemapID);
+
+	m_PrefilterShader->setInt("environmentMap", 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+	unsigned int maxMipLevels = 5;
+
+	// render each mip level
+	// use viewport to mip resolution
+
+	// after all faces and mips are rendered,
+	//		-> generate mipmaps if using glteximage2d
+	//		-> unbind framebuffer
+
+	// backup viewport
+	// todo: figure out how to use multiple viewports, instead of reusing the default one
+	GLint viewport[4];
+	glGetIntegerv(GL_VIEWPORT, viewport);
+
+	for (unsigned int mip = 0; mip < maxMipLevels; ++mip) {
+		// resize viewport to the mip level
+		unsigned int mipWidth = static_cast<unsigned int>(128 * std::pow(0.5, mip));
+		unsigned int mipHeight = static_cast<unsigned int>(128 * std::pow(0.5, mip));
+
+		glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
+		glViewport(0, 0, mipWidth, mipHeight);
+
+		// roughness level of the mip map is defined here
+		// we want to scale it based on the number of mip levels available
+		float roughness = (float)mip / (float)(maxMipLevels - 1);
+		m_PrefilterShader->setFloat("roughness", roughness);
+
+		for (unsigned int i = 0; i < 6; ++i) {
+			m_PrefilterShader->setMat4("view", captureViews[i]);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, m_PrefilterMap, mip);
+
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glBindVertexArray(m_SkyboxVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+	}
+
+	// cleanup
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+	glDeleteFramebuffers(1, &captureFBO);
+	glDeleteRenderbuffers(1, &captureRBO);
 }

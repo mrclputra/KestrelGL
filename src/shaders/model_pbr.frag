@@ -27,8 +27,11 @@ uniform sampler2D aoMap;
 uniform sampler2D shadowMaps[MAX_LIGHTS];
 uniform mat4 lightSpaceMatrices[MAX_LIGHTS];
 
-// irradiance test
+// irradiance
 uniform vec3 shCoefficients[9];
+
+// other maps
+uniform samplerCube prefilterMap;
 
 // attributes from the vertex shader
 in vec3 vFragPos;
@@ -155,35 +158,39 @@ void main() {
     // fetch data
     vec3 texAlbedo      = pow(texture(albedoMap, vTexCoords).rgb, vec3(2.2));
     vec3 texNormal      = texture(normalMap, vTexCoords).rgb * 2.0 - 1.0;
-    vec2 metRough       = texture(metallicRoughnessMap, vTexCoords).gb; // G=Rough, B=Met
+    vec2 texMetRough    = texture(metallicRoughnessMap, vTexCoords).gb; // G=Rough, B=Met
     float texAO         = texture(aoMap, vTexCoords).r;
-
-    // TOLOOKUP: did they change the color convention for metallic roughness maps? gltf 2.0
-    // https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#metallic-roughness-material
-
 //    float roughness     = metRough.x;
 //    float metallic      = metRough.y;
-
     float metallic      = metalnessFac;
     float roughness     = roughnessFac;
 
-    // world space conversion
-//    mat3 TBN    = mat3(normalize(vNormal), normalize(vNormal), normalize(vNormal));
+    // the TBN matrix is a transformation that converts tangentspace to worldspace
+    // this is needed to be able to apply object transformations to the normal map
     mat3 TBN    = mat3(normalize(vTangent), normalize(vBitangent), normalize(vNormal));
     vec3 N      = normalize(TBN * texNormal);
     vec3 V      = normalize(viewPos - vFragPos);
     vec3 F0     = mix(vec3(0.04), texAlbedo, metallic);
 
+    // specular component
+    vec3 R = reflect(-V, N); 
+    const float MAX_REFLECTION_LOD = 4.0;
+    // sample prefilter map based on roughness
+    vec3 prefilteredColor = textureLod(prefilterMap, R, roughness * MAX_REFLECTION_LOD).rgb;
+   
+    // approximate specular IBL
+    // todo: implement BRDF lut
+    vec3 F = fresnelSchlick(max(dot(N, V), 0.0), F0); // temp: use F0
+    vec3 specularIBL = prefilteredColor * F;
+
     // lighting accm
     vec3 Lo = vec3(0.0);
-   
     // Directional
     for (int i = 0; i < numDirLights; i++) {
         vec3 L = normalize(-dirLights[i].direction);
         float shadow = shadowCalculation(i, N, L);
         Lo += calculatePBR(L, V, N, dirLights[i].color, texAlbedo, roughness, metallic, F0) * (1.0 - shadow);
     }
-
     // Point
     for (int i = 0; i < numPointLights; i++) {
         vec3 L = normalize(pointLights[i].position - vFragPos);
@@ -192,9 +199,17 @@ void main() {
         Lo += calculatePBR(L, V, N, pointLights[i].color * atten, texAlbedo, roughness, metallic, F0);
     }
 
-    // now I put it all together :)
+    // ambient and IBL stuff here
     vec3 irradiance = evaluateSHIrradiance(N);
-    vec3 ambient = irradiance * texAlbedo * (1.0 - metallic) * texAO;
+    vec3 kS = F; // fresnel term
+    vec3 kD = (1.0 - kS) * (1.0 - metallic);
+
+    vec3 diffuseIBL = irradiance * texAlbedo;
+
+    vec3 ambient = (kD * diffuseIBL + specularIBL) * texAO;
+//    vec3 ambient = irradiance * texAlbedo * (1.0 - metallic) * texAO;
+
+    // combine
     vec3 color = ambient + Lo;
 
     // tonemapping
@@ -206,9 +221,10 @@ void main() {
     int mode = 0;
     if      (mode == 1) FragColor = vec4(texAlbedo, 1.0);
     else if (mode == 2) FragColor = vec4(N * 0.5 + 0.5, 1.0);
-    else if (mode == 3) FragColor = vec4(vec3(0.0, metRough), 1.0);
-    else if (mode == 4) FragColor = vec4(vec3(roughness), 1.0);
-    else if (mode == 5) FragColor = vec4(vec3(metallic), 1.0);
-    else if (mode == 6) FragColor = vec4(vec3(ambient), 1.0);
+    else if (mode == 3) FragColor = vec4(vec3(0.0, texMetRough), 1.0);
+    else if (mode == 4) FragColor = vec4(vec3(ambient), 1.0);
+    else if (mode == 5) FragColor = vec4(vec3(diffuseIBL), 1.0);
+    else if (mode == 6) FragColor = vec4(vec3(specularIBL), 1.0);
+    else if (mode == 7) FragColor = vec4(vec3(prefilteredColor), 1.0);
     else                FragColor = vec4(color, 1.0);
 }

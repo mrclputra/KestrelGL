@@ -19,18 +19,25 @@ public:
 
 	std::vector<glm::vec3> shCoefficients;
 
+	unsigned int m_CubemapID;		// base albedo map
+	unsigned int m_PrefilterMap;	// specular map
+	//unsigned int m_brdfLUTMap;		// NdotV;x and roughness;y
+
 private:
-	unsigned int m_CubemapID;
 	unsigned int m_SkyboxVAO;
 	unsigned int m_SkyboxVBO;
 
 	void setupGeometry();
 	unsigned int convertHDRItoCubemap(const std::string& path);
-	
-	// reuse the cubemapID, to generate the irradiance map
-	void computeIrradiance(); 
+
+	void computeIrradiance();
+	void computePrefilterMap();
+	//void computeBRDFLUT();
 
 	// shaders
 	std::shared_ptr<Shader> m_SkyboxShader;		// this is for rendering
 	std::shared_ptr<Shader> m_EquiToCubeShader;	// this is for conversion
+	
+	std::shared_ptr<Shader> m_PrefilterShader;	// specular mipmap generation
+	//std::shared_ptr<Shader> m_BRDFShader;		// brdf LUT generation
 };

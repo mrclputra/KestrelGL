@@ -121,12 +121,28 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
         glUniform3fv(glGetUniformLocation(shader.ID, "shCoefficients"), 9, &scene.skybox->shCoefficients[0].x);
     }
 
+    // upload pbr stuff
+    if (scene.skybox) {
+        // prefilter map
+        glActiveTexture(GL_TEXTURE11);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, scene.skybox->m_PrefilterMap);
+        shader.setInt("prefilterMap", 11);
+
+        // todo: brdf map
+    }
+
     // TODO: refactor the textures binding system for multi-mesh objects
 	for (const auto& mesh : object.meshes) {
         unsigned int slot = 0;
 
         // bind only the textures this mesh uses
         for (int texIdx : mesh->textureIndices) {
+            
+            // TODO: figure out a standardized convention for this
+            // RESERVED SLOTS
+            if (slot == 11) slot++; // specular ibl 
+            if (slot == 12) slot++; // brdf lut
+
             const auto& tex = object.textures[texIdx];
             tex->bind(slot);
             switch (tex->type) {
