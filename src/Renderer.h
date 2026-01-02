@@ -15,6 +15,8 @@ public:
 	// TODO: check if storage is necessary
 	//int screenWidth, screenHeight;
 
+	unsigned int renderMode;
+
 private:
 	void uploadLights(const Scene& scene, Shader& shader);
 	void renderObject(const Scene& scene, const Object& object);

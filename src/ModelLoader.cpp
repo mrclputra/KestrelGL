@@ -2,7 +2,7 @@
 
 // TODO: this function should also handle shader assignment
 //	initial transformation should be set here, but optional
-std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::shared_ptr<Shader> shader) {
+std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::shared_ptr<Shader> shader, std::string name = "NONAME") {
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(path,
 		aiProcess_Triangulate |
@@ -23,7 +23,9 @@ std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::shared_p
 
 	// create empty object
 	auto object = std::make_shared<Object>(path);
-	object->name = scene->mRootNode->mName.C_Str(); // get name from root node
+	object->name = name;
+
+	//object->name = scene->mRootNode->mName.C_Str(); // get name from root node
 
 	// traverse scene graph and populate object component 
 	// start with identity matrix for root transform
@@ -35,17 +37,13 @@ std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::shared_p
 		object->shader = shader;
 	}
 	else {
-		// todo: investigate if we should unify textured vs textureless objects into one shader, (and what I mean by this is just the albedo)
-		//	as I dont intend this engine to be used for production, and most arbitrary objects that will be used dont have textures
-		//	i.e. i wont be using the GLTF convention in all cases, so we should setup a base material with configurable parameters
+		// todo: investigate if we should unify textred vs texturless objects into one shader
+		//	as I don't intend this engine to be used for production, GLTF model convention will not be used in all cases
+		//	the idea is to setup a base Material class with configurable paramaters, and based on what textures are available, override said parameters
+
+		// for now, one material per object should be simple enough
+		// maybe look into the OpenPBR convention for parameterization
 		
-		// I need to setup a Material class and store modifiable PBR parameters there, to be passed to the object shader
-		//	for now, lets try to have just one material per object for the sake of simplicity
-		//	
-		// this loader will then need to save into that material class; or set basic parameter configs
-		// any textures from the loaded file will then override the associated parameter (albedo, metallic, roughness)
-		
-		// idea: maybe look into the OpenPBR convention for parameterization 
 		if (object->textures.empty()) {
 			// no textures
 			object->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model_notex.frag");

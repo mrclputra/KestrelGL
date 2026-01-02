@@ -1,8 +1,16 @@
 #include "Renderer.h"
 
 void Renderer::init(const Scene& scene) {
-    // set the depth shader
-	depthShader = new Shader(SHADER_DIR "depth.vert", SHADER_DIR "depth.frag");
+    try {
+        // todo: check where each shader is initialized/called from, case-by-case
+
+        // set the depth shader
+        // this is used for shadows
+        depthShader = new Shader(SHADER_DIR "depth.vert", SHADER_DIR "depth.frag");
+    }
+    catch (const ShaderException& e) {
+        logger.error("Failed to initialize shader: " + std::string(e.what()));
+    }
 }
 
 void Renderer::render(const Scene& scene) {
@@ -61,10 +69,20 @@ void Renderer::renderLightPass(const Scene& scene) {
 }
 
 void Renderer::renderObject(const Scene& scene, const Object& object) {
+    if (!object.shader || object.shader->ID == 0) return;
+
 	Shader& shader = *object.shader;
 	
 	shader.checkHotReload();
-	shader.use();
+
+    try {
+        shader.use();
+    }
+    catch (const ShaderException& e) {
+        return;
+    }
+
+    shader.setInt("mode", renderMode);
 
 	shader.setMat4("model", object.transform.getModelMatrix());
 	shader.setMat4("view", scene.camera.getViewMatrix());
@@ -124,11 +142,11 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
     // upload pbr stuff
     if (scene.skybox) {
         // prefilter map
-        glActiveTexture(GL_TEXTURE11);
+        glActiveTexture(GL_TEXTURE9);
         glBindTexture(GL_TEXTURE_CUBE_MAP, scene.skybox->m_PrefilterMap);
-        shader.setInt("prefilterMap", 11);
+        shader.setInt("prefilterMap", 9);
 
-        // todo: brdf map
+        // todo: brdf lut map
     }
 
     // TODO: refactor the textures binding system for multi-mesh objects

@@ -9,10 +9,19 @@
 #include <iostream>
 #include <sys/stat.h>
 
+#include <stdexcept>
+
 #include <logger.h>
 
+
+// shader exception type
+class ShaderException : public std::runtime_error {
+public:
+    explicit ShaderException(const std::string& message) : std::runtime_error(message) {}
+};
+
 /// <summary>
-/// This class encapsulates an OpenGL shader program; handling, loading, compiling, and setting uniforms
+/// This class encapsulates an OpenGL shader program.
 /// </summary>
 class Shader {
 public:
@@ -20,25 +29,51 @@ public:
 
 	Shader() = default;
 	Shader(const char* vertexPath, const char* fragmentPath) : m_vertexPath(vertexPath), m_fragmentPath(fragmentPath) {
-		compile();
+        if (!compile()) {
+            throw ShaderException("Initial shader compilation failed.");
+        }
+        updateModTimes();
 	}
+    ~Shader() {
+        if (ID != 0 && glIsProgram(ID)) {
+            glDeleteProgram(ID);
+        }
+    }
 
 	/// <summary>
 	/// Run the shader program.
 	/// </summary>
-	void use() const { glUseProgram(ID); }
+	void use() const { 
+        if (ID == 0 || !glIsProgram(ID)) {
+            throw ShaderException("Attempted to use invalid shader program.");
+        }
+        glUseProgram(ID); 
+    }
 
-    // check if shaders have been modified
-    // reload if needed;
-    void checkHotReload() {
+    /// <summary>
+    /// Checks shader source files for modification and recompiles if needed
+    /// </summary>
+    /// <returns>True if a reload occured and succeeded</returns>
+    bool checkHotReload() {
         time_t vMod = getModTime(m_vertexPath);
         time_t fMod = getModTime(m_fragmentPath);
 
+        if (vMod == 0 || fMod == 0) return false;
+
         if (vMod != m_vertexModTime || fMod != m_fragmentModTime) {
-            compile();
-            updateModTimes();
+            m_vertexModTime = vMod;
+            m_fragmentModTime = fMod;
+
+            if (!compile()) {
+                logger.error("Shader hot reload failed");
+                return false;
+            }
+
             logger.info(std::to_string(ID) +" shader reloaded");
+            return true;
         }
+
+        return false;
     }
 
 	// uniform setters
@@ -123,33 +158,47 @@ private:
             GLchar infoLog[1024];
             glGetShaderInfoLog(shader, 1024, nullptr, infoLog);
             logger.error(std::string("SHADER_COMPILATION_ERROR: ") + typeName + "\n" + infoLog);
+            glDeleteShader(shader);
+            return 0;
         }
 
         return shader;
     }
 
     // load, compile, and link the shader program
-    void compile() {
+    bool compile() {
         std::string vertexCode = readFile(m_vertexPath);
         std::string fragmentCode = readFile(m_fragmentPath);
 
         unsigned int vertex = compileShader(vertexCode, GL_VERTEX_SHADER, "VERTEX");
+        if (vertex == 0) return false;
         unsigned int fragment = compileShader(fragmentCode, GL_FRAGMENT_SHADER, "FRAGMENT");
+        if (fragment == 0) { 
+            glDeleteShader(vertex);
+            return false; 
+        }
 
-        ID = glCreateProgram();
-        glAttachShader(ID, vertex);
-        glAttachShader(ID, fragment);
-        glLinkProgram(ID);
+        unsigned int program = glCreateProgram();
+        glAttachShader(program, vertex);
+        glAttachShader(program, fragment);
+        glLinkProgram(program);
 
         GLint success;
-        glGetProgramiv(ID, GL_LINK_STATUS, &success);
+        glGetProgramiv(program, GL_LINK_STATUS, &success);
         if (!success) {
             GLchar infoLog[1024];
-            glGetProgramInfoLog(ID, 1024, nullptr, infoLog);
+            glGetProgramInfoLog(program, 1024, nullptr, infoLog);
             logger.error("PROGRAM_LINKING_ERROR\n" + std::string(infoLog));
+            glDeleteProgram(program);
+            glDeleteShader(vertex);
+            glDeleteShader(fragment);
+            return false;
         }
 
         glDeleteShader(vertex);
         glDeleteShader(fragment);
+
+        ID = program;
+        return true;
     }
 };

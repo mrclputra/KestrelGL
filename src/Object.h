@@ -17,7 +17,7 @@ class Object {
 	//	during the render pass, we iteratre through all components and set shader uniforms
 
 public:
-	Object(const std::string& name = "Object");
+	Object(const std::string& name = "Object") : name(name) {}
 	~Object() = default;
 
 	// per-frame logic

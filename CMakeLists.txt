@@ -71,7 +71,7 @@ add_executable(KestrelGL
     src/main.cpp
     src/App.cpp
     src/Scene.cpp
-    src/Object.cpp
+    
     src/Gui.cpp
     src/Camera.cpp    
     src/components/Texture.cpp
@@ -80,6 +80,7 @@ add_executable(KestrelGL
     src/ModelLoader.cpp
     src/Renderer.cpp
     src/Skybox.cpp
+# "src/components/Shader.cpp"
 )
 
 # target properties

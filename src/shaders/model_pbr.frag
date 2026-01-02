@@ -32,6 +32,12 @@ uniform vec3 shCoefficients[9];
 
 // other maps
 uniform samplerCube prefilterMap;
+//uniform sampler2D brdfLUT; // to be implemented in the future
+
+// imgui stuff
+uniform int mode = 0; // default 0
+uniform float metalnessFac;
+uniform float roughnessFac;
 
 // attributes from the vertex shader
 in vec3 vFragPos;
@@ -112,9 +118,6 @@ float shadowCalculation(int lightIdx, vec3 normal, vec3 lightDir) {
     }
     return shadow / 9.0;
 }
-
-uniform float metalnessFac;
-uniform float roughnessFac;
 
 // irradiance calculation
 vec3 evaluateSHIrradiance(vec3 n)
@@ -218,7 +221,6 @@ void main() {
     color = pow(color, vec3(1.0/2.2));
 
     // debug conditional thingy
-    int mode = 0;
     if      (mode == 1) FragColor = vec4(texAlbedo, 1.0);
     else if (mode == 2) FragColor = vec4(N * 0.5 + 0.5, 1.0);
     else if (mode == 3) FragColor = vec4(vec3(0.0, texMetRough), 1.0);

@@ -21,6 +21,7 @@ void baseScene(Scene& scene) {
 
 	// ADD ENTITY
 	auto object = ModelLoader::load("assets/models/stanford_dragon_pbr/scene.gltf");
+	object->name = "stanford_dragon";
 	object->transform.scale = glm::vec3(0.08);
 	object->transform.rotation = glm::vec3(0, 0, 0);
 	scene.addObject(object);
