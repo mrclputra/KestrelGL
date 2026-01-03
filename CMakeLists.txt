@@ -68,19 +68,21 @@ endif()
 
 # MAIN executable
 add_executable(KestrelGL
+    # core
     src/main.cpp
     src/App.cpp
     src/Scene.cpp
+
+    src/debug.cpp
     
     src/Gui.cpp
     src/Camera.cpp    
     src/components/Texture.cpp
     src/components/Mesh.cpp
-    src/debug.cpp
     src/ModelLoader.cpp
     src/Renderer.cpp
     src/Skybox.cpp
-# "src/components/Shader.cpp"
+
 )
 
 # target properties

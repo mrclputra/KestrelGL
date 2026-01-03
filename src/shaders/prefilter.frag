@@ -48,7 +48,7 @@ vec3 ImportanceSampleGGX(vec2 xi, vec3 N, float roughness)
 }
 
 void main() {
-    vec3 N = normalize(WorldPos);
+    vec3 N = normalize(vec3(WorldPos.x, -WorldPos.y, WorldPos.z));
     vec3 R = N;
     vec3 V = R;
 

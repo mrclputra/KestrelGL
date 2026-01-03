@@ -83,36 +83,31 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
     }
 
     shader.setInt("mode", renderMode);
+    shader.setBool("normalEnabled", isNormalEnabled);
 
 	shader.setMat4("model", object.transform.getModelMatrix());
 	shader.setMat4("view", scene.camera.getViewMatrix());
 	shader.setMat4("projection", scene.camera.getProjectionMatrix());
 	shader.setVec3("viewPos", scene.camera.position);
 
-    // TEMP
-    shader.setFloat("metalnessFac", object.metalnessFac);
-    shader.setFloat("roughnessFac", object.roughnessFac);
+    // base pbr parameters (non-texture)
+    //  use 'p_' convention for overrideable parameters like this
+    shader.setVec3("p_albedo", object.material->albedo);
+    shader.setFloat("p_metalness", object.material->metalness);
+    shader.setFloat("p_roughness", object.material->roughness);
 
+    // shader texture flags
+    shader.setBool("hasAlbedoMap", false);
+    shader.setBool("hasNormalMap", false);
+    shader.setBool("hasMetRoughMap", false);
+    shader.setBool("hasAOMap", false);
+
+    // lights
 	uploadLights(scene, shader);
 
-	// textures
-	unsigned int slot = 0;
-	for (const auto& tex : object.textures) {
-		tex->bind(slot);
-		switch (tex->type) {
-			case Texture::Type::ALBEDO: shader.setInt("albedoMap", slot); break;
-			case Texture::Type::NORMAL: shader.setInt("normalMap", slot); break;
-			case Texture::Type::METALLIC_ROUGHNESS: shader.setInt("metallicRoughnessMap", slot); break;
-			case Texture::Type::OCCLUSION: shader.setInt("aoMap", slot); break;
-			case Texture::Type::EMISSION: shader.setInt("emissionMap", slot); break;
-		}
-		++slot;
-	}
-
-    // TODO: there is probably a better way to do this
+    // shadows
     int shadowMapStartSlot = 10;
     int dirLightCount = 0;
-
     for (auto& light : scene.lights) {
         if (auto dirLight = std::dynamic_pointer_cast<DirectionalLight>(light)) {
             if (dirLightCount >= 10) break;
@@ -133,14 +128,13 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
         }
     }
 
-    // upload irradiance from the skybox
-    // in the future, this should be irradiance generated from the scene instead
-    if (scene.skybox && !scene.skybox->shCoefficients.empty()) {
-        glUniform3fv(glGetUniformLocation(shader.ID, "shCoefficients"), 9, &scene.skybox->shCoefficients[0].x);
-    }
-
-    // upload pbr stuff
+    // skybox and IBL data
     if (scene.skybox) {
+        // irradiance
+        if (!scene.skybox->shCoefficients.empty()) {
+            glUniform3fv(glGetUniformLocation(shader.ID, "shCoefficients"), 9, &scene.skybox->shCoefficients[0].x);
+        }
+
         // prefilter map
         glActiveTexture(GL_TEXTURE9);
         glBindTexture(GL_TEXTURE_CUBE_MAP, scene.skybox->m_PrefilterMap);
@@ -150,31 +144,41 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
     }
 
     // TODO: refactor the textures binding system for multi-mesh objects
-	for (const auto& mesh : object.meshes) {
-        unsigned int slot = 0;
-
-        // bind only the textures this mesh uses
+    // mesh-specific texture binding
+    for (const auto& mesh : object.meshes) {
         for (int texIdx : mesh->textureIndices) {
-            
-            // TODO: figure out a standardized convention for this
-            // RESERVED SLOTS
-            if (slot == 11) slot++; // specular ibl 
-            if (slot == 12) slot++; // brdf lut
+            const auto& tex = object.material->textures[texIdx];
 
-            const auto& tex = object.textures[texIdx];
-            tex->bind(slot);
             switch (tex->type) {
-                case Texture::Type::ALBEDO: shader.setInt("albedoMap", slot); break;
-                case Texture::Type::NORMAL: shader.setInt("normalMap", slot); break;
-                case Texture::Type::METALLIC_ROUGHNESS: shader.setInt("metallicRoughnessMap", slot); break;
-                case Texture::Type::OCCLUSION: shader.setInt("aoMap", slot); break;
-                case Texture::Type::EMISSION: shader.setInt("emissionMap", slot); break;
+                case Texture::Type::ALBEDO: 
+                    if (object.material->useAlbedoTexture) {
+                        shader.setBool("hasAlbedoMap", true);
+                        shader.setInt("albedoMap", 0);
+                        tex->bind(0);
+                    }
+                    break;
+                case Texture::Type::NORMAL: 
+                    shader.setBool("hasNormalMap", true);
+                    shader.setInt("normalMap", 1);
+                    tex->bind(1);
+                    break;
+                case Texture::Type::METALLIC_ROUGHNESS: 
+                    if (object.material->useMetRoughTexture) {
+                        shader.setBool("hasMetRoughMap", true);
+                        shader.setInt("metRoughMap", 2);
+                        tex->bind(2);
+                    }
+                    break;
+                case Texture::Type::OCCLUSION: 
+                    shader.setBool("hasAOMap", true);
+                    shader.setInt("aoMap", 3);
+                    tex->bind(3);
+                    break;
             }
-            ++slot;
         }
 
-		mesh->render();
-	}
+        mesh->render();
+    }
 }
 
 void Renderer::uploadLights(const Scene& scene, Shader& shader) {

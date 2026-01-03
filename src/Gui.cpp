@@ -129,19 +129,19 @@ void Gui::draw() {
 
     ImGui::Spacing();
 
+    ImGui::Checkbox("Normal Maps", &app->renderer.isNormalEnabled);
+
     // irradiance
 
     // shadow maps!
-    static bool showShadowMaps = false;
-    ImGui::Checkbox("L-Depth Maps", &showShadowMaps);
+    static bool showShadowMaps = true;
+    //ImGui::Checkbox("L-Depth Maps", &showShadowMaps);
 
     if (showShadowMaps) {
-        ImGui::Begin("##Shadow Maps", &showShadowMaps,
-            ImGuiWindowFlags_NoCollapse);
+        ImGui::Begin("L-Depth Maps", &showShadowMaps, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 
         for (auto& light : app->scene->lights) {
             if (auto dir = std::dynamic_pointer_cast<DirectionalLight>(light)) {
-                ImGui::Text("Directional Light");
                 ImGui::Image(
                     (void*)(intptr_t)dir->depthMap,
                     ImVec2(128, 128),
@@ -188,13 +188,19 @@ void Gui::draw() {
 
                     // pbr parameters
                     if (ImGui::TreeNodeEx("PBR", subFlags)) {
+                        ImGui::Text("Albedo");
+                        ImGui::ColorEdit3("##AlbedoColor", &obj->material->albedo[0]);
+
                         ImGui::Text("Metalness");
                         ImGui::SetNextItemWidth(140.0f);
-                        ImGui::SliderFloat("##MetalnessFac", &obj->metalnessFac, 0.0f, 1.0f);
+                        ImGui::SliderFloat("##Metalness", &obj->material->metalness, 0.0f, 1.0f);
 
                         ImGui::Text("Roughness");
                         ImGui::SetNextItemWidth(140.0f);
-                        ImGui::SliderFloat("##RougnessFac", &obj->roughnessFac, 0.0f, 1.0f);
+                        ImGui::SliderFloat("##Roughness", &obj->material->roughness, 0.0f, 1.0f);
+
+                        ImGui::Checkbox("Use Albedo Texture ##Albedo", &obj->material->useAlbedoTexture);
+                        ImGui::Checkbox("Use MetRough Texture##Metal", &obj->material->useMetRoughTexture);
 
                         ImGui::TreePop();
                     }

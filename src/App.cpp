@@ -3,7 +3,7 @@
 
 #include "App.h"
 
-#include "debug.h"
+#include "debug.cpp"
 
 // glfw callbacks
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {

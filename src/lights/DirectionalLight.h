@@ -27,9 +27,11 @@ public:
 	float farPlane;
 
 	void updateLightSpaceMatrix() {
-		glm::mat4 lightProj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, nearPlane, farPlane);
+		// projection matrix controls the extents of the light map,
+		// todo: will need to expose this as a parameter 
+		glm::mat4 lightProj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
 		glm::vec3 lightPos = -direction * 30.0f;
-		glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f, -2.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		lightSpaceMatrix = lightProj * lightView;
 	}
 

@@ -1,7 +1,8 @@
-#include "debug.h"
+#include "Scene.h"
 #include "ModelLoader.h"
 
 #include <string>
+#include <logger.h>
 
 #include "lights/DirectionalLight.h"
 #include "lights/PointLight.h"
@@ -10,12 +11,12 @@
 //	it would be responsible for instantiating and setting up different scenes
 
 // this is my test scene configuration
-void baseScene(Scene& scene) {
+static void baseScene(Scene& scene) {
 	logger.info("creating dragon debug scene");
 
 	// ADD LIGHTS
-	//scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1), glm::vec3(0.98)));
-	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1, -1, -1), glm::vec3(228, 112, 37)));
+	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1), glm::vec3(255, 254, 247)));
+	//scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1, -1, -1), glm::vec3(228, 112, 37)));
 	//scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(1, -1, -1), glm::vec3(239, 192, 112)));
 	//scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1, -1, 1), glm::vec3(255, 245, 182)));
 
@@ -26,16 +27,20 @@ void baseScene(Scene& scene) {
 	object->transform.rotation = glm::vec3(0, 0, 0);
 	scene.addObject(object);
 
-	//auto floor = ModelLoader::load("assets/models/cube.obj");
-	//floor->transform.scale = glm::vec3(5, 0.2, 3);
-	//floor->transform.position = glm::vec3(0, -0.2, 0);
-	//scene.addObject(floor);
+	auto sphere = ModelLoader::load("assets/models/sphere.obj");
+	sphere->transform.position = glm::vec3(-1.3, 6, 3);
+	sphere->name = "omega_sphere";
+	scene.addObject(sphere);
 
 	// camera
 	scene.camera.setTarget(glm::vec3(0, 4, 0));
 }
 
-void dragonScene2(Scene& scene) {
+static void sphereScene(Scene& scene) {
+
+}
+
+static void dragonScene2(Scene& scene) {
 	logger.info("creating dragon debug scene");
 
 	// ADD LIGHTS
@@ -97,7 +102,7 @@ void dragonScene2(Scene& scene) {
 	scene.addObject(angel2);
 }
 
-void lionScene(Scene& scene) {
+static void lionScene(Scene& scene) {
 	logger.info("creating lion debug scene");
 
 	// lights

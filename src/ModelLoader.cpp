@@ -2,7 +2,9 @@
 
 // TODO: this function should also handle shader assignment
 //	initial transformation should be set here, but optional
-std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::shared_ptr<Shader> shader, std::string name = "NONAME") {
+std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::shared_ptr<Shader> shader, std::string name) {
+	// todo: swap shader and name in function parameter
+
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(path,
 		aiProcess_Triangulate |
@@ -37,21 +39,8 @@ std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::shared_p
 		object->shader = shader;
 	}
 	else {
-		// todo: investigate if we should unify textred vs texturless objects into one shader
-		//	as I don't intend this engine to be used for production, GLTF model convention will not be used in all cases
-		//	the idea is to setup a base Material class with configurable paramaters, and based on what textures are available, override said parameters
-
-		// for now, one material per object should be simple enough
-		// maybe look into the OpenPBR convention for parameterization
-		
-		if (object->textures.empty()) {
-			// no textures
-			object->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model_notex.frag");
-		}
-		else {
-			// has textures
-			object->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model_pbr.frag");
-		}
+		// use default shader
+		object->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model.frag");
 	}
 
 	logger.info(
@@ -202,14 +191,14 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scen
 
 	// return processed mesh
 	auto meshPtr = std::make_shared<Mesh>(vertices, indices);
-	meshPtr->textureIndices = texIndices; // should we include this in the constructor
+	meshPtr->textureIndices = texIndices;
 	return meshPtr;
 }
 
 int ModelLoader::loadTexture(const std::string& path, Texture::Type type, Object& object) {
 	// check if texture is already loaded
-	for (size_t i = 0; i < object.textures.size(); i++) {
-		if (object.textures[i]->path == path) {
+	for (size_t i = 0; i < object.material->textures.size(); i++) {
+		if (object.material->textures[i]->path == path) {
 			// texture already exists
 			return static_cast<int>(i);
 		}
@@ -217,10 +206,10 @@ int ModelLoader::loadTexture(const std::string& path, Texture::Type type, Object
 
 	// load new texture
 	auto texture = std::make_shared<Texture>(path, type);
-	object.textures.push_back(texture);
+	object.material->textures.push_back(texture);
 
 	logger.info("retrieved " + path);
-	return static_cast<int>(object.textures.size() - 1);
+	return static_cast<int>(object.material->textures.size() - 1);
 }
 
 glm::mat4 ModelLoader::aiMatrixToGlm(const aiMatrix4x4& from) {
