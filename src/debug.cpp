@@ -31,9 +31,6 @@ static void baseScene(Scene& scene) {
 	sphere->transform.position = glm::vec3(-1.3, 6, 3);
 	sphere->name = "omega_sphere";
 	scene.addObject(sphere);
-
-	// camera
-	scene.camera.setTarget(glm::vec3(0, 4, 0));
 }
 
 static void sphereScene(Scene& scene) {
@@ -43,86 +40,30 @@ static void sphereScene(Scene& scene) {
 	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1), glm::vec3(255, 254, 247)));
 
 	// OBJECTS
-	auto sphere0 = ModelLoader::load("assets/models/sphere.obj", "sphere_gold");
+	auto sphere0 = ModelLoader::load("assets/models/cubeSphere.obj", "sphere_gold");
 	sphere0->transform.position = glm::vec3(0.0f);
 	sphere0->material->albedo = glm::vec3(0.56f, 0.5f, 0.19f);
 	sphere0->material->roughness = 0.27f;
 	sphere0->material->metalness = 1.0f;
 	scene.addObject(sphere0);
 
-	auto sphere1 = ModelLoader::load("assets/models/sphere.obj", "sphere_titanium");
-	sphere1->transform.position = glm::vec3(2.5f, 0.0f, 0.0f);
+	auto sphere1 = ModelLoader::load("assets/models/cubeSphere.obj", "sphere_titanium");
+	sphere1->transform.position = glm::vec3(2.0f, 0.0f, 0.0f);
 	sphere1->material->albedo = glm::vec3(0.62f);
-	sphere1->material->roughness = 0.43f;
+	sphere1->material->roughness = 0.07f;
 	sphere1->material->metalness = 1.0f;
 	scene.addObject(sphere1);
 
-	//auto dragon = ModelLoader::load("assets/models/stanford_dragon_pbr/scene.gltf", "stanford_dragon");
-	//dragon->transform.scale = glm::vec3(0.07);
-	//dragon->transform.position = glm::vec3(1.0f, -2.0f, -3.0f);
-	//scene.addObject(dragon);
-}
+	//auto cube = ModelLoader::load("assets/models/cube.obj", "cube");
+	//cube->transform.scale = glm::vec3(0.7f);
+	//cube->transform.position = glm::vec3(-2.0f, 0.0f, 0.0f);
+	//cube->material->albedo = glm::vec3(0.98f);
+	//scene.addObject(cube);
 
-static void dragonScene2(Scene& scene) {
-	logger.info("creating dragon debug scene");
-
-	// ADD LIGHTS
-	auto light1 = std::make_shared<DirectionalLight>(glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(.7, 0, 0));
-	auto light2 = std::make_shared<DirectionalLight>(glm::vec3(1.0f, -0.5f, 0.5f), glm::vec3(0, 0, .7));
-	auto light3 = std::make_shared<DirectionalLight>(glm::vec3(0.5f, -0.5f, 1.0f), glm::vec3(0, .7, 0));
-	auto light4 = std::make_shared<PointLight>(glm::vec3(-4.0, 4.0, -4.0), glm::vec3(1.0));
-	scene.addLight(light1);
-	scene.addLight(light2);
-	scene.addLight(light3);
-	scene.addLight(light4);
-
-	// ADD ENTITY
-	auto dragon = ModelLoader::load("assets/models/stanford_dragon_pbr/scene.gltf");
-	if (!dragon) return;
-
-	// set initial dragon transforms
-	dragon->transform.scale = glm::vec3(0.08f, 0.08f, 0.08f);
-	//dragon->transform.position = glm::vec3(0, -3, 0);
-	//dragon->transform.rotation = glm::vec3(0, 90, 0);
-
+	auto dragon = ModelLoader::load("assets/models/stanford_dragon_pbr/scene.gltf", "stanford_dragon");
+	dragon->transform.scale = glm::vec3(0.07);
+	dragon->transform.position = glm::vec3(1.0f, -2.0f, -3.0f);
 	scene.addObject(dragon);
-	scene.camera.setTarget(glm::vec3(0, 4, -3.0));
-
-	// add floor
-	auto floor = ModelLoader::load("assets/models/cube.obj");
-	if (!floor) return;
-
-	// set initial plane transforms
-	floor->transform.scale = glm::vec3(20, 0.02, 20);
-	floor->transform.position = glm::vec3(0, -0.01, 0);
-	//plane->transform.position = glm::vec3(0, 0, 0);
-
-	scene.addObject(floor);
-
-	// other stuff
-	auto sphere = ModelLoader::load("assets/models/sphere.obj");
-	if (!sphere) return;
-	sphere->transform.position = glm::vec3(3.5 ,4 ,3.5);
-	sphere->transform.scale = glm::vec3(1.0);
-	scene.addObject(sphere);
-
-	// angels!!
-	auto angelBase = ModelLoader::load("assets/models/engel_statue_scan_retopology_gltf/scene.gltf");
-	if (!angelBase) return;
-
-	// angel 1
-	//auto angel1 = std::make_shared<Object>(*angelBase); // copy
-	//angel1->transform.scale = glm::vec3(.4f);
-	//angel1->transform.rotation = glm::vec3(90, 0, -90);
-	//angel1->transform.position = glm::vec3(-7, 0, -7);
-	//scene.addObject(angel1);
-
-	// angel 2
-	auto angel2 = std::make_shared<Object>(*angelBase); // copy
-	angel2->transform.scale = glm::vec3(.4f);
-	angel2->transform.rotation = glm::vec3(90, 0, -42);
-	angel2->transform.position = glm::vec3(-1, 0, -7);
-	scene.addObject(angel2);
 }
 
 static void lionScene(Scene& scene) {
@@ -154,7 +95,4 @@ static void lionScene(Scene& scene) {
 	//plane->transform.scale = glm::vec3(10, .2, 10);
 	//plane->transform.position = glm::vec3(0, -5, 0);
 	//scene.addObject(plane);
-
-	scene.camera.setTarget(glm::vec3(0, 2, 0));
-	//scene.camera.setTarget(glm::vec3(7, -6, -10));
 }

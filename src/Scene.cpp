@@ -2,10 +2,10 @@
 #include "lights/DirectionalLight.h"
 #include "lights/PointLight.h"
 
+// TODO: REFACTOR THIS CONSTRUCTOR
 Scene::Scene(EventBus& bus)
-    : bus(bus), camera(20.0f, 90.0f, 30.0f), skybox(std::make_unique<Skybox>()) {
-	logger.info("scene created...");
-	camera.update(); // init
+    : bus(bus), camera(), skybox(std::make_unique<Skybox>()) {
+
 }
 
 void Scene::setSkybox(const std::string& hdriPath) {

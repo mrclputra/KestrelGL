@@ -36,6 +36,8 @@ public:
     Renderer renderer;
     EventBus bus;
 
+    void processInput(float dt);
+
     // cursor position
     float lastX = 0.0f;
     float lastY = 0.0f;

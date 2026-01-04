@@ -268,6 +268,8 @@ unsigned int Renderer::generateBRDFLUT() {
 
     glEnable(GL_DEPTH_TEST);
 
+    logger.info("generated BRDF lookup table");
+
     return brdfLUTTexture;
 }
 

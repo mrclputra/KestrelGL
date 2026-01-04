@@ -15,40 +15,42 @@ public:
     glm::vec3 position;
     glm::vec3 front, up, right; // needed for view matrix
 
-    float radius = 5.0f;    // distance
-    float theta = 0.0f;     // horizontal
-    float phi = 0.0f;        // vertical
+    float yaw = -90.0f;
+    float pitch = 0.0f;
 
-    float sensitivity = 0.18f;
+    //float radius = 2.0f;    // distance
+    //float theta = 0.0f;     // horizontal
+    //float phi = 0.0f;        // vertical
+
+    float sensitivity = 0.09f;
+    float speed = 5.0f;
     float fov = 36.0f;
 
-    glm::vec3 target = glm::vec3(0.0f); // world-center
-
     // constructor
-    Camera(float radius, float theta, float pi, glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f));
+    Camera(glm::vec3 pos = glm::vec3(0.0f, 0.0f, 3.0f),
+        glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f));
 
     // this should be called every frame
-    void update();
-
-    // this should be called when viewport dimensions change
-    // i.e. when window size changes
-    void setViewport(int width, int height);
+    void updateVectors();
 
     glm::mat4 getViewMatrix() const;
     glm::mat4 getProjectionMatrix() const;
 
     void rotate(float xOffset, float yOffset);
-    void zoom(float offset);
-    void reset();
+    void moveForward(float dt);
+    void moveBackward(float dt);
+    void moveRight(float dt);
+    void moveLeft(float dt);
+    void moveUp(float dt);
+    void moveDown(float dt);
 
-    void setTarget(const glm::vec3& newTarget);
+
+    // this should be called when viewport dimensions change
+    // i.e. when window size changes
+    void setViewport(int width, int height);
 
 private:
     glm::vec3 m_worldUp;
     int m_viewportWidth = 800;
     int m_viewportHeight = 600;
-
-    glm::vec3 calculatePosition() const;
-    void updateVectors();
-
 };

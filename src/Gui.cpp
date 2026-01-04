@@ -105,9 +105,9 @@ void Gui::draw() {
     ImGui::Text("Camera Position");
     ImGui::Text("%.2fx, %.2fy, %.2fz,", cam.position.x, cam.position.y, cam.position.z);
     ImGui::Spacing();
-    ImGui::Text("rad   : %.2f", cam.radius);
-    ImGui::Text("theta : %.2f", cam.theta);
-    ImGui::Text("phi   : %.2f", cam.phi);
+    //ImGui::Text("rad   : %.2f", cam.radius);
+    //ImGui::Text("theta : %.2f", cam.theta);
+    //ImGui::Text("phi   : %.2f", cam.phi);
 
     ImGui::Separator();
 
