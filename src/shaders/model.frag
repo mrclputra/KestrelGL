@@ -39,7 +39,7 @@ uniform vec3 shCoefficients[9];
 
 // other maps
 uniform samplerCube prefilterMap;
-//uniform sampler2D brdfLUT; // to be implemented in the future
+uniform sampler2D brdfLUT;
 
 // imgui stuff
 uniform int mode = 0;
@@ -196,20 +196,22 @@ void main() {
 
     // fresnel component
     // kS represents the amount of light that gets reflected; specular
-    // temp: use F0
-    vec3 kS = fresnelSchlick(max(dot(N, V), 0.0), F0);
-    // kD represents the amount of light that gets refracted; diffuse
-    vec3 kD = (1.0 - kS) * (1.0 - metallic);
+    float NdotV = max(dot(N, V), 0.0);
+    // sample the BRDF LUT, red = roughness, green = bias
+    vec2 envBRDF = texture(brdfLUT, vec2(NdotV, roughness)).rg;
 
-    // diffuse component
-    vec3 irradiance = evaluateSHIrradiance(N);
-    vec3 diffuseIBL = (irradiance / PI) * texAlbedo;
-    
     // specular component
     vec3 R = reflect(-V, N); 
     const float MAX_REFLECTION_LOD = 8.0;
     vec3 prefilteredColor = textureLod(prefilterMap, R, roughness * MAX_REFLECTION_LOD).rgb;
-    vec3 specularIBL = prefilteredColor * kS;
+    vec3 specularIBL = prefilteredColor * (F0 * envBRDF.x + envBRDF.y);
+
+    vec3 F = fresnelSchlick(NdotV, F0); 
+    vec3 kD = (1.0 - F) * (1.0 - metallic);
+
+    // diffuse component
+    vec3 irradiance = evaluateSHIrradiance(N);
+    vec3 diffuseIBL = (irradiance / PI) * texAlbedo;
 
     // combine!
     vec3 ambient = (kD * diffuseIBL + specularIBL) * texAO;

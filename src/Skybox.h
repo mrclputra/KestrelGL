@@ -21,7 +21,6 @@ public:
 
 	unsigned int m_CubemapID;		// base albedo map
 	unsigned int m_PrefilterMap;	// specular map
-	//unsigned int m_brdfLUTMap;		// NdotV;x and roughness;y
 
 	std::shared_ptr<Shader> m_SkyboxShader;		// this is for rendering
 
@@ -34,10 +33,8 @@ private:
 
 	void computeIrradiance();
 	void computePrefilterMap();
-	//void computeBRDFLUT();
 
 	// shaders
 	std::shared_ptr<Shader> m_EquiToCubeShader;	// this is for conversion
 	std::shared_ptr<Shader> m_PrefilterShader;	// specular mipmap generation
-	//std::shared_ptr<Shader> m_BRDFShader;		// brdf LUT generation
 };

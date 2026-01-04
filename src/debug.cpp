@@ -52,8 +52,8 @@ static void sphereScene(Scene& scene) {
 
 	auto sphere1 = ModelLoader::load("assets/models/sphere.obj", "sphere_titanium");
 	sphere1->transform.position = glm::vec3(2.5f, 0.0f, 0.0f);
-	sphere1->material->albedo = glm::vec3(0.95f);
-	sphere1->material->roughness = 0.1f;
+	sphere1->material->albedo = glm::vec3(0.62f);
+	sphere1->material->roughness = 0.43f;
 	sphere1->material->metalness = 1.0f;
 	scene.addObject(sphere1);
 

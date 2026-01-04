@@ -55,8 +55,6 @@ void main() {
     const uint SAMPLE_COUNT = 2048u;
     float totalWeight = 0.0;
     vec3 color = vec3(0.0);
-	
-    float range = 1.0; // 0-255; "exposure"
 
     for(uint i = 0u; i < SAMPLE_COUNT; ++i)
     {
@@ -71,8 +69,9 @@ void main() {
             sampleColor = clamp(sampleColor, 0.0, 1000.0); // CLAMP
 
             // compression
-            float luma = dot(sampleColor, vec3(0.2126, 0.7152, 0.0722)); // perceived brightness
-            float weight = 1.0 / (1.0 + (luma / range));
+            // https://graphicrants.blogspot.com/2013/12/tone-mapping.html?m=1
+            float luma = max(sampleColor.r, max(sampleColor.g, sampleColor.b));
+            float weight = 1.0 / (1.0 + luma);
 
             color       += sampleColor * weight * nDotL;
             totalWeight += weight * nDotL;

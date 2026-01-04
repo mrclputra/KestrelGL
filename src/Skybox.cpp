@@ -226,6 +226,8 @@ void Skybox::computeIrradiance() {
 	for (int i = 0; i < 9; ++i) {
 		shCoefficients[i] *= (4.0f * 3.14159f) / totalWeight;
 	}
+
+	logger.info("generated skybox irradiance");
 }
 
 void Skybox::computePrefilterMap() {
@@ -333,6 +335,8 @@ void Skybox::computePrefilterMap() {
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 	}
+
+	logger.info("generated skybox prefilter map");
 
 	// cleanup
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
