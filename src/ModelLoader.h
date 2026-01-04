@@ -24,7 +24,7 @@ public:
 	/// </summary>
 	/// <param name="path">The path to the model file</param>
 	/// <returns>An Object object</returns>
-	static std::shared_ptr<Object> load(const std::string& path, std::shared_ptr<Shader> shader = nullptr, std::string name = "NONAME");
+	static std::shared_ptr<Object> load(const std::string& path, std::string name = "NONAME", std::shared_ptr<Shader> shader = nullptr);
 
 private:
 	/// <summary>

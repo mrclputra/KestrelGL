@@ -15,6 +15,7 @@ void Renderer::init(const Scene& scene) {
 
 void Renderer::render(const Scene& scene) {
     renderLightPass(scene);
+    scene.skybox->m_SkyboxShader->checkHotReload();
 
 	for (const auto& objPtr : scene.objects) {
 		renderObject(scene, *objPtr);

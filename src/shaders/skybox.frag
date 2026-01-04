@@ -23,11 +23,19 @@ void main() {
     // todo: tonemapping and gamma correction should be moved to the conversion shader
     //  but only in the event that this is what we want; spherical harmonics not using original data
 
-    vec3 envColor = texture(skybox, vec3(LocalPos.x, -LocalPos.y, LocalPos.z)).rgb;
+    vec3 sampleDir = vec3(LocalPos.x, -LocalPos.y, LocalPos.z);
+    vec3 envColor = texture(skybox, sampleDir).rgb;
+
+    envColor = clamp(envColor, 0.0, 1000.0);
+
+    // compression
+    float luma = dot(envColor, vec3(0.2126, 0.7152, 0.0722));
+    float weight = 1.0 / (1.0 + luma);
+
+    envColor = envColor * weight;
 
     // tonemapping; aces
     envColor = aces(envColor);
-
     // gamma correction
     envColor = pow(envColor, vec3(1.0/2.2)); 
 

@@ -130,7 +130,7 @@ float calculateShadow(int lightIdx, vec3 normal, vec3 lightDir) {
 // irradiance calculation
 vec3 evaluateSHIrradiance(vec3 n)
 {
-    float x = n.x, y = n.y, z = n.z;
+    float x = n.x, y = -n.y, z = n.z;
 
     // Lambert convolution constants
     const float A0 = PI;
@@ -203,11 +203,11 @@ void main() {
 
     // diffuse component
     vec3 irradiance = evaluateSHIrradiance(N);
-    vec3 diffuseIBL = irradiance * texAlbedo;
-
+    vec3 diffuseIBL = (irradiance / PI) * texAlbedo;
+    
     // specular component
     vec3 R = reflect(-V, N); 
-    const float MAX_REFLECTION_LOD = 4.0;
+    const float MAX_REFLECTION_LOD = 8.0;
     vec3 prefilteredColor = textureLod(prefilterMap, R, roughness * MAX_REFLECTION_LOD).rgb;
     vec3 specularIBL = prefilteredColor * kS;
 
@@ -258,4 +258,10 @@ void main() {
     else if (mode == 5) FragColor = vec4(vec3(specularIBL), 1.0);
     else if (mode == 6) FragColor = vec4(vec3(prefilteredColor), 1.0);
     else                FragColor = vec4(color, 1.0);
+
+//    if (any(isnan(color)) || any(isinf(color))) {
+//        FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+//    } else {
+//        FragColor = vec4(color, 1.0);
+//    }
 }

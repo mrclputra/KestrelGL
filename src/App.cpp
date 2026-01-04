@@ -139,7 +139,8 @@ void App::init() {
 	scene->camera.setViewport(fbWidth, fbHeight); // tell camera about viewport
 
 	// open a debug scene
-	baseScene(*scene);
+	sphereScene(*scene);
+	//baseScene(*scene);
 	//lionScene(*scene);
 
 	logger.info("ended initialization");

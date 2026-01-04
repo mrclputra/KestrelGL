@@ -52,9 +52,12 @@ void main() {
     vec3 R = N;
     vec3 V = R;
 
-    const uint SAMPLE_COUNT = 1024u;float totalWeight = 0.0;
+    const uint SAMPLE_COUNT = 2048u;
+    float totalWeight = 0.0;
     vec3 color = vec3(0.0);
 	
+    float range = 1.0; // 0-255; "exposure"
+
     for(uint i = 0u; i < SAMPLE_COUNT; ++i)
     {
         vec2 xi = Hammersley(i, SAMPLE_COUNT);
@@ -64,11 +67,24 @@ void main() {
         float nDotL = max(dot(N, L), 0.0);
         if(nDotL > 0.0)
         {
-            color += texture(environmentMap, L).rgb * nDotL;
-            totalWeight      += nDotL;
+            vec3 sampleColor = texture(environmentMap, L).rgb;
+            sampleColor = clamp(sampleColor, 0.0, 1000.0); // CLAMP
+
+            // compression
+            float luma = dot(sampleColor, vec3(0.2126, 0.7152, 0.0722)); // perceived brightness
+            float weight = 1.0 / (1.0 + (luma / range));
+
+            color       += sampleColor * weight * nDotL;
+            totalWeight += weight * nDotL;
         }
     }
     color = color / totalWeight;
 
-    FragColor = vec4(color, 1.0);
+//    FragColor = vec4(color, 1.0);
+
+    if (any(isnan(color)) || any(isinf(color))) {
+        FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+    } else {
+        FragColor = vec4(color, 1.0);
+    }
 }

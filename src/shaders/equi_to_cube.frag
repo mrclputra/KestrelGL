@@ -17,6 +17,6 @@ vec2 sampleSphere(vec3 v) {
 void main() {
 	vec2 uv = sampleSphere(normalize(LocalPos));
     vec3 color = texture(equirectangularMap, uv).rgb;
-    
+
     FragColor = vec4(color, 1.0);
 }

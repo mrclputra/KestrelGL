@@ -112,7 +112,7 @@ void Gui::draw() {
     ImGui::Separator();
 
     // global render configs
-    ImGui::Text("Global Render Configuration");
+    ImGui::Text("Global Render Config");
 
     static int mode = 0;
     if (mode < 0) mode = 0;
@@ -131,10 +131,32 @@ void Gui::draw() {
 
     ImGui::Checkbox("Normal Maps", &app->renderer.isNormalEnabled);
 
+    ImGui::Separator();
+    ImGui::Text("Environment");
+
+    if (ImGui::Button("Change HDRI")) {
+        IGFD::FileDialogConfig config;
+        config.path = ".";
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseSkyboxKey", "Choose HDR File", ".hdr", config);
+    }
+
+    // display the dialog
+    if (ImGuiFileDialog::Instance()->Display("ChooseSkyboxKey")) {
+        if (ImGuiFileDialog::Instance()->IsOk()) {
+            std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+
+            if (app->scene->skybox) {
+                app->scene->skybox->load(filePathName);
+                logger.info("Loaded new skybox: " + filePathName);
+            }
+        }
+        ImGuiFileDialog::Instance()->Close();
+    }
+
     // irradiance
 
     // shadow maps!
-    static bool showShadowMaps = true;
+    static bool showShadowMaps = false;
     //ImGui::Checkbox("L-Depth Maps", &showShadowMaps);
 
     if (showShadowMaps) {

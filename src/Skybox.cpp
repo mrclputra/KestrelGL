@@ -11,8 +11,6 @@ Skybox::Skybox() : m_CubemapID(0), m_SkyboxVAO(0), m_SkyboxVBO(0) {
 
 	// TODO: move this out of the constructor
 	load("assets/skybox/artist_workshop_4k.hdr");
-	computeIrradiance();
-	computePrefilterMap();
 }
 
 Skybox::~Skybox() {
@@ -23,6 +21,13 @@ Skybox::~Skybox() {
 
 void Skybox::load(const std::string& path) {
 	m_CubemapID = convertHDRItoCubemap(path);
+	glFinish();
+
+	// may need to cleanup the old data?
+	// idk, we'll see how it pans out
+
+	computeIrradiance();
+	computePrefilterMap();
 }
 
 unsigned int Skybox::convertHDRItoCubemap(const std::string& path) {
@@ -105,7 +110,7 @@ unsigned int Skybox::convertHDRItoCubemap(const std::string& path) {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
-	// cleanup temp
+	// cleanup
 	glDeleteTextures(1, &hdrTexture);
 	glDeleteFramebuffers(1, &captureFBO);
 	glDeleteRenderbuffers(1, &captureRBO);
@@ -195,6 +200,8 @@ void Skybox::computeIrradiance() {
 					data[(y * width + x) * 3 + 1],
 					data[(y * width + x) * 3 + 2]);
 
+				texel = glm::clamp(texel, glm::vec3(0.0f), glm::vec3(1000.0f));
+
 				// project onto SH basis
 				float sh[9];
 				sh[0] = 0.282095f;
@@ -215,7 +222,7 @@ void Skybox::computeIrradiance() {
 		}
 	}
 
-	// normalize
+	// normalize, this is necessary
 	for (int i = 0; i < 9; ++i) {
 		shCoefficients[i] *= (4.0f * 3.14159f) / totalWeight;
 	}
@@ -237,7 +244,7 @@ void Skybox::computePrefilterMap() {
 
 	for (unsigned int i = 0; i < 6; ++i) {
 		// faces of the cubemap
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 128, 128, 0, GL_RGB, GL_FLOAT, nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
 	}
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -289,7 +296,7 @@ void Skybox::computePrefilterMap() {
 	m_PrefilterShader->setInt("environmentMap", 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-	unsigned int maxMipLevels = 5;
+	unsigned int maxMipLevels = 9;
 
 	// render each mip level
 	// use viewport to mip resolution
@@ -305,8 +312,8 @@ void Skybox::computePrefilterMap() {
 
 	for (unsigned int mip = 0; mip < maxMipLevels; ++mip) {
 		// resize viewport to the mip level
-		unsigned int mipWidth = static_cast<unsigned int>(128 * std::pow(0.5, mip));
-		unsigned int mipHeight = static_cast<unsigned int>(128 * std::pow(0.5, mip));
+		unsigned int mipWidth = static_cast<unsigned int>(512 * std::pow(0.5, mip));
+		unsigned int mipHeight = static_cast<unsigned int>(512 * std::pow(0.5, mip));
 
 		glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);

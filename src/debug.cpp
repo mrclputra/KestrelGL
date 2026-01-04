@@ -37,7 +37,30 @@ static void baseScene(Scene& scene) {
 }
 
 static void sphereScene(Scene& scene) {
+	logger.info("creating spheres scene");
 
+	// LIGHTS
+	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1), glm::vec3(255, 254, 247)));
+
+	// OBJECTS
+	auto sphere0 = ModelLoader::load("assets/models/sphere.obj", "sphere_gold");
+	sphere0->transform.position = glm::vec3(0.0f);
+	sphere0->material->albedo = glm::vec3(0.56f, 0.5f, 0.19f);
+	sphere0->material->roughness = 0.27f;
+	sphere0->material->metalness = 1.0f;
+	scene.addObject(sphere0);
+
+	auto sphere1 = ModelLoader::load("assets/models/sphere.obj", "sphere_titanium");
+	sphere1->transform.position = glm::vec3(2.5f, 0.0f, 0.0f);
+	sphere1->material->albedo = glm::vec3(0.95f);
+	sphere1->material->roughness = 0.1f;
+	sphere1->material->metalness = 1.0f;
+	scene.addObject(sphere1);
+
+	//auto dragon = ModelLoader::load("assets/models/stanford_dragon_pbr/scene.gltf", "stanford_dragon");
+	//dragon->transform.scale = glm::vec3(0.07);
+	//dragon->transform.position = glm::vec3(1.0f, -2.0f, -3.0f);
+	//scene.addObject(dragon);
 }
 
 static void dragonScene2(Scene& scene) {

@@ -2,9 +2,7 @@
 
 // TODO: this function should also handle shader assignment
 //	initial transformation should be set here, but optional
-std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::shared_ptr<Shader> shader, std::string name) {
-	// todo: swap shader and name in function parameter
-
+std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::string name, std::shared_ptr<Shader> shader) {
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(path,
 		aiProcess_Triangulate |

@@ -23,6 +23,8 @@ public:
 	unsigned int m_PrefilterMap;	// specular map
 	//unsigned int m_brdfLUTMap;		// NdotV;x and roughness;y
 
+	std::shared_ptr<Shader> m_SkyboxShader;		// this is for rendering
+
 private:
 	unsigned int m_SkyboxVAO;
 	unsigned int m_SkyboxVBO;
@@ -35,9 +37,7 @@ private:
 	//void computeBRDFLUT();
 
 	// shaders
-	std::shared_ptr<Shader> m_SkyboxShader;		// this is for rendering
 	std::shared_ptr<Shader> m_EquiToCubeShader;	// this is for conversion
-	
 	std::shared_ptr<Shader> m_PrefilterShader;	// specular mipmap generation
 	//std::shared_ptr<Shader> m_BRDFShader;		// brdf LUT generation
 };
