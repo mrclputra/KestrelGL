@@ -222,7 +222,7 @@ void Skybox::computeIrradiance() {
 		}
 	}
 
-	// normalize, this is necessary
+	// normalize
 	for (int i = 0; i < 9; ++i) {
 		shCoefficients[i] *= (4.0f * 3.14159f) / totalWeight;
 	}

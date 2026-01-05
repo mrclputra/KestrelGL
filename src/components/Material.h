@@ -18,7 +18,7 @@ public:
 
 	// toggles
 	bool useAlbedoTexture = true;
-	bool useMetRoughTexture = true;
+	bool useMetRoughTexture = false;
 	
 	// to be expanded...
 	// https://www.khronos.org/gltf/pbr

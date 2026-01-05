@@ -61,40 +61,40 @@ const float PI = 3.14159265359;
 // PBR FUNCTIONS
 // -------------------------------------------------
 
-// normal distribution function
-// approximates the relative suface area of microfacets aligned to the halfway vector (H)
-float DistributionGGX(vec3 N, vec3 H, float roughness) {
-    float a = roughness * roughness;
-    
-    // Trowbridge-Reitz GGX
-    float a2 = a * a;
-    float NdotH = max(dot(N, H), 0.0);
-    float NdotH2 = NdotH * NdotH;
-    
-    float nom = a2;
-    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-    denom = PI * denom * denom;
-
-    return nom / denom;
-}
-
-// geometry function
-// approximates the relative surface area in which microfacets overshadow each other, causing light rays to be occluded
-float GeometrySchlickGGX(float NdotV, float k) {
-    float nom = NdotV;
-    float denom = NdotV * (1.0 - k) + k;
-
-    return nom / denom;
-}
-
-float GeometrySmith(vec3 N, vec3 V, vec3 L, float k) {
-    float NdotV = max(dot(N, V), 0.0); // shadows from view vector
-    float NdotL = max(dot(N, L), 0.0); // shadows from light vector
-    float ggx1 = GeometrySchlickGGX(NdotV, k);
-    float ggx2 = GeometrySchlickGGX(NdotL, k);
-
-    return ggx1 * ggx2;
-}
+//// normal distribution function
+//// approximates the relative suface area of microfacets aligned to the halfway vector (H)
+//float DistributionGGX(vec3 N, vec3 H, float roughness) {
+//    float a = roughness * roughness;
+//    
+//    // Trowbridge-Reitz GGX
+//    float a2 = a * a;
+//    float NdotH = max(dot(N, H), 0.0);
+//    float NdotH2 = NdotH * NdotH;
+//    
+//    float nom = a2;
+//    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+//    denom = PI * denom * denom;
+//
+//    return nom / denom;
+//}
+//
+//// geometry function
+//// approximates the relative surface area in which microfacets overshadow each other, causing light rays to be occluded
+//float GeometrySchlickGGX(float NdotV, float k) {
+//    float nom = NdotV;
+//    float denom = NdotV * (1.0 - k) + k;
+//
+//    return nom / denom;
+//}
+//
+//float GeometrySmith(vec3 N, vec3 V, vec3 L, float k) {
+//    float NdotV = max(dot(N, V), 0.0); // shadows from view vector
+//    float NdotL = max(dot(N, L), 0.0); // shadows from light vector
+//    float ggx1 = GeometrySchlickGGX(NdotV, k);
+//    float ggx2 = GeometrySchlickGGX(NdotL, k);
+//
+//    return ggx1 * ggx2;
+//}
 
 // fresnel
 vec3 fresnelSchlick(float cosTheta, vec3 F0) {
@@ -170,7 +170,6 @@ vec3 evaluateSHIrradiance(vec3 n)
 void main() {
     // fetch data
     vec3 texAlbedo = hasAlbedoMap ? pow(texture(albedoMap, vTexCoords).rgb, vec3(2.2)) : p_albedo;
-    vec3 rawNormal = hasNormalMap ? texture(normalMap, vTexCoords).rgb * 2.0 - 1.0 : vec3(0.0, 0.0, 1.0); // fallback to vertex normal in tangent space
     float metallic = hasMetRoughMap ? texture(metRoughMap, vTexCoords).b : p_metalness;
     float roughness = hasMetRoughMap ? texture(metRoughMap, vTexCoords).g : p_roughness;
     float texAO = hasAOMap ? texture(aoMap, vTexCoords).r : 1.0;
@@ -211,7 +210,7 @@ void main() {
 
     // diffuse component
     vec3 irradiance = evaluateSHIrradiance(N);
-    vec3 diffuseIBL = (irradiance / PI) * texAlbedo;
+    vec3 diffuseIBL = (irradiance * texAlbedo) / PI;
 
     // combine!
     vec3 ambient = (kD * diffuseIBL + specularIBL) * texAO;

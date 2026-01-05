@@ -70,7 +70,7 @@ void main() {
 
             // compression
             // https://graphicrants.blogspot.com/2013/12/tone-mapping.html?m=1
-            float luma = max(sampleColor.r, max(sampleColor.g, sampleColor.b));
+            float luma = dot(sampleColor, vec3(0.2126, 0.7152, 0.0722));
             float weight = 1.0 / (1.0 + luma);
 
             color       += sampleColor * weight * nDotL;

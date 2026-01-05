@@ -6,23 +6,16 @@ uniform samplerCube skybox;
 
 void main() {    
     // note, input skybox map is not tonemapped
-
     vec3 sampleDir = vec3(LocalPos.x, -LocalPos.y, LocalPos.z);
     vec3 envColor = texture(skybox, sampleDir).rgb;
-
-    // exposure
-//    envColor *= 0.5;
 
     // clamp
     envColor = clamp(envColor, 0.0, 1000.0);
 
-    // tonemapping
-//    float luma = max(envColor.r, max(envColor.g, envColor.b));
-    float luma = dot(envColor, vec3(0.2126, 0.7152, 0.0722));
-
+    // compression
     // https://graphicrants.blogspot.com/2013/12/tone-mapping.html?m=1
-    float range = 1.0;
-    float weight = 1.0 / (1.0 + (luma / range));
+    float luma = dot(envColor, vec3(0.2126, 0.7152, 0.0722));
+    float weight = 1.0 / (1.0 + luma);
     envColor *= weight;
 
     // gamma correction
