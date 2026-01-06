@@ -39,20 +39,15 @@ static void sphereScene(Scene& scene) {
 	sphere2->material->metalness = 0.0f;
 	scene.addObject(sphere2);
 
-	//auto object = ModelLoader::load("assets/models/lion_crushing_a_serpent/scene.gltf", "lion");
-	//object->transform.scale = glm::vec3(0.6f);
-	//object->transform.position = glm::vec3(1.0f, 0.0f, -20.0f);
-	//object->material->albedo = glm::vec3(0.98f);
-	//scene.addObject(object);
-
-	//auto cube = ModelLoader::load("assets/models/cube.obj", "cube");
-	//cube->transform.scale = glm::vec3(0.7f);
-	//cube->transform.position = glm::vec3(-2.0f, 0.0f, 0.0f);
-	//cube->material->albedo = glm::vec3(0.98f);
-	//scene.addObject(cube);
-
-	//auto dragon = ModelLoader::load("assets/models/stanford_dragon_pbr/scene.gltf", "stanford_dragon");
-	//dragon->transform.scale = glm::vec3(0.07);
-	//dragon->transform.position = glm::vec3(1.0f, -2.0f, -3.0f);
-	//scene.addObject(dragon);
+	auto dragon = ModelLoader::load("assets/models/stanford_dragon_pbr/scene.gltf", "stanford_dragon");
+	dragon->transform.scale = glm::vec3(0.07);
+	dragon->transform.position = glm::vec3(1.0f, -2.0f, -3.0f);
+	scene.addObject(dragon);
 }
+
+/*static void sponzaScene(Scene& scene) {
+	logger.info("loading sponza...");
+
+	auto sponza = ModelLoader::load("assets/models/sponza.glb");
+	scene.addObject(sponza);
+}*/

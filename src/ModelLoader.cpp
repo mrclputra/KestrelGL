@@ -33,7 +33,7 @@ std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::string n
 
 	// set shader
 	if (shader) {
-		// custom shader
+		// if a custom shader is provided
 		object->shader = shader;
 	}
 	else {
@@ -162,6 +162,7 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scen
 				int idx = loadTexture(texPath, Texture::Type::ALBEDO, object);
 				texIndices.push_back(idx);
 			}
+			object.material->useAlbedoMap = true;
 		}
 
 		// load normal maps
@@ -173,6 +174,7 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scen
 				int idx = loadTexture(texPath, Texture::Type::NORMAL, object);
 				texIndices.push_back(idx);
 			}
+			object.material->useNormalMap = true;
 		}
 
 		// load metallic roughness maps

@@ -8,7 +8,6 @@
 #include <sstream>
 #include <iostream>
 #include <sys/stat.h>
-
 #include <stdexcept>
 
 #include <logger.h>

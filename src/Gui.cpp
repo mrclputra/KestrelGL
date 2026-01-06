@@ -129,7 +129,8 @@ void Gui::draw() {
 
     ImGui::Spacing();
 
-    ImGui::Checkbox("Normal Maps", &app->renderer.isNormalEnabled);
+    // maybe make this recursive?
+    //ImGui::Checkbox("Normal Maps", &app->renderer.isNormalEnabled);
 
     ImGui::Separator();
     ImGui::Text("Environment");
@@ -137,6 +138,7 @@ void Gui::draw() {
     if (ImGui::Button("Change HDRI")) {
         IGFD::FileDialogConfig config;
         config.path = ".";
+        ImGui::SetNextWindowSize(ImVec2(720, 500));
         ImGuiFileDialog::Instance()->OpenDialog("ChooseSkyboxKey", "Choose HDR File", ".hdr", config);
     }
 
@@ -157,16 +159,16 @@ void Gui::draw() {
 
     // shadow maps!
     static bool showShadowMaps = false;
-    //ImGui::Checkbox("L-Depth Maps", &showShadowMaps);
+    ImGui::Checkbox("Visualize Shadow Maps", &showShadowMaps);
 
-    if (showShadowMaps) {
-        ImGui::Begin("L-Depth Maps", &showShadowMaps, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+    if (showShadowMaps && !app->scene->lights.empty()) {
+        ImGui::Begin("##L-Depth Map", &showShadowMaps, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 
         for (auto& light : app->scene->lights) {
             if (auto dir = std::dynamic_pointer_cast<DirectionalLight>(light)) {
                 ImGui::Image(
                     (void*)(intptr_t)dir->depthMap,
-                    ImVec2(128, 128),
+                    ImVec2(256, 256),
                     ImVec2(0, 1),
                     ImVec2(1, 0)
                 );
@@ -221,8 +223,9 @@ void Gui::draw() {
                         ImGui::SetNextItemWidth(140.0f);
                         ImGui::SliderFloat("##Roughness", &obj->material->roughness, 0.0f, 1.0f);
 
-                        ImGui::Checkbox("Use Albedo Texture ##Albedo", &obj->material->useAlbedoTexture);
-                        ImGui::Checkbox("Use MetRough Texture##Metal", &obj->material->useMetRoughTexture);
+                        ImGui::Checkbox("Use Albedo Map ##Albedo", &obj->material->useAlbedoMap);
+                        ImGui::Checkbox("Use Normal Map", &obj->material->useNormalMap);
+                        ImGui::Checkbox("Use MetRough Map ##Metal", &obj->material->useMetRoughMap);
 
                         ImGui::TreePop();
                     }

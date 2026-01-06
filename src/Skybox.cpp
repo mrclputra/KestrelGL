@@ -161,6 +161,8 @@ void Skybox::setupGeometry() {
 }
 
 void Skybox::computeIrradiance() {
+	logger.info("computing irradiance map...");
+
 	shCoefficients.assign(9, glm::vec3(0.0f));
 
 	// read back the cubemap faces to the CPU to calculate
@@ -168,6 +170,7 @@ void Skybox::computeIrradiance() {
 	// ill figure this out in the future when I get to it :)
 
 	int width = 1024;
+	int skip = 64; // refactor
 	std::vector<float> data(width * width * 3);
 	float totalWeight = 0.0f;
 
@@ -175,8 +178,8 @@ void Skybox::computeIrradiance() {
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_CubemapID);
 		glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, GL_RGB, GL_FLOAT, data.data());
 
-		for (int y = 0; y < width; ++y) {
-			for (int x = 0; x < width; ++x) {
+		for (int y = 0; y < width; y += skip) {
+			for (int x = 0; x < width; x += skip) {
 				// get direction from face UV (yes really)
 				// https://en.wikipedia.org/wiki/Cube_mapping
 				float u = (x + 0.5f) / width * 2.0f - 1.0f;
@@ -231,6 +234,8 @@ void Skybox::computeIrradiance() {
 }
 
 void Skybox::computePrefilterMap() {
+	logger.info("computing prefilter map...");
+
 	// create cubemap that will store prefiltered mipmaps
 	// -> allocate cubemap
 	// -> gl_rgb16f
@@ -298,7 +303,7 @@ void Skybox::computePrefilterMap() {
 	m_PrefilterShader->setInt("environmentMap", 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-	unsigned int maxMipLevels = 9;
+	unsigned int maxMipLevels = 6;
 
 	// render each mip level
 	// use viewport to mip resolution
@@ -316,6 +321,8 @@ void Skybox::computePrefilterMap() {
 		// resize viewport to the mip level
 		unsigned int mipWidth = static_cast<unsigned int>(512 * std::pow(0.5, mip));
 		unsigned int mipHeight = static_cast<unsigned int>(512 * std::pow(0.5, mip));
+
+		logger.info("calculating mip " + std::to_string(mip) + " (" + std::to_string(mipWidth) + "x" + std::to_string(mipHeight) + ")");
 
 		glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);

@@ -17,13 +17,13 @@ static void cursor_position_callback(GLFWwindow* window, double xPos, double yPo
 	auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
 	app->onCursorPos(xPos, yPos);
 }
-//static void scroll_callback(GLFWwindow* window, double xOff, double yOff) {
-//	ImGui_ImplGlfw_ScrollCallback(window, xOff, yOff); // ImGui
-//	if (ImGui::GetIO().WantCaptureMouse) return; // if imgui wants the scroll, stop here
-//
-//	auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
-//	app->onScroll(xOff, yOff);
-//}
+static void scroll_callback(GLFWwindow* window, double xOff, double yOff) {
+	ImGui_ImplGlfw_ScrollCallback(window, xOff, yOff); // ImGui
+	if (ImGui::GetIO().WantCaptureMouse) return; // if imgui wants the scroll, stop here
+
+	auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
+	app->onScroll(xOff, yOff);
+}
 static void character_callback(GLFWwindow* window, unsigned int codepoint) {
 	ImGui_ImplGlfw_CharCallback(window, codepoint);
 }
@@ -138,10 +138,11 @@ void App::init() {
 	scene = std::make_unique<Scene>(bus);
 	scene->camera.setViewport(fbWidth, fbHeight); // tell camera about viewport
 
+	// initialize renderer instance
+	renderer.init(*scene);
+
 	// open a debug scene
 	sphereScene(*scene);
-	//baseScene(*scene);
-	//lionScene(*scene);
 
 	logger.info("ended initialization");
 }
@@ -152,7 +153,7 @@ void App::setupCallbacks() {
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwSetCursorPosCallback(window, cursor_position_callback);
-	//glfwSetScrollCallback(window, scroll_callback);
+	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetCharCallback(window, character_callback);
 }
@@ -161,8 +162,6 @@ void App::run() {
 	logger.info("running main process...");
 	// main stuff happens in this function here
 	float lastTime = 0.0f;
-
-	renderer.init(*scene);
 
 	// main execution loop below
 	// per-frame logic

@@ -12,11 +12,7 @@ public:
 	void render(const Scene& scene);
 	void renderLightPass(const Scene& scene);
 
-	// TODO: check if storage is necessary
-	//int screenWidth, screenHeight;
-
 	unsigned int renderMode;
-	bool isNormalEnabled = true;
 
 private:
 	void uploadLights(const Scene& scene, Shader& shader);

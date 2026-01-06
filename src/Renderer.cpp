@@ -86,7 +86,6 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
     }
 
     shader.setInt("mode", renderMode);
-    shader.setBool("normalEnabled", isNormalEnabled);
 
 	shader.setMat4("model", object.transform.getModelMatrix());
 	shader.setMat4("view", scene.camera.getViewMatrix());
@@ -94,16 +93,16 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
 	shader.setVec3("viewPos", scene.camera.position);
 
     // base pbr parameters (non-texture)
-    //  use 'p_' convention for overrideable parameters like this
     shader.setVec3("p_albedo", object.material->albedo);
     shader.setFloat("p_metalness", object.material->metalness);
     shader.setFloat("p_roughness", object.material->roughness);
 
-    // shader texture flags
-    shader.setBool("hasAlbedoMap", false);
-    shader.setBool("hasNormalMap", false);
-    shader.setBool("hasMetRoughMap", false);
-    shader.setBool("hasAOMap", false);
+    // shader manual texture flags
+    shader.setBool("useAlbedoMap", object.material->useAlbedoMap);
+    shader.setBool("useNormalMap", object.material->useNormalMap);
+    shader.setBool("useMetRoughMap", object.material->useMetRoughMap);
+    shader.setBool("useAOMap", object.material->useAOMap);
+    shader.setBool("useEmissionMap", object.material->useEmissionMap);
 
     // lights
 	uploadLights(scene, shader);
@@ -149,40 +148,38 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
         shader.setInt("brdfLUT", 8);
     }
 
-    // TODO: refactor the textures binding system for multi-mesh objects
-    // mesh-specific texture binding
-    for (const auto& mesh : object.meshes) {
-        for (int texIdx : mesh->textureIndices) {
-            const auto& tex = object.material->textures[texIdx];
+    // load textures
+    for (int i = 0; i < object.material->textures.size(); i++) {
+        const auto& tex = object.material->textures[i];
 
-            switch (tex->type) {
-                case Texture::Type::ALBEDO: 
-                    if (object.material->useAlbedoTexture) {
-                        shader.setBool("hasAlbedoMap", true);
-                        shader.setInt("albedoMap", 0);
-                        tex->bind(0);
-                    }
-                    break;
-                case Texture::Type::NORMAL: 
-                    shader.setBool("hasNormalMap", true);
-                    shader.setInt("normalMap", 1);
-                    tex->bind(1);
-                    break;
-                case Texture::Type::METALLIC_ROUGHNESS: 
-                    if (object.material->useMetRoughTexture) {
-                        shader.setBool("hasMetRoughMap", true);
-                        shader.setInt("metRoughMap", 2);
-                        tex->bind(2);
-                    }
-                    break;
-                case Texture::Type::OCCLUSION: 
-                    shader.setBool("hasAOMap", true);
-                    shader.setInt("aoMap", 3);
-                    tex->bind(3);
-                    break;
-            }
+        // check if these texture types exist;
+        // update shader accordingly
+        switch (tex->type) {
+        case Texture::Type::ALBEDO:
+            shader.setBool("hasAlbedoMap", true);
+            shader.setInt("albedoMap", 0);
+            tex->bind(0);
+            break;
+        case Texture::Type::NORMAL:
+            shader.setBool("hasNormalMap", true);
+            shader.setInt("normalMap", 1);
+            tex->bind(1);
+            break;
+        case Texture::Type::METALLIC_ROUGHNESS:
+            shader.setBool("hasMetRoughMap", true);
+            shader.setInt("metRoughMap", 2);
+            tex->bind(2);
+            break;
+        case Texture::Type::OCCLUSION:
+            shader.setBool("hasAOMap", true);
+            shader.setInt("aoMap", 3);
+            tex->bind(3);
+            break;
         }
+    }
 
+    // render mesh
+    for (const auto& mesh : object.meshes) {
         mesh->render();
     }
 }

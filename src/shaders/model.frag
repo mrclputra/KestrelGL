@@ -32,8 +32,6 @@ uniform bool hasMetRoughMap = false;
 uniform sampler2D aoMap;
 uniform bool hasAOMap = false;
 
-// todo: external flags to determine if said textures should be used
-
 // irradiance
 uniform vec3 shCoefficients[9];
 
@@ -43,9 +41,14 @@ uniform sampler2D brdfLUT;
 
 // imgui stuff
 uniform int mode = 0;
-uniform bool normalEnabled = true;
-// to be deprecated?: 
-uniform vec3 p_albedo;
+// overrides
+uniform bool useAlbedoMap;
+uniform bool useNormalMap;
+uniform bool useMetRoughMap;
+uniform bool useAOMap;
+uniform bool useEmissionMap;
+
+uniform vec3 p_albedo; // rgb
 uniform float p_metalness;
 uniform float p_roughness;
 
@@ -169,16 +172,16 @@ vec3 evaluateSHIrradiance(vec3 n)
 
 void main() {
     // fetch data
-    vec3 texAlbedo = hasAlbedoMap ? pow(texture(albedoMap, vTexCoords).rgb, vec3(2.2)) : p_albedo;
-    float metallic = hasMetRoughMap ? texture(metRoughMap, vTexCoords).b : p_metalness;
-    float roughness = hasMetRoughMap ? texture(metRoughMap, vTexCoords).g : p_roughness;
-    float texAO = hasAOMap ? texture(aoMap, vTexCoords).r : 1.0;
+    vec3 texAlbedo = hasAlbedoMap && useAlbedoMap ? pow(texture(albedoMap, vTexCoords).rgb, vec3(2.2)) : p_albedo;
+    float metallic = hasMetRoughMap && useMetRoughMap ? texture(metRoughMap, vTexCoords).b : p_metalness;
+    float roughness = hasMetRoughMap && useMetRoughMap ? texture(metRoughMap, vTexCoords).g : p_roughness;
+    float texAO = hasAOMap && useAOMap ? texture(aoMap, vTexCoords).r : 1.0;
 
     // the TBN matrix is a transformation that converts tangentspace to worldspace
     // this is needed to be able to apply object transformations to the normal map
     mat3 TBN = mat3(normalize(vTangent), normalize(vBitangent), normalize(vNormal));
     vec3 tangentNormal;
-    if (hasNormalMap && normalEnabled) {
+    if (useNormalMap && hasNormalMap) {
         // sample and remap to -1,1
         tangentNormal = texture(normalMap, vTexCoords).rgb * 2.0 - 1.0;
     } else {
@@ -201,7 +204,7 @@ void main() {
 
     // specular component
     vec3 R = reflect(-V, N); 
-    const float MAX_REFLECTION_LOD = 8.0;
+    const float MAX_REFLECTION_LOD = 5.0;
     vec3 prefilteredColor = textureLod(prefilterMap, R, roughness * MAX_REFLECTION_LOD).rgb;
     vec3 specularIBL = prefilteredColor * (F0 * envBRDF.x + envBRDF.y);
 
