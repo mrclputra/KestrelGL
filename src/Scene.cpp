@@ -2,10 +2,17 @@
 #include "lights/DirectionalLight.h"
 #include "lights/PointLight.h"
 
+// TODO: REFACTOR THIS CONSTRUCTOR
 Scene::Scene(EventBus& bus)
-    : bus(bus), camera(20.0f, 90.0f, 30.0f) {
-	logger.info("scene created...");
-	camera.update(); // init
+    : bus(bus), camera(), skybox(std::make_unique<Skybox>()) {
+
+}
+
+void Scene::setSkybox(const std::string& hdriPath) {
+	//if (!skybox) {
+	//	skybox = std::make_unique<Skybox>();
+	//}
+	skybox->load(hdriPath);
 }
 
 void Scene::update(float deltaTime) {
@@ -17,13 +24,6 @@ void Scene::update(float deltaTime) {
 	// DEBUG LIGHT ROTATION THINGY!!!
 	static float t = 0;
 	t += deltaTime * 0.5f;
-
-	//if (auto it = std::find_if(lights.begin(), lights.end(),
-	//	[](auto& l) { return std::dynamic_pointer_cast<PointLight>(l); }); it != lights.end())
-	//{
-	//	auto& p = std::dynamic_pointer_cast<PointLight>(*it)->transform.position;
-	//	p.x = 4.0f * sin(t * glm::two_pi<float>());
-	//}
 
 	float step = deltaTime * 0.5f;
 	for (auto& light : lights) {

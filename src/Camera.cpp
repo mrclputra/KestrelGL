@@ -1,78 +1,53 @@
 #include "Camera.h"
 
-Camera::Camera(float radius, float theta, float pi, glm::vec3 worldUp) {
-	this->radius = radius;
-	this->theta = glm::radians(theta);
-	this->phi = glm::radians(pi);
-	this->m_worldUp = worldUp;
-
+Camera::Camera(glm::vec3 pos, glm::vec3 worldUp)
+	: position(pos), m_worldUp(worldUp) {
 	logger.info("camera created - " + std::to_string(m_viewportWidth) + "*" + std::to_string(m_viewportHeight));
-	update();
-}
-
-void Camera::update() {
-	position = calculatePosition();
 	updateVectors();
 }
-void Camera::setViewport(int width, int height) {
-	m_viewportWidth = width;
-	m_viewportHeight = height;
+
+glm::mat4 Camera::getViewMatrix() const {
+	return glm::lookAt(position, position + front, up);
 }
 
 glm::mat4 Camera::getProjectionMatrix() const {
-	return glm::perspective(glm::radians(fov), (float)m_viewportWidth / (float)m_viewportHeight, 0.1f, 100.0f);
-}
-glm::mat4 Camera::getViewMatrix() const {
-	return glm::lookAt(position, target, up);
-}
-
-void Camera::rotate(float xOffset, float yOffset) {
-	theta += xOffset * sensitivity * PIXEL_TO_RAD;
-	phi += yOffset * sensitivity * PIXEL_TO_RAD;
-
-	// constraints
-	if (phi > glm::radians(89.0f))
-		phi = glm::radians(89.0f);
-	if (phi < glm::radians(-89.0f))
-		phi = glm::radians(-89.0f);
-
-	update();
-}
-void Camera::zoom(float offset) {
-	radius = glm::clamp(radius - offset * 0.7f, 0.2f, 700.0f);
-	update();
-}
-void Camera::reset() {
-	logger.info("camera reset");
-	
-	radius = 5.0f;
-	theta = 0.0f;
-	phi = 0.0f;
-	update();
-}
-
-void Camera::setTarget(const glm::vec3& newTarget) {
-	glm::vec3 targetOffset = newTarget - target;
-	target = newTarget;
-
-	// update camera position by adding the offset, to maintain the same relative position/orientation
-	position += targetOffset;
-
-	update();
-}
-
-glm::vec3 Camera::calculatePosition() const {
-	// spherical to cartesian
-	return target + glm::vec3(
-		radius * cos(phi) * cos(theta),
-		radius * sin(phi),
-		radius * cos(phi) * sin(theta)
+	return glm::perspective(
+		glm::radians(fov),
+		(float)m_viewportWidth / (float)m_viewportHeight,
+		0.1f,
+		100.0f
 	);
 }
 
-// https://www.songho.ca/opengl/gl_camera.html
+void Camera::rotate(float xOffset, float yOffset) {
+	yaw += xOffset * sensitivity;
+	pitch -= yOffset * sensitivity;
+
+	pitch = glm::clamp(pitch, -89.0f, 89.0f);
+
+	updateVectors();
+}
+
 void Camera::updateVectors() {
-	front = glm::normalize(target - position);
+	glm::vec3 f;
+	f.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	f.y = sin(glm::radians(pitch));
+	f.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
+	// https://www.songho.ca/opengl/gl_camera.html
+	front = glm::normalize(f);
 	right = glm::normalize(glm::cross(front, m_worldUp));
 	up = glm::normalize(glm::cross(right, front));
+}
+
+void Camera::moveForward(float dt) { position += front * speed * dt; }
+void Camera::moveBackward(float dt) { position -= front * speed * dt; }
+void Camera::moveRight(float dt) { position += right * speed * dt; }
+void Camera::moveLeft(float dt) { position -= right * speed * dt; }
+void Camera::moveUp(float dt) { position += m_worldUp * speed * dt; }
+void Camera::moveDown(float dt) { position -= m_worldUp * speed * dt; }
+
+void Camera::setViewport(int width, int height) {
+	m_viewportWidth = width;
+	m_viewportHeight = height;
 }

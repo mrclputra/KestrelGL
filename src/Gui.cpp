@@ -46,8 +46,6 @@ void Gui::endFrame() {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     ImGuiIO& io = ImGui::GetIO();
-
-    // if needed, add multi-window support here
 }
 
 void Gui::draw() {
@@ -81,34 +79,128 @@ void Gui::draw() {
         if (frameTimeHistory[i] > maxFrameTime) maxFrameTime = frameTimeHistory[i];
     }
 
-    // SCENE TREE
-    ImGui::Begin("Scene TREE", nullptr, ImGuiChildFlags_AlwaysAutoResize);
-    // root scene node
-    if (ImGui::TreeNodeEx("Scene", ImGuiTreeNodeFlags_DefaultOpen)) {
+    ImGui::Begin("Debug", nullptr, ImGuiChildFlags_AlwaysAutoResize);
 
-        // OBJECTS FOLDER
-        if (ImGui::TreeNodeEx("Objects", ImGuiTreeNodeFlags_DefaultOpen)) {
+    // profiler
+    ImGui::Text("Current: %.2f ms", currentDeltaTime);
+    ImGui::Text("Average: %.2f ms (%.1f FPS)",
+        movingAverage,
+        (movingAverage > 0.0f) ? 1000.0f / movingAverage : 0.0f);
+
+    ImGui::PlotLines("##FrameTimeGraph",
+        frameTimeHistory,
+        FRAME_HIST_COUNT,
+        frameTimeOffset,
+        nullptr,
+        0.0f,
+        maxFrameTime + 2.0f,
+        ImVec2(ImGui::GetContentRegionAvail().x, 80));
+
+    ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Max: %.1fms", maxFrameTime);
+
+    ImGui::Separator();
+
+    // camera data
+    auto cam = app->scene->camera;
+    ImGui::Text("Camera Position");
+    ImGui::Text("%.2fx, %.2fy, %.2fz,", cam.position.x, cam.position.y, cam.position.z);
+    ImGui::Spacing();
+    //ImGui::Text("rad   : %.2f", cam.radius);
+    //ImGui::Text("theta : %.2f", cam.theta);
+    //ImGui::Text("phi   : %.2f", cam.phi);
+
+    ImGui::Separator();
+
+    // global render configs
+    ImGui::Text("Global Render Config");
+
+    static int mode = 0;
+    if (mode < 0) mode = 0;
+
+    ImGui::Text("Mode");
+    ImGui::SameLine();
+    if (ImGui::Button("-")) { mode--; }
+    ImGui::SameLine();
+    ImGui::Text("%d", mode);
+    ImGui::SameLine();
+    if (ImGui::Button("+")) { mode++; }
+
+    app->renderer.renderMode = mode;
+
+    ImGui::Spacing();
+
+    ImGui::Checkbox("Normal Maps", &app->renderer.isNormalEnabled);
+
+    ImGui::Separator();
+    ImGui::Text("Environment");
+
+    if (ImGui::Button("Change HDRI")) {
+        IGFD::FileDialogConfig config;
+        config.path = ".";
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseSkyboxKey", "Choose HDR File", ".hdr", config);
+    }
+
+    // display the dialog
+    if (ImGuiFileDialog::Instance()->Display("ChooseSkyboxKey")) {
+        if (ImGuiFileDialog::Instance()->IsOk()) {
+            std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+
+            if (app->scene->skybox) {
+                app->scene->skybox->load(filePathName);
+                logger.info("Loaded new skybox: " + filePathName);
+            }
+        }
+        ImGuiFileDialog::Instance()->Close();
+    }
+
+    // irradiance
+
+    // shadow maps!
+    static bool showShadowMaps = false;
+    //ImGui::Checkbox("L-Depth Maps", &showShadowMaps);
+
+    if (showShadowMaps) {
+        ImGui::Begin("L-Depth Maps", &showShadowMaps, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+
+        for (auto& light : app->scene->lights) {
+            if (auto dir = std::dynamic_pointer_cast<DirectionalLight>(light)) {
+                ImGui::Image(
+                    (void*)(intptr_t)dir->depthMap,
+                    ImVec2(128, 128),
+                    ImVec2(0, 1),
+                    ImVec2(1, 0)
+                );
+            }
+        }
+
+        ImGui::End();
+    }
+
+    ImGui::Separator();
+
+    // scene tree
+    if (ImGui::TreeNodeEx("Scene Tree")) {
+        // objects
+        if (ImGui::TreeNodeEx("Objects")) {
             for (auto& obj : app->scene->objects) {
-                ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
-                if (ImGui::TreeNodeEx((void*)obj.get(), flags, "%s", obj->name.c_str())) {
+                if (ImGui::TreeNodeEx((void*)obj.get(), ImGuiTreeNodeFlags_OpenOnArrow, "%s", obj->name.c_str())) {
                     ImGuiTreeNodeFlags subFlags = ImGuiTreeNodeFlags_DefaultOpen;
 
-                    // transform section
+                    // transforms
                     if (ImGui::TreeNodeEx("Transform", subFlags)) {
-                        //ImGui::DragFloat3("Position", &obj->transform.position[0], 0.1f);
                         ImGui::Text("Position");
                         ImGui::SetNextItemWidth(140.0f);
                         ImGui::DragFloat3("##Pos", &obj->transform.position[0], 0.1f);
                         ImGui::TreePop();
                     }
 
-                    // shader section
+                    // shader
                     if (obj->shader && ImGui::TreeNodeEx("Shader", subFlags)) {
                         ImGui::Text("ID: %u", obj->shader->ID);
                         ImGui::TreePop();
                     }
 
-                    // meshes section
+                    // meshes
                     if (!obj->meshes.empty() && ImGui::TreeNodeEx("Meshes", subFlags)) {
                         for (int i = 0; i < (int)obj->meshes.size(); i++) {
                             ImGui::BulletText("Mesh %d", i);
@@ -116,35 +208,44 @@ void Gui::draw() {
                         ImGui::TreePop();
                     }
 
-                    if (ImGui::TreeNode("DANGER ZONE :)")) {
+                    // pbr parameters
+                    if (ImGui::TreeNodeEx("PBR", subFlags)) {
+                        ImGui::Text("Albedo");
+                        ImGui::ColorEdit3("##AlbedoColor", &obj->material->albedo[0]);
+
                         ImGui::Text("Metalness");
                         ImGui::SetNextItemWidth(140.0f);
-                        ImGui::SliderFloat("##MetalnessFac", &obj->metalnessFac, 0.0f, 1.0f);
+                        ImGui::SliderFloat("##Metalness", &obj->material->metalness, 0.0f, 1.0f);
 
                         ImGui::Text("Roughness");
                         ImGui::SetNextItemWidth(140.0f);
-                        ImGui::SliderFloat("##RougnessFac", &obj->roughnessFac, 0.0f, 1.0f);
+                        ImGui::SliderFloat("##Roughness", &obj->material->roughness, 0.0f, 1.0f);
+
+                        ImGui::Checkbox("Use Albedo Texture ##Albedo", &obj->material->useAlbedoTexture);
+                        ImGui::Checkbox("Use MetRough Texture##Metal", &obj->material->useMetRoughTexture);
 
                         ImGui::TreePop();
                     }
 
-                    ImGui::TreePop(); // close object instance
+                    ImGui::TreePop();
                 }
             }
-            ImGui::TreePop(); // close objects instance
+
+            // pop objects
+            ImGui::TreePop();
         }
 
-        // LIGHTS FOLDER
-        if (ImGui::TreeNodeEx("Lights", ImGuiTreeNodeFlags_DefaultOpen)) {
-            for (int i = 0; i < (int)app->scene->lights.size(); i++) {
+        // lights
+        if (ImGui::TreeNodeEx("Lights")) {
+            for (int i = 0; i < app->scene->lights.size(); i++) {
                 auto& light = app->scene->lights[i];
 
                 // make a unique ID for the light node
-                // should probably implement a proper ID system for the engine down the line
+                // should probably implement a proper global ID system for the engine down the line
                 char lightLabel[64];
                 auto dirLight = std::dynamic_pointer_cast<DirectionalLight>(light);
                 bool isDir = (dirLight != nullptr);
-                sprintf(lightLabel, "%s ##%p", isDir ? "Dir Light" : "Point Light", (void*)light.get());
+                sprintf(lightLabel, "%s ##%p", isDir ? "Directional Light" : "Point Light", (void*)light.get());
 
                 if (ImGui::TreeNodeEx(lightLabel, ImGuiTreeNodeFlags_OpenOnArrow)) {
                     ImGuiTreeNodeFlags subFlags = ImGuiTreeNodeFlags_DefaultOpen;
@@ -176,57 +277,14 @@ void Gui::draw() {
                     ImGui::TreePop(); // close light instance
                 }
             }
-            ImGui::TreePop(); // close lights folder
+
+            // pop lights
+            ImGui::TreePop();
         }
 
-        ImGui::TreePop(); // close root scene
+        // pop scene
+        ImGui::TreePop();
     }
-    ImGui::End();
 
-    // base camera debug information,
-    // standard stuff we just put here
-    ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-    // TODO: add elements here
-    auto cam = app->scene->camera;
-    ImGui::Text("Camera Position");
-    ImGui::Text("%.2fx, %.2fy, %.2fz,", cam.position.x, cam.position.y, cam.position.z);
-    ImGui::Spacing();
-    ImGui::Text("rad   : %.2f", cam.radius);
-    ImGui::Text("theta : %.2f", cam.theta);
-    ImGui::Text("phi   : %.2f", cam.phi);
-    //ImGui::Text("%.2fr, %.2ft, %.2fp,", cam.radius, cam.theta, cam.phi);
-    ImGui::End();
-
-    
-    // PROFILER
-    ImGui::Begin("Marcel's Magic Profiler", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-
-    ImGui::Text("Current: %.2f ms", currentDeltaTime);
-    ImGui::Text("Average: %.2f ms (%.1f FPS)",
-        movingAverage,
-        (movingAverage > 0.0f) ? 1000.0f / movingAverage : 0.0f);
-
-    ImGui::PlotLines("##FrameTimeGraph",
-        frameTimeHistory,
-        FRAME_HIST_COUNT,
-        frameTimeOffset,
-        nullptr,
-        0.0f,
-        maxFrameTime + 2.0f,
-        ImVec2(ImGui::GetContentRegionAvail().x, 80));
-        //ImVec2(200, 80));
-
-    ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Max: %.1fms", maxFrameTime);
-    ImGui::End();
-
-
-    // SHADOWMAP FRAMEBUFFER PREVIEW
-    ImGui::Begin("L-Depth Buffers", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-    for (auto light : app->scene->lights) {
-        if (auto dir = std::dynamic_pointer_cast<DirectionalLight>(light)) {
-            //ImGui::Text("Directional Light: %d", dir->depthMap);
-            ImGui::Image((void*)(intptr_t)dir->depthMap, ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0));
-        }
-    }
     ImGui::End();
 }

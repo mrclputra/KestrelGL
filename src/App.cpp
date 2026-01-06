@@ -3,17 +3,12 @@
 
 #include "App.h"
 
-#include "debug.h"
+#include "debug.cpp"
 
 // glfw callbacks
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	auto app = static_cast<App*>(glfwGetWindowUserPointer(window)); // is there a way to get this value without casting each time?
 	app->onFrameBufferSize(width, height);
-
-	// update renderer
-	//app->renderer.screenHeight = height;
-	//app->renderer.screenWidth = width;
-
 }
 static void cursor_position_callback(GLFWwindow* window, double xPos, double yPos) {
 	ImGui_ImplGlfw_CursorPosCallback(window, xPos, yPos); // ImGui
@@ -22,13 +17,13 @@ static void cursor_position_callback(GLFWwindow* window, double xPos, double yPo
 	auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
 	app->onCursorPos(xPos, yPos);
 }
-static void scroll_callback(GLFWwindow* window, double xOff, double yOff) {
-	ImGui_ImplGlfw_ScrollCallback(window, xOff, yOff); // ImGui
-	if (ImGui::GetIO().WantCaptureMouse) return; // if imgui wants the scroll, stop here
-
-	auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
-	app->onScroll(xOff, yOff);
-}
+//static void scroll_callback(GLFWwindow* window, double xOff, double yOff) {
+//	ImGui_ImplGlfw_ScrollCallback(window, xOff, yOff); // ImGui
+//	if (ImGui::GetIO().WantCaptureMouse) return; // if imgui wants the scroll, stop here
+//
+//	auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
+//	app->onScroll(xOff, yOff);
+//}
 static void character_callback(GLFWwindow* window, unsigned int codepoint) {
 	ImGui_ImplGlfw_CharCallback(window, codepoint);
 }
@@ -121,10 +116,6 @@ void App::init() {
 	logger.info("OpenGL Version: " + std::string((const char*)glGetString(GL_VERSION)));
 	logger.info("GLSL Version: " + std::string((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION)));
 
-	//std::cout << "\n";
-	//std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << "\n";
-	//std::cout << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
-
 	// initialize ImGui
 	gui.init(this, window);
 
@@ -147,9 +138,10 @@ void App::init() {
 	scene = std::make_unique<Scene>(bus);
 	scene->camera.setViewport(fbWidth, fbHeight); // tell camera about viewport
 
-	// open debug scene
+	// open a debug scene
+	sphereScene(*scene);
 	//baseScene(*scene);
-	lionScene(*scene);
+	//lionScene(*scene);
 
 	logger.info("ended initialization");
 }
@@ -160,7 +152,7 @@ void App::setupCallbacks() {
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwSetCursorPosCallback(window, cursor_position_callback);
-	glfwSetScrollCallback(window, scroll_callback);
+	//glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetCharCallback(window, character_callback);
 }
@@ -179,10 +171,9 @@ void App::run() {
 		float deltaTime = currentTime - lastTime;
 		lastTime = currentTime;
 
-		// do stuff here
-
-		// check if shader files modified? (hot reload)
-		// TODO: implement and call here
+		// process continuous input
+		// this is needed for non-discrete functionality that depend on deltatime
+		processInput(deltaTime);
 
 		// clear render buffers
 		glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
@@ -216,6 +207,23 @@ void App::cleanup() {
 	glfwTerminate();
 }
 
+void App::processInput(float dt) {
+	if (ImGui::GetIO().WantCaptureKeyboard) return; // check if ImGui is using input
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		scene->camera.moveForward(dt);
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		scene->camera.moveBackward(dt);
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		scene->camera.moveLeft(dt);
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		scene->camera.moveRight(dt);
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+		scene->camera.moveUp(dt);
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+		scene->camera.moveDown(dt);
+}
+
 // callbacks
 void App::onFrameBufferSize(int w, int h) {
 	glViewport(0, 0, w, h);
@@ -245,7 +253,6 @@ void App::onCursorPos(double xPos, double yPos) {
 	lastX = xPos;
 	lastY = yPos;
 
-	// TODO: camera.rotate
 	scene->camera.rotate(xOffset, yOffset);
 
 	// wrap cursor
@@ -266,7 +273,7 @@ void App::onCursorPos(double xPos, double yPos) {
 }
 
 void App::onScroll(double xOff, double yOff) {
-	scene->camera.zoom(yOff);
+	// do this on scroll
 }
 
 void App::onKey(int key, int scancode, int action, int mods) {

@@ -2,19 +2,32 @@
 
 #include <glm/glm.hpp>
 #include <memory>
-#include <vector>
+#include <string>
 
-#include "shader.h"
+#include "Texture.h"
 
 class Material {
 public:
 	Material() = default;
 	~Material() = default;
 
-	// set shader uniforms
-	[[deprecated("This class is incompatible with current engine architecture")]]
-	void apply(Shader& shader) const;
+	// PBR parameters
+	glm::vec3 albedo = glm::vec3(0.98); // rgb
+	float metalness = 0.0f; // 0-1
+	float roughness = 0.2f; // 0-1
 
-	// material properties
-	glm::vec3 albedo = glm::vec3(1.0f); // rgb base color
+	// toggles
+	bool useAlbedoTexture = true;
+	bool useMetRoughTexture = false;
+	
+	// to be expanded...
+	// https://www.khronos.org/gltf/pbr
+	//float alpha;
+	//float emission;
+	
+	// textures
+	std::vector<std::shared_ptr<Texture>> textures;
+
+	// todo: if a specific Texture::Type for albedo, metalness, or roughness exists,
+	//	we should override the associated PBR parameter in the shader
 };
