@@ -203,7 +203,7 @@ void Gui::draw() {
                     }
 
                     // meshes
-                    if (!obj->meshes.empty() && ImGui::TreeNodeEx("Meshes", subFlags)) {
+                    if (!obj->meshes.empty() && ImGui::TreeNode("Meshes")) {
                         for (int i = 0; i < (int)obj->meshes.size(); i++) {
                             ImGui::BulletText("Mesh %d", i);
                         }

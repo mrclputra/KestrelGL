@@ -149,37 +149,35 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
     }
 
     // load textures
-    for (int i = 0; i < object.material->textures.size(); i++) {
-        const auto& tex = object.material->textures[i];
-
-        // check if these texture types exist;
-        // update shader accordingly
-        switch (tex->type) {
-        case Texture::Type::ALBEDO:
-            shader.setBool("hasAlbedoMap", true);
-            shader.setInt("albedoMap", 0);
-            tex->bind(0);
-            break;
-        case Texture::Type::NORMAL:
-            shader.setBool("hasNormalMap", true);
-            shader.setInt("normalMap", 1);
-            tex->bind(1);
-            break;
-        case Texture::Type::METALLIC_ROUGHNESS:
-            shader.setBool("hasMetRoughMap", true);
-            shader.setInt("metRoughMap", 2);
-            tex->bind(2);
-            break;
-        case Texture::Type::OCCLUSION:
-            shader.setBool("hasAOMap", true);
-            shader.setInt("aoMap", 3);
-            tex->bind(3);
-            break;
-        }
-    }
-
-    // render mesh
     for (const auto& mesh : object.meshes) {
+        for (int texIdx : mesh->textureIndices) {
+            const auto& tex = object.material->textures[texIdx];
+
+            // check if these texture types exist;
+            // update shader accordingly
+            switch (tex->type) {
+            case Texture::Type::ALBEDO:
+                shader.setBool("hasAlbedoMap", true);
+                shader.setInt("albedoMap", 0);
+                tex->bind(0);
+                break;
+            case Texture::Type::NORMAL:
+                shader.setBool("hasNormalMap", true);
+                shader.setInt("normalMap", 1);
+                tex->bind(1);
+                break;
+            case Texture::Type::METALLIC_ROUGHNESS:
+                shader.setBool("hasMetRoughMap", true);
+                shader.setInt("metRoughMap", 2);
+                tex->bind(2);
+                break;
+            case Texture::Type::OCCLUSION:
+                shader.setBool("hasAOMap", true);
+                shader.setInt("aoMap", 3);
+                tex->bind(3);
+                break;
+            }
+        }
         mesh->render();
     }
 }

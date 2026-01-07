@@ -1,5 +1,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include <chrono>
 
 #include "App.h"
 
@@ -142,8 +143,14 @@ void App::init() {
 	renderer.init(*scene);
 
 	// open a debug scene
-	sphereScene(*scene);
+	//sphereScene(*scene);
 
+	auto start = std::chrono::high_resolution_clock::now();
+	sponzaScene(*scene);
+	auto end = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double, std::milli> duration = end - start;
+
+	logger.info("Scene loaded in " + std::to_string(duration.count()) + " ms");
 	logger.info("ended initialization");
 }
 

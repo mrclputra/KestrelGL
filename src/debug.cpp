@@ -45,9 +45,9 @@ static void sphereScene(Scene& scene) {
 	scene.addObject(dragon);
 }
 
-/*static void sponzaScene(Scene& scene) {
+static void sponzaScene(Scene& scene) {
 	logger.info("loading sponza...");
 
-	auto sponza = ModelLoader::load("assets/models/sponza.glb");
+	auto sponza = ModelLoader::load("assets/models/main_sponza/NewSponza_Main_glTF_003.gltf");
 	scene.addObject(sponza);
-}*/
+}
