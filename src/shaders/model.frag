@@ -11,7 +11,7 @@ uniform int numDirLights;
 uniform sampler2DArray shadowMaps;
 uniform mat4 lightSpaceMatrices[8]; // this array maps to shadowMaps
 
-// camera position
+// camera uniforms
 uniform vec3 viewPos;
 
 // texture maps
@@ -131,10 +131,6 @@ vec3 evaluateSHIrradiance(vec3 n)
 
 void main() {
     // fetch data
-//    vec4 sampleColor = hasAlbedoMap && useAlbedoMap ? texture(albedoMap, vTexCoords) : p_albedo;
-//    vec3 texAlbedo = pow(sampleColor.rgb, vec3(2.2));
-//    float alpha = sampleColor.a;
-
     vec3 albedo = vec3(1.0);
     float alpha = 1.0;
     if (hasAlbedoMap && useAlbedoMap) {
@@ -146,8 +142,6 @@ void main() {
         albedo = p_albedo.rgb;
         alpha = p_albedo.a;
     }
-
-//    vec3 texAlbedo = hasAlbedoMap && useAlbedoMap ? pow(texture(albedoMap, vTexCoords).rgb, vec3(2.2)) : p_albedo.xyz; // TODO: make texAlbedo RGBA/vec4
 
     float metallic = hasMetRoughMap && useMetRoughMap ? texture(metRoughMap, vTexCoords).b : p_metalness;
     float roughness = hasMetRoughMap && useMetRoughMap ? texture(metRoughMap, vTexCoords).g : p_roughness;
@@ -223,6 +217,8 @@ void main() {
     else if (mode == 4) FragColor = vec4(vec3(diffuseIBL), 1.0);
     else if (mode == 5) FragColor = vec4(vec3(specularIBL), 1.0);
     else if (mode == 6) FragColor = vec4(vec3(prefilteredColor), 1.0);
-    else if (mode == 7) FragColor = vec4(Lo, 1.0);
+    else if (mode == 7) FragColor = vec4(Lo, 1.0); // shadows system only
     else                FragColor = vec4(color, alpha);
+
+//    FragColor = vec4(vec3(gl_FragCoord.z), 1.0);
 }

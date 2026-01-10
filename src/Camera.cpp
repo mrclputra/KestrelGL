@@ -14,8 +14,8 @@ glm::mat4 Camera::getProjectionMatrix() const {
 	return glm::perspective(
 		glm::radians(fov),
 		(float)m_viewportWidth / (float)m_viewportHeight,
-		0.1f,
-		100.0f
+		0.1f,	// near plane
+		40.0f	// far plane
 	);
 }
 

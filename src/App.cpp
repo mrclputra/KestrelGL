@@ -134,7 +134,6 @@ void App::init() {
 
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
-	//glCullFace(GL_FRONT);
 
 	// initialize and configure scene instance
 	scene = std::make_unique<Scene>(bus);
@@ -143,8 +142,8 @@ void App::init() {
 	// open a debug scene
 	auto start = std::chrono::high_resolution_clock::now();
 	//khronos_spheres(*scene);
-	sphereScene(*scene);
-	//sponzaScene(*scene);
+	//sphereScene(*scene);
+	sponzaScene(*scene);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double, std::milli> duration = end - start;
 
@@ -229,6 +228,12 @@ void App::processInput(float dt) {
 		scene->camera.moveUp(dt);
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 		scene->camera.moveDown(dt);
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+		scene->camera.speed = 10.0f;
+	}
+	else {
+		scene->camera.speed = 5.0f;
+	}
 }
 
 // callbacks

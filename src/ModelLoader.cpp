@@ -36,7 +36,8 @@ std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::string n
 	}
 	else {
 		// use default shader
-		object->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model.frag");
+		//object->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model.frag");
+		object->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model_phong.frag");
 	}
 
 	logger.info(

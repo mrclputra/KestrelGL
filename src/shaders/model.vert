@@ -17,11 +17,6 @@ uniform mat4 model; // object to world space
 uniform mat4 view;  // world to view space
 uniform mat4 projection; // view to clip space
 
-// TODO: handle multiple lights
-// shadow map
-//uniform mat4 lightSpaceMatrix;
-//out vec4 vFragPosLightSpace;
-
 void main() {
     mat3 M = mat3(model);
 

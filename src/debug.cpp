@@ -15,7 +15,6 @@ static void sphereScene(Scene& scene) {
 
 	// LIGHTS
 	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1), glm::vec3(255, 254, 247)));
-	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(1, -1, -1), glm::vec3(255, 254, 247)));
 
 	// OBJECTS
 	auto sphere0 = ModelLoader::load("assets/models/cubeSphere.obj", "sphere_gold");
@@ -55,9 +54,9 @@ static void khronos_spheres(Scene& scene) {
 	scene.addObject(spheres);
 }
 
-//static void sponzaScene(Scene& scene) {
-//	logger.info("loading sponza...");
-//
-//	auto sponza = ModelLoader::load("assets/models/main_sponza/NewSponza_Main_glTF_003.gltf");
-//	scene.addObject(sponza);
-//}
+static void sponzaScene(Scene& scene) {
+	logger.info("loading sponza...");
+
+	auto sponza = ModelLoader::load("assets/models/main_sponza/NewSponza_Main_glTF_003.gltf", "sponza");
+	scene.addObject(sponza);
+}
