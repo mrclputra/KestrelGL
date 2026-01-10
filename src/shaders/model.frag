@@ -41,7 +41,7 @@ uniform bool useMetRoughMap;
 uniform bool useAOMap;
 uniform bool useEmissionMap;
 
-uniform vec3 p_albedo; // rgb
+uniform vec4 p_albedo; // rgb
 uniform float p_metalness;
 uniform float p_roughness;
 
@@ -131,7 +131,24 @@ vec3 evaluateSHIrradiance(vec3 n)
 
 void main() {
     // fetch data
-    vec3 texAlbedo = hasAlbedoMap && useAlbedoMap ? pow(texture(albedoMap, vTexCoords).rgb, vec3(2.2)) : p_albedo;
+//    vec4 sampleColor = hasAlbedoMap && useAlbedoMap ? texture(albedoMap, vTexCoords) : p_albedo;
+//    vec3 texAlbedo = pow(sampleColor.rgb, vec3(2.2));
+//    float alpha = sampleColor.a;
+
+    vec3 albedo = vec3(1.0);
+    float alpha = 1.0;
+    if (hasAlbedoMap && useAlbedoMap) {
+        // use the texture map
+        albedo = pow(texture(albedoMap, vTexCoords).rgb, vec3(2.2));
+        alpha = texture(albedoMap, vTexCoords).a;
+    } else {
+        // use p_albedo
+        albedo = p_albedo.rgb;
+        alpha = p_albedo.a;
+    }
+
+//    vec3 texAlbedo = hasAlbedoMap && useAlbedoMap ? pow(texture(albedoMap, vTexCoords).rgb, vec3(2.2)) : p_albedo.xyz; // TODO: make texAlbedo RGBA/vec4
+
     float metallic = hasMetRoughMap && useMetRoughMap ? texture(metRoughMap, vTexCoords).b : p_metalness;
     float roughness = hasMetRoughMap && useMetRoughMap ? texture(metRoughMap, vTexCoords).g : p_roughness;
     float texAO = hasAOMap && useAOMap ? texture(aoMap, vTexCoords).r : 1.0;
@@ -151,7 +168,7 @@ void main() {
     // transform to world space
     vec3 N = normalize(TBN * tangentNormal);
     vec3 V = normalize(viewPos - vFragPos);
-    vec3 F0 = mix(vec3(0.04), texAlbedo, metallic); // todo: replace with BRDF lut
+    vec3 F0 = mix(vec3(0.04), albedo, metallic); // todo: replace with BRDF lut
 
     // IBL :)
 
@@ -172,7 +189,7 @@ void main() {
 
     // diffuse component
     vec3 irradiance = evaluateSHIrradiance(N);
-    vec3 diffuseIBL = (irradiance * texAlbedo) / PI;
+    vec3 diffuseIBL = (irradiance * albedo) / PI;
 
     // combine!
     vec3 ambient = (kD * diffuseIBL + specularIBL) * texAO;
@@ -188,7 +205,7 @@ void main() {
         float diff = max(dot(N, L), 0.0);
         vec3 radiance = dirLights[i].color;
 
-        Lo += (kD * texAlbedo / PI) * radiance * diff * (1.0 - shadow);
+        Lo += (kD * albedo / PI) * radiance * diff * (1.0 - shadow);
     }
 
     // combine
@@ -200,18 +217,12 @@ void main() {
     color = pow(color, vec3(1.0/2.2));
 
     // output
-    if      (mode == 1) FragColor = vec4(texAlbedo, 1.0);
+    if      (mode == 1) FragColor = vec4(albedo, 1.0);
     else if (mode == 2) FragColor = vec4(N * 0.5 + 0.5, 1.0);
     else if (mode == 3) FragColor = vec4(texture(metRoughMap, vTexCoords).rgb, 1.0);
     else if (mode == 4) FragColor = vec4(vec3(diffuseIBL), 1.0);
     else if (mode == 5) FragColor = vec4(vec3(specularIBL), 1.0);
     else if (mode == 6) FragColor = vec4(vec3(prefilteredColor), 1.0);
     else if (mode == 7) FragColor = vec4(Lo, 1.0);
-    else                FragColor = vec4(color, 1.0);
-
-//    if (any(isnan(color)) || any(isinf(color))) {
-//        FragColor = vec4(1.0, 0.0, 1.0, 1.0);
-//    } else {
-//        FragColor = vec4(color, 1.0);
-//    }
+    else                FragColor = vec4(color, alpha);
 }

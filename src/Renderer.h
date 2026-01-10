@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Scene.h"
+#include <map>
 #include "lights/DirectionalLight.h"
 
 class Renderer {
@@ -11,6 +12,7 @@ public:
 	void render(const Scene& scene);
 
 	unsigned int renderMode;
+	std::multimap<float, std::shared_ptr<Object>, std::greater<float>> drawOrder;
 
 	GLuint shadowArrayTexture;
 	GLuint shadowArrayFBO;

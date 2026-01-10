@@ -12,7 +12,7 @@ public:
 	~Material() = default;
 
 	// PBR parameters
-	glm::vec3 albedo = glm::vec3(0.98); // rgb
+	glm::vec4 albedo = glm::vec4(0.98, 0.98, 0.98, 1.0); // rgba
 	float metalness = 0.0f; // 0-1
 	float roughness = 0.2f; // 0-1
 	// to be expanded... according to the gltf convention

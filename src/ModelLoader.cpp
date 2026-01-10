@@ -1,7 +1,5 @@
 #include "ModelLoader.h"
 
-// TODO: this function should also handle shader assignment
-//	initial transformation should be set here, but optional
 std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::string name, std::shared_ptr<Shader> shader) {
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(path,

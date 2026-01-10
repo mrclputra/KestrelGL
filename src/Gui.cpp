@@ -213,7 +213,7 @@ void Gui::draw() {
                     // pbr parameters
                     if (ImGui::TreeNodeEx("PBR", subFlags)) {
                         ImGui::Text("Albedo");
-                        ImGui::ColorEdit3("##AlbedoColor", &obj->material->albedo[0]);
+                        ImGui::ColorEdit4("##AlbedoColor", &obj->material->albedo[0]);
 
                         ImGui::Text("Metalness");
                         ImGui::SetNextItemWidth(140.0f);

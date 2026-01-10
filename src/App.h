@@ -28,15 +28,15 @@ public:
     void onCursorPos(double xPos, double yPos);
     void onScroll(double xOff, double yOff);
     void onKey(int key, int scancode, int action, int mods);
-
-    bool firstMouse = true;
-    bool mousePressed = false;
     
     std::unique_ptr<Scene> scene; // single scene instance
     Renderer renderer;
     EventBus bus;
 
     void processInput(float dt);
+
+    bool firstMouse = true;
+    bool mousePressed = false;
 
     // cursor position
     float lastX = 0.0f;

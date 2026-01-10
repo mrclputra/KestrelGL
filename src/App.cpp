@@ -128,11 +128,12 @@ void App::init() {
 	// setup OpenGL configurations here
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	/*glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);*/
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 	//glCullFace(GL_FRONT);
 
 	// initialize and configure scene instance
@@ -141,6 +142,7 @@ void App::init() {
 
 	// open a debug scene
 	auto start = std::chrono::high_resolution_clock::now();
+	//khronos_spheres(*scene);
 	sphereScene(*scene);
 	//sponzaScene(*scene);
 	auto end = std::chrono::high_resolution_clock::now();

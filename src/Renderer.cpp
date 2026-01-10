@@ -62,16 +62,23 @@ void Renderer::init(const Scene& scene) {
 }
 
 void Renderer::render(const Scene& scene) {
+    drawOrder.clear();
+
     // render skybox
     renderSkybox(scene);
 
     // render shadow maps
     renderShadowPass(scene);
-
-    // render objects
-	for (const auto& objPtr : scene.objects) {
-		renderObject(scene, *objPtr);
-	}
+    
+    // sort objects by distance from camera
+    for (const std::shared_ptr<Object> &object : scene.objects) {
+        float distance = glm::length(scene.camera.position - object->transform.position);
+        drawOrder.insert(std::make_pair(distance, object));
+    }
+    // render the objects
+    for (const auto &pair : drawOrder) {
+        renderObject(scene, *pair.second);
+    }
 }
 
 void Renderer::renderObject(const Scene& scene, const Object& object) {
@@ -90,7 +97,7 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
     shader.setVec3("viewPos", scene.camera.position);
 
     // base pbr parameters (non-texture)
-    shader.setVec3("p_albedo", object.material->albedo);
+    shader.setVec4("p_albedo", object.material->albedo);
     shader.setFloat("p_metalness", object.material->metalness);
     shader.setFloat("p_roughness", object.material->roughness);
 
