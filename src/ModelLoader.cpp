@@ -176,16 +176,17 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scen
 			object.material->useNormalMap = true;
 		}
 
-		// load metallic roughness maps
-		if (material->GetTextureCount(aiTextureType_GLTF_METALLIC_ROUGHNESS) > 0) {
-			for (unsigned int i = 0; i < material->GetTextureCount(aiTextureType_GLTF_METALLIC_ROUGHNESS); i++) {
-				aiString str;
-				material->GetTexture(aiTextureType_GLTF_METALLIC_ROUGHNESS, i, &str);
-				std::string texPath = directory + "/" + std::string(str.C_Str());
-				int idx = loadTexture(texPath, Texture::Type::METALLIC_ROUGHNESS, object);
-				texIndices.push_back(idx);
-			}
-		}
+		// temporarily disabled, while i try to fix the rendering pipeline bottleneck
+		//// load metallic roughness maps
+		//if (material->GetTextureCount(aiTextureType_GLTF_METALLIC_ROUGHNESS) > 0) {
+		//	for (unsigned int i = 0; i < material->GetTextureCount(aiTextureType_GLTF_METALLIC_ROUGHNESS); i++) {
+		//		aiString str;
+		//		material->GetTexture(aiTextureType_GLTF_METALLIC_ROUGHNESS, i, &str);
+		//		std::string texPath = directory + "/" + std::string(str.C_Str());
+		//		int idx = loadTexture(texPath, Texture::Type::METALLIC_ROUGHNESS, object);
+		//		texIndices.push_back(idx);
+		//	}
+		//}
 	}
 
 	// return processed mesh

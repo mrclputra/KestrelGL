@@ -58,20 +58,21 @@ void Renderer::init(const Scene& scene) {
     }
 
     // generate brdf map
-    brdfLUT = generateBRDFLUT();
+    //brdfLUT = generateBRDFLUT();
 }
 
 void Renderer::render(const Scene& scene) {
-    drawOrder.clear();
-
     // render skybox
     renderSkybox(scene);
 
     // render shadow maps
-    renderShadowPass(scene);
-    
-    // sort objects by distance from camera
+    //renderShadowPass(scene);
+
+    // render objects
+    drawOrder.clear();
     for (const std::shared_ptr<Object> &object : scene.objects) {
+        // sort objects by distance from camera
+        // this is so wecan properly implement blending
         float distance = glm::length(scene.camera.position - object->transform.position);
         drawOrder.insert(std::make_pair(distance, object));
     }
@@ -91,7 +92,10 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
 
     shader.setInt("mode", renderMode);
 
+    // object transformations
     shader.setMat4("model", object.transform.getModelMatrix());
+    
+    // camera
     shader.setMat4("view", scene.camera.getViewMatrix());
     shader.setMat4("projection", scene.camera.getProjectionMatrix());
     shader.setVec3("viewPos", scene.camera.position);
@@ -109,65 +113,65 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
     shader.setBool("useEmissionMap", object.material->useEmissionMap);
 
     // lights
-    int dirCount = 0;
-    for (auto& light : scene.lights) {
-        if (auto dir = std::dynamic_pointer_cast<DirectionalLight>(light)) {
-            if (dirCount >= 8) continue; // max lights
+    //int dirCount = 0;
+    //for (auto& light : scene.lights) {
+    //    if (auto dir = std::dynamic_pointer_cast<DirectionalLight>(light)) {
+    //        if (dirCount >= 8) continue; // max lights
 
-            std::string base = "dirLights[" + std::to_string(dirCount) + "]";
-            shader.setVec3(base + ".direction", dir->direction);
-            shader.setVec3(base + ".color", dir->color);
+    //        std::string base = "dirLights[" + std::to_string(dirCount) + "]";
+    //        shader.setVec3(base + ".direction", dir->direction);
+    //        shader.setVec3(base + ".color", dir->color);
 
-            dirCount++;
-        }
-        // TODO: point lights
-        // TODO: spot lights
-    }
-    shader.setInt("numDirLights", dirCount);
+    //        dirCount++;
+    //    }
+    //    // TODO: point lights
+    //    // TODO: spot lights
+    //}
+    //shader.setInt("numDirLights", dirCount);
 
     // shadows
-    glActiveTexture(GL_TEXTURE8);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, shadowArrayTexture);
-    shader.setInt("shadowMaps", 8);
+    //glActiveTexture(GL_TEXTURE8);
+    //glBindTexture(GL_TEXTURE_2D_ARRAY, shadowArrayTexture);
+    //shader.setInt("shadowMaps", 8);
 
-    int dirLightCount = 0;
-    for (auto& light : scene.lights) {
-        if (auto dirLight = std::dynamic_pointer_cast<DirectionalLight>(light)) {
-            if (dirLightCount >= 10) break;
+    //int dirLightCount = 0;
+    //for (auto& light : scene.lights) {
+    //    if (auto dirLight = std::dynamic_pointer_cast<DirectionalLight>(light)) {
+    //        if (dirLightCount >= 10) break;
 
-            // upload transformation matrix
-            std::string matrixName = "lightSpaceMatrices[" + std::to_string(dirLightCount) + "]";
-            shader.setMat4(matrixName, dirLight->lightSpaceMatrix);
+    //        // upload transformation matrix
+    //        std::string matrixName = "lightSpaceMatrices[" + std::to_string(dirLightCount) + "]";
+    //        shader.setMat4(matrixName, dirLight->lightSpaceMatrix);
 
-            dirLightCount++;
-        }
-    }
+    //        dirLightCount++;
+    //    }
+    //}
 
     // skybox and IBL data
-    if (scene.skybox) {
-        // irradiance
-        if (!scene.skybox->shCoefficients.empty()) {
-            glUniform3fv(glGetUniformLocation(shader.ID, "shCoefficients"), 9, &scene.skybox->shCoefficients[0].x);
-        }
+    //if (scene.skybox) {
+    //    // irradiance
+    //    if (!scene.skybox->shCoefficients.empty()) {
+    //        glUniform3fv(glGetUniformLocation(shader.ID, "shCoefficients"), 9, &scene.skybox->shCoefficients[0].x);
+    //    }
 
-        // prefilter map
-        glActiveTexture(GL_TEXTURE10);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, scene.skybox->m_PrefilterMap);
-        shader.setInt("prefilterMap", 10);
+    //    // prefilter map
+    //    glActiveTexture(GL_TEXTURE10);
+    //    glBindTexture(GL_TEXTURE_CUBE_MAP, scene.skybox->m_PrefilterMap);
+    //    shader.setInt("prefilterMap", 10);
 
-        // brdf lut map
-        glActiveTexture(GL_TEXTURE11);
-        glBindTexture(GL_TEXTURE_2D, brdfLUT);
-        shader.setInt("brdfLUT", 11);
-    }
+    //    // brdf lut map
+    //    glActiveTexture(GL_TEXTURE11);
+    //    glBindTexture(GL_TEXTURE_2D, brdfLUT);
+    //    shader.setInt("brdfLUT", 11);
+    //}
 
     // load textures
     for (const auto& mesh : object.meshes) {
+        // I believe this is causing a bottleneck?
+        //  as we need to iterate through every mesh...
         for (int texIdx : mesh->textureIndices) {
             const auto& tex = object.material->textures[texIdx];
 
-            // check if these texture types exist;
-            // update shader accordingly
             switch (tex->type) {
             case Texture::Type::ALBEDO:
                 shader.setBool("hasAlbedoMap", true);
@@ -179,24 +183,60 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
                 shader.setInt("normalMap", 1);
                 tex->bind(1);
                 break;
-            case Texture::Type::METALLIC_ROUGHNESS:
-                shader.setBool("hasMetRoughMap", true);
-                shader.setInt("metRoughMap", 2);
-                tex->bind(2);
-                break;
-            case Texture::Type::OCCLUSION:
-                shader.setBool("hasAOMap", true);
-                shader.setInt("aoMap", 3);
-                tex->bind(3);
-                break;
-            case Texture::Type::EMISSION:
-                shader.setBool("hasEmissionMap", true);
-                shader.setInt("emissionMap", 4);
-                tex->bind(4);
+                // uncomment when needed:
+                //case Texture::Type::METALLIC_ROUGHNESS:
+                //    shader.setBool("hasMetRoughMap", true);
+                //    shader.setInt("metRoughMap", 2);
+                //    tex->bind(2);
+                //    break;
+                //case Texture::Type::OCCLUSION:
+                //    shader.setBool("hasAOMap", true);
+                //    shader.setInt("aoMap", 3);
+                //    tex->bind(3);
+                //    break;
+                //case Texture::Type::EMISSION:
+                //    shader.setBool("hasEmissionMap", true);
+                //    shader.setInt("emissionMap", 4);
+                //    tex->bind(4);
             }
         }
+
         mesh->render();
     }
+
+    // 
+    //for (const auto& tex : object.material->textures) {
+    //    switch (tex->type) {
+    //    case Texture::Type::ALBEDO:
+    //        shader.setBool("hasAlbedoMap", true);
+    //        shader.setInt("albedoMap", 0);
+    //        tex->bind(0);
+    //        break;
+    //    case Texture::Type::NORMAL:
+    //        shader.setBool("hasNormalMap", true);
+    //        shader.setInt("normalMap", 1);
+    //        tex->bind(1);
+    //        break;
+    //        //case Texture::Type::METALLIC_ROUGHNESS:
+    //        //    shader.setBool("hasMetRoughMap", true);
+    //        //    shader.setInt("metRoughMap", 2);
+    //        //    tex->bind(2);
+    //        //    break;
+    //        //case Texture::Type::OCCLUSION:
+    //        //    shader.setBool("hasAOMap", true);
+    //        //    shader.setInt("aoMap", 3);
+    //        //    tex->bind(3);
+    //        //    break;
+    //        //case Texture::Type::EMISSION:
+    //        //    shader.setBool("hasEmissionMap", true);
+    //        //    shader.setInt("emissionMap", 4);
+    //        //    tex->bind(4);
+    //    }
+    //}
+
+    //for (const auto& mesh : object.meshes) {
+    //    mesh->render();
+    //}
 }
 
 void Renderer::renderShadowPass(const Scene& scene) {

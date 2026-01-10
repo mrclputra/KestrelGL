@@ -14,7 +14,7 @@ static void sphereScene(Scene& scene) {
 	logger.info("creating spheres scene");
 
 	// LIGHTS
-	scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1), glm::vec3(255, 254, 247)));
+	//scene.addLight(std::make_shared<DirectionalLight>(glm::vec3(-1), glm::vec3(255, 254, 247)));
 
 	// OBJECTS
 	auto sphere0 = ModelLoader::load("assets/models/cubeSphere.obj", "sphere_gold");
@@ -46,8 +46,6 @@ static void sphereScene(Scene& scene) {
 
 static void khronos_spheres(Scene& scene) {
 	logger.info("loading khronos spheres scene...");
-
-	// light
 
 	// model
 	auto spheres = ModelLoader::load("assets/models/khronos_test_spheres/MetalRoughSpheres.gltf");

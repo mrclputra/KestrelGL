@@ -29,7 +29,7 @@ private:
     bool active = false; // flag
 
     // profiler stuff
-    static const int FRAME_HIST_COUNT = 2000;
+    static const int FRAME_HIST_COUNT = 100;
     float frameTimeHistory[FRAME_HIST_COUNT] = { 0 };
     int frameTimeOffset = 0;
     float maxFrameTime = 0.0f;
