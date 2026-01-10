@@ -139,16 +139,15 @@ void App::init() {
 	scene = std::make_unique<Scene>(bus);
 	scene->camera.setViewport(fbWidth, fbHeight); // tell camera about viewport
 
-	// initialize renderer instance
-	renderer.init(*scene);
-
 	// open a debug scene
-	//sphereScene(*scene);
-
 	auto start = std::chrono::high_resolution_clock::now();
-	sponzaScene(*scene);
+	sphereScene(*scene);
+	//sponzaScene(*scene);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double, std::milli> duration = end - start;
+
+	// initialize renderer instance
+	renderer.init(*scene);
 
 	logger.info("Scene loaded in " + std::to_string(duration.count()) + " ms");
 	logger.info("ended initialization");

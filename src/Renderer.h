@@ -4,21 +4,27 @@
 
 #include "Scene.h"
 #include "lights/DirectionalLight.h"
-#include "lights/PointLight.h"
 
 class Renderer {
 public:
 	void init(const Scene& scene);
 	void render(const Scene& scene);
-	void renderLightPass(const Scene& scene);
 
 	unsigned int renderMode;
 
+	GLuint shadowArrayTexture;
+	GLuint shadowArrayFBO;
+	const unsigned int SHADOW_HEIGHT = 2048;
+	const unsigned int SHADOW_WIDTH = 2048;
+
 private:
-	void uploadLights(const Scene& scene, Shader& shader);
 	void renderObject(const Scene& scene, const Object& object);
+	void renderShadowPass(const Scene& scene);
+	void renderSkybox(const Scene& scene);
 
 	Shader* depthShader = nullptr;
+
+	//void initShadowArray(int numLayers);
 
 	unsigned int brdfLUT = 0;
 	unsigned int generateBRDFLUT();

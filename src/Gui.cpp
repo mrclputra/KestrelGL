@@ -157,28 +157,28 @@ void Gui::draw() {
 
     // irradiance
 
-    // shadow maps!
-    static bool showShadowMaps = false;
-    ImGui::Checkbox("Visualize Shadow Maps", &showShadowMaps);
+    // shadow maps
+    //static bool showShadowMaps = false;
+    //ImGui::Checkbox("Visualize Shadow Maps", &showShadowMaps);
 
-    if (showShadowMaps && !app->scene->lights.empty()) {
-        ImGui::Begin("##L-Depth Map", &showShadowMaps, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+    //if (showShadowMaps && !app->scene->lights.empty()) {
+    //    ImGui::Begin("##L-Depth Map", &showShadowMaps, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 
-        for (auto& light : app->scene->lights) {
-            if (auto dir = std::dynamic_pointer_cast<DirectionalLight>(light)) {
-                ImGui::Image(
-                    (void*)(intptr_t)dir->depthMap,
-                    ImVec2(256, 256),
-                    ImVec2(0, 1),
-                    ImVec2(1, 0)
-                );
-            }
-        }
+    //    for (auto& light : app->scene->lights) {
+    //        if (auto dir = std::dynamic_pointer_cast<DirectionalLight>(light)) {
+    //            ImGui::Image(
+    //                (void*)(intptr_t)dir->depthMap,
+    //                ImVec2(256, 256),
+    //                ImVec2(0, 1),
+    //                ImVec2(1, 0)
+    //            );
+    //        }
+    //    }
 
-        ImGui::End();
-    }
+    //    ImGui::End();
+    //}
 
-    ImGui::Separator();
+    //ImGui::Separator();
 
     // scene tree
     if (ImGui::TreeNodeEx("Scene Tree")) {

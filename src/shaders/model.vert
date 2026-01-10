@@ -33,9 +33,6 @@ void main() {
     vBitangent = M * aBitangent;
     vTexCoords = aTexCoords;
 
-    // shadow map
-//    vFragPosLightSpace = lightSpaceMatrix * vec4(vFragPos, 1.0);
-
     // ORDER MATTERS
     gl_Position = projection * view * vec4(vFragPos, 1.0); // TO NDC
 }

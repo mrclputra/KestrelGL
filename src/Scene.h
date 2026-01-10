@@ -5,10 +5,10 @@
 
 #include <eventbus.h>
 
-#include "Object.h"
 #include "Camera.h"
 #include "Skybox.h"
 #include "lights/Light.h"
+#include "components/Object.h"
 #include "components/Mesh.h"
 
 class Scene {

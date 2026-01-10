@@ -1,6 +1,5 @@
 #include "Scene.h"
 #include "lights/DirectionalLight.h"
-#include "lights/PointLight.h"
 
 // TODO: REFACTOR THIS CONSTRUCTOR
 Scene::Scene(EventBus& bus)

@@ -11,7 +11,7 @@
 
 #include <logger.h>
 
-#include "Object.h"
+#include "components/Object.h"
 
 /// <summary>
 /// <para>This class is responsible for constructing Object instances from files</para>

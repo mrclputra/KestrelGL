@@ -1,5 +1,7 @@
 #include "Renderer.h"
 
+// todo: rename this init function to something else? 
+// as it depends on current scene data which may change when i add a loading system in the future
 void Renderer::init(const Scene& scene) {
     try {
         // todo: check where each shader is initialized/called from, case-by-case
@@ -12,85 +14,80 @@ void Renderer::init(const Scene& scene) {
         logger.error("Failed to initialize shader: " + std::string(e.what()));
     }
 
+    // initialize shadow maps
+    int numDirLights = 0;
+    for (auto& light : scene.lights) {
+        if (std::dynamic_pointer_cast<DirectionalLight>(light)) {
+            numDirLights++;
+        }
+    }
+    if (numDirLights > 0) {
+        // creates the 2D array texture
+        glGenFramebuffers(1, &shadowArrayFBO);
+
+        glGenTextures(1, &shadowArrayTexture);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, shadowArrayTexture);
+        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT,
+            SHADOW_WIDTH, SHADOW_HEIGHT, numDirLights, 0,
+            GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+        float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowArrayFBO);
+        glFramebufferTexture3D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D_ARRAY, shadowArrayTexture, 0, 0);
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // we will attach layers individually on the render loop
+        // for now, we just allocate the memory
+
+        // assign layer indices to each light
+        int layerIdx = 0;
+        for (auto& light : scene.lights) {
+            if (auto dirLight = std::dynamic_pointer_cast<DirectionalLight>(light)) {
+                dirLight->shadowArrayLayer = layerIdx++;
+            }
+        }
+    }
+
+    // generate brdf map
     brdfLUT = generateBRDFLUT();
 }
 
 void Renderer::render(const Scene& scene) {
-    renderLightPass(scene);
-    scene.skybox->m_SkyboxShader->checkHotReload();
+    // render skybox
+    renderSkybox(scene);
 
+    // render shadow maps
+    renderShadowPass(scene);
+
+    // render objects
 	for (const auto& objPtr : scene.objects) {
 		renderObject(scene, *objPtr);
 	}
-
-    if (scene.skybox) {
-        scene.skybox->draw(scene.camera.getViewMatrix(),
-            scene.camera.getProjectionMatrix(),
-            scene.camera.position);
-    }
-    else {
-        logger.error("NO SKYBOX FOR RENDERER");
-    }
-}
-
-void Renderer::renderLightPass(const Scene& scene) {
-    for (auto light : scene.lights) {
-        if (auto dirLight = std::dynamic_pointer_cast<DirectionalLight>(light)) {
-
-            // maybe should move this to an update function in the scene class?
-            // I just put it here for now cuz it's more related to rendering
-            dirLight->updateLightSpaceMatrix();
-        
-            // NOTE: whenever framebuffers are used again in the future, 
-            // try to use the pattern below for viewport handling:
-
-            // backup current viewport
-            GLint viewport[4];
-            glGetIntegerv(GL_VIEWPORT, viewport);
-
-            // bind shadow framebuffer
-            glBindFramebuffer(GL_FRAMEBUFFER, dirLight->depthMapFBO);
-            glViewport(0, 0, dirLight->SHADOW_WIDTH, dirLight->SHADOW_HEIGHT);
-            glClear(GL_DEPTH_BUFFER_BIT);
-
-            // render scene from the light
-            depthShader->use();
-            depthShader->setMat4("lightSpaceMatrix", dirLight->lightSpaceMatrix);
-
-            for (auto& objPtr : scene.objects) {
-                // here we need to use a depth shader that only retrieves depth information
-                depthShader->setMat4("model", objPtr->transform.getModelMatrix());
-                for (auto& mesh : objPtr->meshes)
-                    mesh->render();
-            }
-
-            // unbind FBO, restore viewport
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-        }
-    }
 }
 
 void Renderer::renderObject(const Scene& scene, const Object& object) {
     if (!object.shader || object.shader->ID == 0) return;
 
-	Shader& shader = *object.shader;
-	
-	shader.checkHotReload();
+    Shader& shader = *object.shader;
 
-    try {
-        shader.use();
-    }
-    catch (const ShaderException& e) {
-        return;
-    }
+    shader.checkHotReload();
+    shader.use();
 
     shader.setInt("mode", renderMode);
 
-	shader.setMat4("model", object.transform.getModelMatrix());
-	shader.setMat4("view", scene.camera.getViewMatrix());
-	shader.setMat4("projection", scene.camera.getProjectionMatrix());
-	shader.setVec3("viewPos", scene.camera.position);
+    shader.setMat4("model", object.transform.getModelMatrix());
+    shader.setMat4("view", scene.camera.getViewMatrix());
+    shader.setMat4("projection", scene.camera.getProjectionMatrix());
+    shader.setVec3("viewPos", scene.camera.position);
 
     // base pbr parameters (non-texture)
     shader.setVec3("p_albedo", object.material->albedo);
@@ -105,10 +102,27 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
     shader.setBool("useEmissionMap", object.material->useEmissionMap);
 
     // lights
-	uploadLights(scene, shader);
+    int dirCount = 0;
+    for (auto& light : scene.lights) {
+        if (auto dir = std::dynamic_pointer_cast<DirectionalLight>(light)) {
+            if (dirCount >= 8) continue; // max lights
+
+            std::string base = "dirLights[" + std::to_string(dirCount) + "]";
+            shader.setVec3(base + ".direction", dir->direction);
+            shader.setVec3(base + ".color", dir->color);
+
+            dirCount++;
+        }
+        // TODO: point lights
+        // TODO: spot lights
+    }
+    shader.setInt("numDirLights", dirCount);
 
     // shadows
-    int shadowMapStartSlot = 10;
+    glActiveTexture(GL_TEXTURE8);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, shadowArrayTexture);
+    shader.setInt("shadowMaps", 8);
+
     int dirLightCount = 0;
     for (auto& light : scene.lights) {
         if (auto dirLight = std::dynamic_pointer_cast<DirectionalLight>(light)) {
@@ -117,14 +131,6 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
             // upload transformation matrix
             std::string matrixName = "lightSpaceMatrices[" + std::to_string(dirLightCount) + "]";
             shader.setMat4(matrixName, dirLight->lightSpaceMatrix);
-
-            // bind depth
-            glActiveTexture(GL_TEXTURE0 + shadowMapStartSlot + dirLightCount);
-            glBindTexture(GL_TEXTURE_2D, dirLight->depthMap);
-
-            // tell shader which slot this index uses
-            std::string samplerName = "shadowMaps[" + std::to_string(dirLightCount) + "]";
-            shader.setInt(samplerName, shadowMapStartSlot + dirLightCount);
 
             dirLightCount++;
         }
@@ -138,14 +144,14 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
         }
 
         // prefilter map
-        glActiveTexture(GL_TEXTURE9);
+        glActiveTexture(GL_TEXTURE10);
         glBindTexture(GL_TEXTURE_CUBE_MAP, scene.skybox->m_PrefilterMap);
-        shader.setInt("prefilterMap", 9);
+        shader.setInt("prefilterMap", 10);
 
         // brdf lut map
-        glActiveTexture(GL_TEXTURE8);
+        glActiveTexture(GL_TEXTURE11);
         glBindTexture(GL_TEXTURE_2D, brdfLUT);
-        shader.setInt("brdfLUT", 8);
+        shader.setInt("brdfLUT", 11);
     }
 
     // load textures
@@ -176,45 +182,69 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
                 shader.setInt("aoMap", 3);
                 tex->bind(3);
                 break;
+            case Texture::Type::EMISSION:
+                shader.setBool("hasEmissionMap", true);
+                shader.setInt("emissionMap", 4);
+                tex->bind(4);
             }
         }
         mesh->render();
     }
 }
 
-void Renderer::uploadLights(const Scene& scene, Shader& shader) {
-    constexpr int MAX_LIGHTS = 8; // this is arbitrary
+void Renderer::renderShadowPass(const Scene& scene) {
+    for (auto light : scene.lights) {
+        if (auto dirLight = std::dynamic_pointer_cast<DirectionalLight>(light)) {
 
-    int dirCount = 0;
-    int pointCount = 0;
-    int spotCount = 0;
+            // maybe should move this to an update function in the scene class?
+            // I just put it here for now cuz it's more related to rendering
+            dirLight->updateLightSpaceMatrix();
+        
+            // NOTE: whenever framebuffers are used again in the future, 
+            // try to use the pattern below for viewport handling:
 
-    for (auto& light : scene.lights) {
-        if (auto dir = std::dynamic_pointer_cast<DirectionalLight>(light)) {
-            if (dirCount >= MAX_LIGHTS) continue;
+            // todo: see if there is a better way to do viewport handling?
 
-            std::string base = "dirLights[" + std::to_string(dirCount) + "]";
-            shader.setVec3(base + ".direction", dir->direction);
-            shader.setVec3(base + ".color", dir->color);
+            // backup current viewport
+            GLint viewport[4];
+            glGetIntegerv(GL_VIEWPORT, viewport);
 
-            dirCount++;
+            // bind shadow framebuffer
+            glBindFramebuffer(GL_FRAMEBUFFER, shadowArrayFBO);
+            glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                shadowArrayTexture, 0, dirLight->shadowArrayLayer);
+
+            glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+            glClear(GL_DEPTH_BUFFER_BIT);
+
+            // render scene from the light
+            depthShader->use();
+            depthShader->setMat4("lightSpaceMatrix", dirLight->lightSpaceMatrix);
+
+            for (auto& objPtr : scene.objects) {
+                // here we need to use a depth shader that only retrieves depth information
+                depthShader->setMat4("model", objPtr->transform.getModelMatrix());
+                for (auto& mesh : objPtr->meshes)
+                    mesh->render();
+            }
+
+            // unbind FBO, restore viewport
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
         }
-        else if (auto point = std::dynamic_pointer_cast<PointLight>(light)) {
-            if (pointCount >= MAX_LIGHTS) continue;
-
-            std::string base = "pointLights[" + std::to_string(pointCount) + "]";
-            shader.setVec3(base + ".position", point->transform.position);
-            shader.setVec3(base + ".color", point->color);
-            shader.setFloat(base + ".radius", point->radius);
-
-            pointCount++;
-        }
-        // TODO: spot lights
     }
+}
 
-    shader.setInt("numDirLights", dirCount);
-    shader.setInt("numPointLights", pointCount);
-    shader.setInt("numSpotLights", spotCount);
+void Renderer::renderSkybox(const Scene& scene) {
+    scene.skybox->m_SkyboxShader->checkHotReload();
+    if (scene.skybox) {
+        scene.skybox->draw(scene.camera.getViewMatrix(),
+            scene.camera.getProjectionMatrix(),
+            scene.camera.position);
+    }
+    else {
+        logger.error("NO SKYBOX FOR RENDERER");
+    }
 }
 
 unsigned int Renderer::generateBRDFLUT() {
