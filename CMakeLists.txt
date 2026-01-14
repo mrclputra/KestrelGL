@@ -76,9 +76,7 @@ add_executable(KestrelGL
     src/debug.cpp
     
     src/Gui.cpp
-    src/Camera.cpp    
-    src/components/Texture.cpp
-    src/components/Mesh.cpp
+    src/Camera.cpp
     src/ModelLoader.cpp
     src/Renderer.cpp
     src/Skybox.cpp

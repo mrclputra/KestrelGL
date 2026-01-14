@@ -197,8 +197,8 @@ void Gui::draw() {
                     }
 
                     // shader
-                    if (obj->shader && ImGui::TreeNodeEx("Shader", subFlags)) {
-                        ImGui::Text("ID: %u", obj->shader->ID);
+                    if (obj->material->shader && ImGui::TreeNodeEx("Shader", subFlags)) {
+                        ImGui::Text("ID: %u", obj->material->shader->ID);
                         ImGui::TreePop();
                     }
 
@@ -211,7 +211,7 @@ void Gui::draw() {
                     }
 
                     // pbr parameters
-                    if (ImGui::TreeNodeEx("PBR", subFlags)) {
+                    /*if (ImGui::TreeNodeEx("PBR", subFlags)) {
                         ImGui::Text("Albedo");
                         ImGui::ColorEdit4("##AlbedoColor", &obj->material->albedo[0]);
 
@@ -228,7 +228,7 @@ void Gui::draw() {
                         ImGui::Checkbox("Use MetRough Map ##Metal", &obj->material->useMetRoughMap);
 
                         ImGui::TreePop();
-                    }
+                    }*/
 
                     ImGui::TreePop();
                 }

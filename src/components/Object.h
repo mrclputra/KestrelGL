@@ -14,9 +14,11 @@
 
 class Object {
 public:
-	Object(const std::string& name = "Object") : name(name) {
-		shader = std::make_shared<Shader>();
-		material = std::make_shared<Material>();
+	Object(const std::string& name = "Object") {
+		this->name = name;
+
+		//shader = std::make_shared<Shader>();
+		material = std::make_shared<Material>(); // add a material by default?
 	}
 	~Object() = default;
 
@@ -28,7 +30,7 @@ public:
 
 	// object components
 	Transform transform;
-	std::shared_ptr<Shader> shader;
+	//std::shared_ptr<Shader> shader; // todo: move this under material
 	std::shared_ptr<Material> material;
 	std::vector<std::shared_ptr<Mesh>> meshes;
 

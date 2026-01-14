@@ -15,47 +15,47 @@ void Renderer::init(const Scene& scene) {
     }
 
     // initialize shadow maps
-    int numDirLights = 0;
-    for (auto& light : scene.lights) {
-        if (std::dynamic_pointer_cast<DirectionalLight>(light)) {
-            numDirLights++;
-        }
-    }
-    if (numDirLights > 0) {
-        // creates the 2D array texture
-        glGenFramebuffers(1, &shadowArrayFBO);
+    //int numDirLights = 0;
+    //for (auto& light : scene.lights) {
+    //    if (std::dynamic_pointer_cast<DirectionalLight>(light)) {
+    //        numDirLights++;
+    //    }
+    //}
+    //if (numDirLights > 0) {
+    //    // creates the 2D array texture
+    //    glGenFramebuffers(1, &shadowArrayFBO);
 
-        glGenTextures(1, &shadowArrayTexture);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, shadowArrayTexture);
-        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT,
-            SHADOW_WIDTH, SHADOW_HEIGHT, numDirLights, 0,
-            GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    //    glGenTextures(1, &shadowArrayTexture);
+    //    glBindTexture(GL_TEXTURE_2D_ARRAY, shadowArrayTexture);
+    //    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT,
+    //        SHADOW_WIDTH, SHADOW_HEIGHT, numDirLights, 0,
+    //        GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    //    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    //    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    //    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    //    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-        float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-        glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor);
+    //    float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    //    glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, shadowArrayFBO);
-        glFramebufferTexture3D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D_ARRAY, shadowArrayTexture, 0, 0);
-        glDrawBuffer(GL_NONE);
-        glReadBuffer(GL_NONE);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //    glBindFramebuffer(GL_FRAMEBUFFER, shadowArrayFBO);
+    //    glFramebufferTexture3D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D_ARRAY, shadowArrayTexture, 0, 0);
+    //    glDrawBuffer(GL_NONE);
+    //    glReadBuffer(GL_NONE);
+    //    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        // we will attach layers individually on the render loop
-        // for now, we just allocate the memory
+    //    // we will attach layers individually on the render loop
+    //    // for now, we just allocate the memory
 
-        // assign layer indices to each light
-        int layerIdx = 0;
-        for (auto& light : scene.lights) {
-            if (auto dirLight = std::dynamic_pointer_cast<DirectionalLight>(light)) {
-                dirLight->shadowArrayLayer = layerIdx++;
-            }
-        }
-    }
+    //    // assign layer indices to each light
+    //    int layerIdx = 0;
+    //    for (auto& light : scene.lights) {
+    //        if (auto dirLight = std::dynamic_pointer_cast<DirectionalLight>(light)) {
+    //            dirLight->shadowArrayLayer = layerIdx++;
+    //        }
+    //    }
+    //}
 
     // generate brdf map
     //brdfLUT = generateBRDFLUT();
@@ -76,16 +76,15 @@ void Renderer::render(const Scene& scene) {
         float distance = glm::length(scene.camera.position - object->transform.position);
         drawOrder.insert(std::make_pair(distance, object));
     }
-    // render the objects
     for (const auto &pair : drawOrder) {
         renderObject(scene, *pair.second);
     }
 }
 
 void Renderer::renderObject(const Scene& scene, const Object& object) {
-    if (!object.shader || object.shader->ID == 0) return;
+    if (!object.material->shader || object.material->shader->ID == 0) return;
 
-    Shader& shader = *object.shader;
+    Shader& shader = *object.material->shader;
 
     shader.checkHotReload();
     shader.use();
@@ -106,11 +105,11 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
     shader.setFloat("p_roughness", object.material->roughness);
 
     // shader manual texture flags
-    shader.setBool("useAlbedoMap", object.material->useAlbedoMap);
-    shader.setBool("useNormalMap", object.material->useNormalMap);
-    shader.setBool("useMetRoughMap", object.material->useMetRoughMap);
-    shader.setBool("useAOMap", object.material->useAOMap);
-    shader.setBool("useEmissionMap", object.material->useEmissionMap);
+    //shader.setBool("useAlbedoMap", object.material->useAlbedoMap);
+    //shader.setBool("useNormalMap", object.material->useNormalMap);
+    //shader.setBool("useMetRoughMap", object.material->useMetRoughMap);
+    //shader.setBool("useAOMap", object.material->useAOMap);
+    //shader.setBool("useEmissionMap", object.material->useEmissionMap);
 
     // lights
     //int dirCount = 0;

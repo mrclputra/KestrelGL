@@ -1,4 +1,5 @@
 #include "ModelLoader.h"
+#include <stb_image.h>
 
 std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::string name, std::shared_ptr<Shader> shader) {
 	Assimp::Importer importer;
@@ -32,12 +33,12 @@ std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::string n
 	// set shader
 	if (shader) {
 		// if a custom shader is provided
-		object->shader = shader;
+		object->material->shader = shader;
 	}
 	else {
 		// use default shader
 		//object->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model.frag");
-		object->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model_phong.frag");
+		object->material->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model_phong.frag");
 	}
 
 	logger.info(
@@ -161,22 +162,21 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scen
 				int idx = loadTexture(texPath, Texture::Type::ALBEDO, object);
 				texIndices.push_back(idx);
 			}
-			object.material->useAlbedoMap = true;
+			//object.material->useAlbedoMap = true;
 		}
 
 		// load normal maps
-		if (material->GetTextureCount(aiTextureType_NORMALS) > 0) {
-			for (unsigned int i = 0; i < material->GetTextureCount(aiTextureType_NORMALS); i++) {
-				aiString str;
-				material->GetTexture(aiTextureType_NORMALS, i, &str);
-				std::string texPath = directory + "/" + std::string(str.C_Str());
-				int idx = loadTexture(texPath, Texture::Type::NORMAL, object);
-				texIndices.push_back(idx);
-			}
-			object.material->useNormalMap = true;
-		}
+		//if (material->GetTextureCount(aiTextureType_NORMALS) > 0) {
+		//	for (unsigned int i = 0; i < material->GetTextureCount(aiTextureType_NORMALS); i++) {
+		//		aiString str;
+		//		material->GetTexture(aiTextureType_NORMALS, i, &str);
+		//		std::string texPath = directory + "/" + std::string(str.C_Str());
+		//		int idx = loadTexture(texPath, Texture::Type::NORMAL, object);
+		//		texIndices.push_back(idx);
+		//	}
+		//	object.material->useNormalMap = true;
+		//}
 
-		// temporarily disabled, while i try to fix the rendering pipeline bottleneck
 		//// load metallic roughness maps
 		//if (material->GetTextureCount(aiTextureType_GLTF_METALLIC_ROUGHNESS) > 0) {
 		//	for (unsigned int i = 0; i < material->GetTextureCount(aiTextureType_GLTF_METALLIC_ROUGHNESS); i++) {
@@ -196,16 +196,46 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* mesh, const aiScene* scen
 }
 
 int ModelLoader::loadTexture(const std::string& path, Texture::Type type, Object& object) {
-	// check if texture is already loaded
-	for (size_t i = 0; i < object.material->textures.size(); i++) {
-		if (object.material->textures[i]->path == path) {
-			// texture already exists
-			return static_cast<int>(i);
-		}
-	}
+	// TODO: check if texture is already loaded
 
 	// load new texture
-	auto texture = std::make_shared<Texture>(path, type);
+	//auto texture = std::make_shared<Texture>(path, type);
+	auto texture = std::make_shared<Texture>(type);
+
+	glGenTextures(1, &texture->id);
+
+	int width, height, nrChannels;
+	unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+
+	if (data) {
+		GLenum format;
+		if (nrChannels == 1)
+			format = GL_RED;
+		else if (nrChannels == 2)
+			format = GL_RG;
+		else if (nrChannels == 3)
+			format = GL_RGB;
+		else if (nrChannels == 4)
+			format = GL_RGBA;
+
+		glBindTexture(GL_TEXTURE_2D, texture->id);
+		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		// configure texture parameters
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		stbi_image_free(data);
+	}
+	else {
+		logger.error("Failed to load texture: " + path);
+		stbi_image_free(data);
+	}
+
+	// add to the object material
 	object.material->textures.push_back(texture);
 
 	logger.info("retrieved " + path);

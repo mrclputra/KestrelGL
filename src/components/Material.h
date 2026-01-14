@@ -5,9 +5,11 @@
 #include <string>
 
 #include "Texture.h"
+#include "Shader.h"
 
 class Material {
 public:
+	// constructors
 	Material() = default;
 	~Material() = default;
 
@@ -20,14 +22,17 @@ public:
 	//float alpha;
 	//float emission;
 
-	// toggles, these should be set through the modelloader class
-	bool useAlbedoMap = false;
-	bool useNormalMap = false;
-	bool useMetRoughMap = false;
-	// to be implemented:
-	bool useAOMap = false;
-	bool useEmissionMap = false;
+	//// toggles, these should be set through the modelloader class
+	//bool useAlbedoMap = false;
+	//bool useNormalMap = false;
+	//bool useMetRoughMap = false;
+	//// to be implemented:
+	//bool useAOMap = false;
+	//bool useEmissionMap = false;
 	
+	// associated shader
+	std::shared_ptr<Shader> shader;
+
 	// textures
 	// TODO: considering moving textures to a global vector at the scene level instead; 
 	//	as multiple meshes may reference the same texture
