@@ -32,6 +32,7 @@ public:
 
     // object management
     void addObject(std::shared_ptr<Object> object);
+    void addObjects(std::vector<std::shared_ptr<Object>> objects);
     void removeObject(std::shared_ptr<Object> object);
 
     // lights management

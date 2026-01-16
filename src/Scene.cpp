@@ -39,6 +39,12 @@ void Scene::addObject(std::shared_ptr<Object> entity) {
 	}
 }
 
+void Scene::addObjects(std::vector<std::shared_ptr<Object>> objects) {
+	for (auto object : objects) {
+		addObject(object);
+	}
+}
+
 void Scene::removeObject(std::shared_ptr<Object> entity) {
 	auto it = std::remove(objects.begin(), objects.end(), entity);
 	if (it != objects.end()) {

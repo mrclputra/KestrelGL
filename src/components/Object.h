@@ -30,9 +30,11 @@ public:
 
 	// object components
 	Transform transform;
-	//std::shared_ptr<Shader> shader; // todo: move this under material
-	std::shared_ptr<Material> material;
 	std::vector<std::shared_ptr<Mesh>> meshes;
+	std::shared_ptr<Material> material;
 
 	std::string name;
+
+	// TODO: figure out how to do parent child references?
+	//	though I don't think it is necessary
 };

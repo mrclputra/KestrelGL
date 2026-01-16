@@ -41,8 +41,8 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
 	
 	auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
 
-	// lmb
-	if (button == GLFW_MOUSE_BUTTON_LEFT) {
+	// mouse buttons
+	if (button == GLFW_MOUSE_BUTTON_RIGHT) {
 		if (action == GLFW_PRESS) {
 			double xPos, yPos;
 			glfwGetCursorPos(window, &xPos, &yPos);
@@ -51,7 +51,9 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
 
 			app->mousePressed = true;
 			app->firstMouse = true;
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // hide cursor
+
+			// hide cursor
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		}
 		else if (action == GLFW_RELEASE) {
 			app->mousePressed = false;
@@ -142,8 +144,8 @@ void App::init() {
 	// open a debug scene
 	auto start = std::chrono::high_resolution_clock::now();
 	//khronos_spheres(*scene);
-	sphereScene(*scene);
-	//sponzaScene(*scene);
+	//sphereScene(*scene);
+	sponzaScene(*scene);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double, std::milli> duration = end - start;
 

@@ -16,9 +16,12 @@ public:
 	};
 
 	// constructor
-	Texture(Type type = Type::ALBEDO) {
-		this->type = type;
-	}
+	//Texture() = default;
+	Texture(const std::string& path, Type type = Type::ALBEDO) : path(path), type(type) {}
+	//Texture(const std::string path, Type type = Type::ALBEDO) {
+	//	this->type = type;
+	//	this->path = path;
+	//}
 	~Texture() {
 		if (id != 0) {
 			glDeleteTextures(1, &id);
@@ -33,6 +36,7 @@ public:
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
+	std::string path;
 	unsigned int id = 0;
 	Type type;
 };

@@ -20,8 +20,14 @@ public:
         glm::vec2 uv;
     };
 
-    // which textures from the object's texture vector this mesh uses
+    // which textures from the material texture vector this mesh uses
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
     std::vector<int> textureIndices;
+
+    unsigned int VAO = 0;
+    unsigned int VBO = 0;
+    unsigned int EBO = 0;
 
     // constructors
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) {
@@ -87,12 +93,4 @@ public:
         glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0); // unbind
     }
-
-private:
-    std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
-
-    unsigned int VAO = 0;
-    unsigned int VBO = 0;
-    unsigned int EBO = 0;
 };

@@ -85,7 +85,6 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
     if (!object.material->shader || object.material->shader->ID == 0) return;
 
     Shader& shader = *object.material->shader;
-
     shader.checkHotReload();
     shader.use();
 
@@ -177,11 +176,11 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
                 shader.setInt("albedoMap", 0);
                 tex->bind(0);
                 break;
-            case Texture::Type::NORMAL:
-                shader.setBool("hasNormalMap", true);
-                shader.setInt("normalMap", 1);
-                tex->bind(1);
-                break;
+            //case Texture::Type::NORMAL:
+            //    shader.setBool("hasNormalMap", true);
+            //    shader.setInt("normalMap", 1);
+            //    tex->bind(1);
+            //    break;
                 // uncomment when needed:
                 //case Texture::Type::METALLIC_ROUGHNESS:
                 //    shader.setBool("hasMetRoughMap", true);
