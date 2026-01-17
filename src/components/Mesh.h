@@ -42,7 +42,7 @@ public:
 	}
 
     // render our mesh
-    void render() {
+    void render() const {
         if (vertices.empty()) {
             logger.error("MASH HAS NO VERTICES, CANNOT RENDER");
             return;

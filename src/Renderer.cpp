@@ -7,49 +7,82 @@ void Renderer::init(const Scene& scene) {
 void Renderer::render(const Scene& scene) {
 	renderSkybox(scene);
 
-	drawOrder.clear();
-	for (const auto object : scene.objects) {
-		float distance = glm::length(scene.camera.position - object->transform.position);
-		drawOrder.insert(std::make_pair(distance, object));
-	}
-	for (const auto& pair : drawOrder) {
-		renderObject(scene, *pair.second);
-	}
+	commands.clear();
+	collectDrawCommands(scene);
+	executeBatched(scene);
 }
 
-void Renderer::renderObject(const Scene& scene, const Object& object) {
-	if (!object.material->shader|| object.material->shader->ID == 0) return;
+void Renderer::collectDrawCommands(const Scene& scene) {
+	for (const auto& object : scene.objects) {
+		if (!object->material->shader || object->material->shader->ID == 0) continue;
 
-	Shader& shader = *object.material->shader;
-	shader.checkHotReload();
-	shader.use();
+		float distance = glm::length(scene.camera.position - object->transform.position);
+		glm::mat4 modelMatrix = object->transform.getModelMatrix();
 
-	// object transformations
-	shader.setMat4("model", object.transform.getModelMatrix());
-	// camera
-	shader.setMat4("view", scene.camera.getViewMatrix());
-	shader.setMat4("projection", scene.camera.getProjectionMatrix());
-	shader.setVec3("viewPos", scene.camera.position);
+		for (const auto& mesh : object->meshes) {
+			commands.push_back({
+				mesh.get(),
+				object->material.get(),
+				modelMatrix,
+				distance
+				});
+		}
+	}
 
-	shader.setVec4("p_albedo", object.material->albedo);
-    shader.setFloat("p_metalness", object.material->metalness);
-    shader.setFloat("p_roughness", object.material->roughness);
+	// sort
+	std::sort(commands.begin(), commands.end(),
+		[](const DrawCommand& a, const DrawCommand& b) {
+			if (a.material->isTransparent != b.material->isTransparent) {
+				return a.material->isTransparent;
+			}
 
-	// render textures
-	for (const auto& mesh : object.meshes) {
-		for (int texIdx : mesh->texIndices) {
+			return a.material->shader < b.material->shader;
+		});
+}
+
+void Renderer::executeBatched(const Scene& scene) {
+	if (commands.empty()) return;
+	Shader* currentShader = nullptr;
+
+	for (const auto& cmd : commands) {
+		if (currentShader != cmd.material->shader.get()) {
+			currentShader = cmd.material->shader.get();
+
+			currentShader->checkHotReload();
+			currentShader->use();
+
+			currentShader->setMat4("view", scene.camera.getViewMatrix());
+			currentShader->setMat4("projection", scene.camera.getProjectionMatrix());
+			currentShader->setVec3("viewPos", scene.camera.position);
+		}
+
+		currentShader->setMat4("model", cmd.modelMatrix);
+		currentShader->setVec4("p_albedo", cmd.material->albedo);
+		currentShader->setFloat("p_metalness", cmd.material->metalness);
+		currentShader->setFloat("p_roughness", cmd.material->roughness);
+
+		currentShader->setBool("hasAlbedoMap", false);
+
+		// textures
+		for (int texIdx : cmd.mesh->texIndices) {
 			const auto& tex = scene.textures[texIdx];
-
+			
 			switch (tex->type) {
 			case Texture::Type::ALBEDO:
-				shader.setBool("hasAlbedoMap", true);
-				shader.setInt("albedoMap", 0);
+				currentShader->setBool("hasAlbedoMap", true);
+				currentShader->setInt("albedoMap", 0);
 				tex->bind(0);
 				break;
+
+			// albedo: 0
+			// normal: 1
+			// metrough: 2
+			// ao = 3
+			// emissive: 4
 			}
 		}
 
-		mesh->render();
+		cmd.mesh->render();
 	}
 }
 

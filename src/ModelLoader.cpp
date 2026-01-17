@@ -7,7 +7,7 @@
 
 // if we want to make changes to the model, that should be done externally instead of here
 
-std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::vector<std::shared_ptr<Texture>>& textureCache) {
+std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::vector<std::shared_ptr<Texture>>& textureCache, const std::string& name) {
 	Assimp::Importer importer;
 	const aiScene* assimpScene = importer.ReadFile(path,
 		// post-processing flags
@@ -28,10 +28,41 @@ std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::vector<s
 	directory = (lastSlash != std::string::npos) ? path.substr(0, lastSlash) : ".";
 
 	// single object
-	auto object = std::make_shared<Object>();
+	auto object = std::make_shared<Object>(name);
 	processNode(assimpScene->mRootNode, assimpScene, directory, glm::mat4(1.0), *object, textureCache);
 	object->material->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model_phong.frag");
 	return object;
+}
+
+std::vector<std::shared_ptr<Object>> ModelLoader::loadAsMultiple(const std::string& path, std::vector<std::shared_ptr<Texture>>& textureCache) {
+	Assimp::Importer importer;
+	const aiScene* assimpScene = importer.ReadFile(path,
+		aiProcess_Triangulate |
+		aiProcess_CalcTangentSpace |
+		aiProcess_GenSmoothNormals |
+		aiProcess_FlipUVs
+	);
+
+	if (!assimpScene || assimpScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !assimpScene->mRootNode) {
+		logger.error("failed to load: " + std::string(importer.GetErrorString()));
+		return {};
+	}
+
+	std::string directory;
+	size_t lastSlash = path.find_last_of("/\\");
+	directory = (lastSlash != std::string::npos) ? path.substr(0, lastSlash) : ".";
+
+	// each aiNode is it's own object
+	std::vector<std::shared_ptr<Object>> objects;
+	processNodeAsObject(assimpScene->mRootNode, assimpScene, directory, glm::mat4(1.0), objects, textureCache);
+
+	auto shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model_phong.frag");
+
+	for (auto& obj : objects) {
+		obj->material->shader = shader;
+	}
+
+	return objects;
 }
 
 void ModelLoader::processNode(aiNode* assimpNode, const aiScene* assimpScene, const std::string& directory, const glm::mat4 transform, Object& object, std::vector<std::shared_ptr<Texture>>& textureCache) {
@@ -51,6 +82,45 @@ void ModelLoader::processNode(aiNode* assimpNode, const aiScene* assimpScene, co
 	// recurse and process all children nodes
 	for (unsigned int i = 0; i < assimpNode->mNumChildren; i++) {
 		processNode(assimpNode->mChildren[i], assimpScene, directory, global, object, textureCache);
+	}
+}
+
+// TODO: make a function to place object origin at center of vertices, then apply that to my own transform
+//	instead of having it baked in the vertices
+void ModelLoader::processNodeAsObject(aiNode* assimpNode, const aiScene* assimpScene, const std::string& directory, const glm::mat4 transform, std::vector<std::shared_ptr<Object>>& objects, std::vector<std::shared_ptr<Texture>>& textureCache) {
+	glm::mat4 local = aiMatrixtoGLM(assimpNode->mTransformation);
+	glm::mat4 global = transform * local;
+
+	// create a new object for this node if it has meshes
+	if (assimpNode->mNumMeshes > 0) {
+		auto object = std::make_shared<Object>();
+		object->name = std::string(assimpNode->mName.C_Str());
+
+		glm::vec3 scale;
+		glm::quat rotation;
+		glm::vec3 translation;
+		glm::vec3 skew;
+		glm::vec4 perspective;
+		glm::decompose(global, scale, rotation, translation, skew, perspective);
+
+		object->transform.position = translation;
+		object->transform.rotation = glm::degrees(glm::eulerAngles(rotation));
+		object->transform.scale = scale;
+
+		for (unsigned int i = 0; i < assimpNode->mNumMeshes; i++) {
+			aiMesh* assimpMesh = assimpScene->mMeshes[assimpNode->mMeshes[i]];
+			auto mesh = processMesh(assimpMesh, assimpScene, directory, glm::mat4(1.0f), *object, textureCache);
+			if (mesh) {
+				object->meshes.push_back(mesh);
+			}
+		}
+
+		objects.push_back(object);
+	}
+
+	// recurse into children
+	for (unsigned int i = 0; i < assimpNode->mNumChildren; i++) {
+		processNodeAsObject(assimpNode->mChildren[i], assimpScene, directory, global, objects, textureCache);
 	}
 }
 
@@ -132,10 +202,14 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* assimpMesh, const aiScene
 	if (assimpMesh->mMaterialIndex >= 0) {
 		aiMaterial* assimpMaterial = assimpScene->mMaterials[assimpMesh->mMaterialIndex];
 
+		float opacity = 1.0f;
+		if (AI_SUCCESS == assimpMaterial->Get(AI_MATKEY_OPACITY, opacity)) {
+			if (opacity < 1.0f) object.material->isTransparent = true;
+		}
+
 		// load albedo textures
 		if (assimpMaterial->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
 			for (unsigned int i = 0; i < assimpMaterial->GetTextureCount(aiTextureType_DIFFUSE); i++) {
-				// TODO: load texture
 				aiString str;
 				assimpMaterial->GetTexture(aiTextureType_DIFFUSE, i, &str);
 				std::string texPath = directory + "/" + std::string(str.C_Str());
