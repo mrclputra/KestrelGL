@@ -7,6 +7,8 @@
 #include "Texture.h"
 #include "Shader.h"
 
+// this class is basically just a wrapper for the shader
+// but we can put additional PBR parameters here, aka if we want to make modifications to the shader
 class Material {
 public:
 	// constructors
@@ -25,5 +27,4 @@ public:
 
 	// components
 	std::shared_ptr<Shader> shader;
-	std::vector<std::shared_ptr<Texture>> textures;
 };

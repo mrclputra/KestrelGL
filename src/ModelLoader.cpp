@@ -7,7 +7,7 @@
 
 // if we want to make changes to the model, that should be done externally instead of here
 
-std::shared_ptr<Object> ModelLoader::load(const std::string& path) {
+std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::vector<std::shared_ptr<Texture>>& textureCache) {
 	Assimp::Importer importer;
 	const aiScene* assimpScene = importer.ReadFile(path,
 		// post-processing flags
@@ -29,12 +29,12 @@ std::shared_ptr<Object> ModelLoader::load(const std::string& path) {
 
 	// single object
 	auto object = std::make_shared<Object>();
-	processNode(assimpScene->mRootNode, assimpScene, directory, glm::mat4(1.0), *object);
+	processNode(assimpScene->mRootNode, assimpScene, directory, glm::mat4(1.0), *object, textureCache);
 	object->material->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model_phong.frag");
 	return object;
 }
 
-void ModelLoader::processNode(aiNode* assimpNode, const aiScene* assimpScene, const std::string& directory, const glm::mat4 transform, Object& object) {
+void ModelLoader::processNode(aiNode* assimpNode, const aiScene* assimpScene, const std::string& directory, const glm::mat4 transform, Object& object, std::vector<std::shared_ptr<Texture>>& textureCache) {
 	// get world space transformation
 	glm::mat4 local = aiMatrixtoGLM(assimpNode->mTransformation);
 	glm::mat4 global = transform * local;
@@ -42,7 +42,7 @@ void ModelLoader::processNode(aiNode* assimpNode, const aiScene* assimpScene, co
 	// process current node's meshes
 	for (unsigned int i = 0; i < assimpNode->mNumMeshes; i++) {
 		aiMesh* assimpMesh = assimpScene->mMeshes[assimpNode->mMeshes[i]];
-		auto mesh = processMesh(assimpMesh, assimpScene, directory, global, object);
+		auto mesh = processMesh(assimpMesh, assimpScene, directory, global, object, textureCache);
 		if (mesh) {
 			object.meshes.push_back(mesh);
 		}
@@ -50,11 +50,11 @@ void ModelLoader::processNode(aiNode* assimpNode, const aiScene* assimpScene, co
 
 	// recurse and process all children nodes
 	for (unsigned int i = 0; i < assimpNode->mNumChildren; i++) {
-		processNode(assimpNode->mChildren[i], assimpScene, directory, global, object);
+		processNode(assimpNode->mChildren[i], assimpScene, directory, global, object, textureCache);
 	}
 }
 
-std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* assimpMesh, const aiScene* assimpScene, const std::string& directory, const glm::mat4 transform, Object& object) {
+std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* assimpMesh, const aiScene* assimpScene, const std::string& directory, const glm::mat4 transform, Object& object, std::vector<std::shared_ptr<Texture>>& textureCache) {
 	std::vector<Mesh::Vertex> vertices;
 	std::vector<unsigned int> indices;
 	std::vector<int> texIndices;
@@ -139,7 +139,7 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* assimpMesh, const aiScene
 				aiString str;
 				assimpMaterial->GetTexture(aiTextureType_DIFFUSE, i, &str);
 				std::string texPath = directory + "/" + std::string(str.C_Str());
-				int idx = loadTexture(texPath, Texture::Type::ALBEDO, object);
+				int idx = loadTexture(texPath, Texture::Type::ALBEDO, object, textureCache);
 				texIndices.push_back(idx);
 			}
 		}
@@ -153,10 +153,10 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* assimpMesh, const aiScene
 }
 
 // load a texture
-int ModelLoader::loadTexture(const std::string& path, Texture::Type type, Object& object) {
+int ModelLoader::loadTexture(const std::string& path, Texture::Type type, Object& object, std::vector<std::shared_ptr<Texture>>& textureCache) {
 	// check if texture is already loaded
-	for (int i = 0; i < object.material->textures.size(); i++) {
-		if (object.material->textures[i]->path == path) {
+	for (int i = 0; i < textureCache.size(); i++) {
+		if (textureCache[i]->path == path) {
 			return i;
 		}
 	}
@@ -194,8 +194,8 @@ int ModelLoader::loadTexture(const std::string& path, Texture::Type type, Object
 		stbi_image_free(data);
 	}
 
-	object.material->textures.push_back(texture);
-	return static_cast<int>(object.material->textures.size() - 1); // index
+	textureCache.push_back(texture);
+	return static_cast<int>(textureCache.size() - 1); // index
 }
 
 glm::mat4 ModelLoader::aiMatrixtoGLM(const aiMatrix4x4& from) {

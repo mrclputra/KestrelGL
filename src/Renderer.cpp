@@ -38,7 +38,7 @@ void Renderer::renderObject(const Scene& scene, const Object& object) {
 	// render textures
 	for (const auto& mesh : object.meshes) {
 		for (int texIdx : mesh->texIndices) {
-			const auto& tex = object.material->textures[texIdx];
+			const auto& tex = scene.textures[texIdx];
 
 			switch (tex->type) {
 			case Texture::Type::ALBEDO:

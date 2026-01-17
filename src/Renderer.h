@@ -8,6 +8,19 @@
 #include "Scene.h"
 //#include "lights/DirectionalLight.h"
 
+class RenderCommand {
+	Mesh* mesh;
+	Material* material;
+	glm::mat4 transform;
+	float distance; // sorting
+
+	bool operator<(const RenderCommand& other) const {
+		if (material->shader->ID != other.material->shader->ID)
+			return material->shader->ID < other.material->shader->ID;
+		return material < other.material;
+	}
+};
+
 class Renderer {
 public:
 	void init(const Scene& scene);
