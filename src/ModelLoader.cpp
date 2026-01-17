@@ -1,12 +1,11 @@
 #include "ModelLoader.h"
 #include <stb_image.h>
 
-// todo: rewrite this loader such that it returns a vector of objects instead
-//	we can figure out how to optimize textures later, but for now architecture is what matters
-// 
-// it will be helpful in the future to separate every aiNode into it's own object instance
-// we could implement a singleton textures store in the scene or application level
-// kinda like the logger	
+// I think it is fine if we make the loaded file as a single object
+//	for one, it is great for performance as we do not have to rebind N-many object transformations every frame
+//	second, helps for organization, as I this engine is meant for rendering only
+
+// if we want to make changes to the model, that should be done externally instead of here
 
 std::shared_ptr<Object> ModelLoader::load(const std::string& path) {
 	Assimp::Importer importer;
