@@ -3,22 +3,15 @@ out vec4 FragColor;
 
 // lights
 struct DirectionalLight { vec3 direction; vec3 color; };
-struct PointLight { vec3 position; vec3 color; float radius; };
-struct SpotLight { vec3 position; vec3 direction; vec3 color; float innerCos; float outerCos; };
 
-#define MAX_LIGHTS 8
-uniform DirectionalLight dirLights[MAX_LIGHTS];
+uniform DirectionalLight dirLights[8];
 uniform int numDirLights;
-uniform PointLight pointLights[MAX_LIGHTS];
-uniform int numPointLights;
-uniform SpotLight spotLights[MAX_LIGHTS];
-uniform int numSpotLights;
 
 // shadows
-uniform sampler2D shadowMaps[MAX_LIGHTS];
-uniform mat4 lightSpaceMatrices[MAX_LIGHTS]; // this array maps to shadowMaps[]
+uniform sampler2DArray shadowMaps;
+uniform mat4 lightSpaceMatrices[8]; // this array maps to shadowMaps
 
-// camera position
+// camera uniforms
 uniform vec3 viewPos;
 
 // texture maps
@@ -48,7 +41,7 @@ uniform bool useMetRoughMap;
 uniform bool useAOMap;
 uniform bool useEmissionMap;
 
-uniform vec3 p_albedo; // rgb
+uniform vec4 p_albedo; // rgb
 uniform float p_metalness;
 uniform float p_roughness;
 
@@ -63,41 +56,6 @@ const float PI = 3.14159265359;
 
 // PBR FUNCTIONS
 // -------------------------------------------------
-
-//// normal distribution function
-//// approximates the relative suface area of microfacets aligned to the halfway vector (H)
-//float DistributionGGX(vec3 N, vec3 H, float roughness) {
-//    float a = roughness * roughness;
-//    
-//    // Trowbridge-Reitz GGX
-//    float a2 = a * a;
-//    float NdotH = max(dot(N, H), 0.0);
-//    float NdotH2 = NdotH * NdotH;
-//    
-//    float nom = a2;
-//    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-//    denom = PI * denom * denom;
-//
-//    return nom / denom;
-//}
-//
-//// geometry function
-//// approximates the relative surface area in which microfacets overshadow each other, causing light rays to be occluded
-//float GeometrySchlickGGX(float NdotV, float k) {
-//    float nom = NdotV;
-//    float denom = NdotV * (1.0 - k) + k;
-//
-//    return nom / denom;
-//}
-//
-//float GeometrySmith(vec3 N, vec3 V, vec3 L, float k) {
-//    float NdotV = max(dot(N, V), 0.0); // shadows from view vector
-//    float NdotL = max(dot(N, L), 0.0); // shadows from light vector
-//    float ggx1 = GeometrySchlickGGX(NdotV, k);
-//    float ggx2 = GeometrySchlickGGX(NdotL, k);
-//
-//    return ggx1 * ggx2;
-//}
 
 // fresnel
 vec3 fresnelSchlick(float cosTheta, vec3 F0) {
@@ -114,12 +72,12 @@ float calculateShadow(int lightIdx, vec3 normal, vec3 lightDir) {
 
     float bias = max(0.01 * (1.0 - dot(normal, lightDir)), 0.0005);
     float shadow = 0.0;
-    vec2 texelSize = 1.0 / textureSize(shadowMaps[lightIdx], 0);
+    vec2 texelSize = 1.0 / vec2(textureSize(shadowMaps, 0));
 
     for(int x = -1; x <= 1; ++x) {
         for(int y = -1; y <= 1; ++y) {
             // 3x3 PCF sample grid
-            float pcfDepth = texture(shadowMaps[lightIdx], projCoords.xy + vec2(x, y) * texelSize).r; 
+            float pcfDepth = texture(shadowMaps, vec3(projCoords.xy + vec2(x, y) * texelSize, lightIdx)).r; 
             shadow += (projCoords.z - bias) > pcfDepth ? 1.0 : 0.0;        
         }    
     }
@@ -130,7 +88,8 @@ float calculateShadow(int lightIdx, vec3 normal, vec3 lightDir) {
 // OTHER
 // -------------------------------------------------
 
-// irradiance calculation
+// this function calculates the diffuse irradiance for a given direction/surface normal
+// it does this by projecting the lighting environment into Spherical Harmonics
 vec3 evaluateSHIrradiance(vec3 n)
 {
     float x = n.x, y = -n.y, z = n.z;
@@ -172,7 +131,18 @@ vec3 evaluateSHIrradiance(vec3 n)
 
 void main() {
     // fetch data
-    vec3 texAlbedo = hasAlbedoMap && useAlbedoMap ? pow(texture(albedoMap, vTexCoords).rgb, vec3(2.2)) : p_albedo;
+    vec3 albedo = vec3(1.0);
+    float alpha = 1.0;
+    if (hasAlbedoMap && useAlbedoMap) {
+        // use the texture map
+        albedo = pow(texture(albedoMap, vTexCoords).rgb, vec3(2.2));
+        alpha = texture(albedoMap, vTexCoords).a;
+    } else {
+        // use p_albedo
+        albedo = p_albedo.rgb;
+        alpha = p_albedo.a;
+    }
+
     float metallic = hasMetRoughMap && useMetRoughMap ? texture(metRoughMap, vTexCoords).b : p_metalness;
     float roughness = hasMetRoughMap && useMetRoughMap ? texture(metRoughMap, vTexCoords).g : p_roughness;
     float texAO = hasAOMap && useAOMap ? texture(aoMap, vTexCoords).r : 1.0;
@@ -192,7 +162,7 @@ void main() {
     // transform to world space
     vec3 N = normalize(TBN * tangentNormal);
     vec3 V = normalize(viewPos - vFragPos);
-    vec3 F0 = mix(vec3(0.04), texAlbedo, metallic); // todo: replace with BRDF lut
+    vec3 F0 = mix(vec3(0.04), albedo, metallic); // todo: replace with BRDF lut
 
     // IBL :)
 
@@ -213,12 +183,12 @@ void main() {
 
     // diffuse component
     vec3 irradiance = evaluateSHIrradiance(N);
-    vec3 diffuseIBL = (irradiance * texAlbedo) / PI;
+    vec3 diffuseIBL = (irradiance * albedo) / PI;
 
     // combine!
     vec3 ambient = (kD * diffuseIBL + specularIBL) * texAO;
 
-    // CUSTOM LIGHTING
+    // MY CUSTOM LIGHTING
     vec3 Lo = vec3(0.0); // accumulated lighting
     // Directional
     for (int i = 0; i < numDirLights; i++) {
@@ -229,21 +199,7 @@ void main() {
         float diff = max(dot(N, L), 0.0);
         vec3 radiance = dirLights[i].color;
 
-        Lo += (kD * texAlbedo / PI) * radiance * diff * (1.0 - shadow);
-    }
-    // Point
-    for (int i = 0; i < numPointLights; i++) {
-        vec3 L = normalize(pointLights[i].position - vFragPos);
-        float distance = length(pointLights[i].position - vFragPos);
-
-        // todo: calculate shadow
-
-        float attenuation = 1.0 / (distance * distance);
-        
-        float diff = max(dot(N, L), 0.0);
-        vec3 radiance = pointLights[i].color * attenuation;
-        
-        Lo += (kD * texAlbedo / PI) * radiance * diff;
+        Lo += (kD * albedo / PI) * radiance * diff * (1.0 - shadow);
     }
 
     // combine
@@ -255,17 +211,14 @@ void main() {
     color = pow(color, vec3(1.0/2.2));
 
     // output
-    if      (mode == 1) FragColor = vec4(texAlbedo, 1.0);
+    if      (mode == 1) FragColor = vec4(albedo, 1.0);
     else if (mode == 2) FragColor = vec4(N * 0.5 + 0.5, 1.0);
     else if (mode == 3) FragColor = vec4(texture(metRoughMap, vTexCoords).rgb, 1.0);
     else if (mode == 4) FragColor = vec4(vec3(diffuseIBL), 1.0);
     else if (mode == 5) FragColor = vec4(vec3(specularIBL), 1.0);
     else if (mode == 6) FragColor = vec4(vec3(prefilteredColor), 1.0);
-    else                FragColor = vec4(color, 1.0);
+    else if (mode == 7) FragColor = vec4(Lo, 1.0); // shadows system only
+    else                FragColor = vec4(color, alpha);
 
-//    if (any(isnan(color)) || any(isinf(color))) {
-//        FragColor = vec4(1.0, 0.0, 1.0, 1.0);
-//    } else {
-//        FragColor = vec4(color, 1.0);
-//    }
+//    FragColor = vec4(vec3(gl_FragCoord.z), 1.0);
 }

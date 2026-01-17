@@ -26,8 +26,8 @@ void Skybox::load(const std::string& path) {
 	// may need to cleanup the old data?
 	// idk, we'll see how it pans out
 
-	computeIrradiance();
-	computePrefilterMap();
+	//computeIrradiance();
+	//computePrefilterMap();
 }
 
 unsigned int Skybox::convertHDRItoCubemap(const std::string& path) {

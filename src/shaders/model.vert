@@ -17,11 +17,6 @@ uniform mat4 model; // object to world space
 uniform mat4 view;  // world to view space
 uniform mat4 projection; // view to clip space
 
-// TODO: handle multiple lights
-// shadow map
-//uniform mat4 lightSpaceMatrix;
-//out vec4 vFragPosLightSpace;
-
 void main() {
     mat3 M = mat3(model);
 
@@ -32,9 +27,6 @@ void main() {
     vTangent   = M * aTangent;
     vBitangent = M * aBitangent;
     vTexCoords = aTexCoords;
-
-    // shadow map
-//    vFragPosLightSpace = lightSpaceMatrix * vec4(vFragPos, 1.0);
 
     // ORDER MATTERS
     gl_Position = projection * view * vec4(vFragPos, 1.0); // TO NDC

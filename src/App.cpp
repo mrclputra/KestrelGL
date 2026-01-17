@@ -1,5 +1,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include <chrono>
 
 #include "App.h"
 
@@ -40,8 +41,8 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
 	
 	auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
 
-	// lmb
-	if (button == GLFW_MOUSE_BUTTON_LEFT) {
+	// mouse buttons
+	if (button == GLFW_MOUSE_BUTTON_RIGHT) {
 		if (action == GLFW_PRESS) {
 			double xPos, yPos;
 			glfwGetCursorPos(window, &xPos, &yPos);
@@ -50,7 +51,9 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
 
 			app->mousePressed = true;
 			app->firstMouse = true;
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // hide cursor
+
+			// hide cursor
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		}
 		else if (action == GLFW_RELEASE) {
 			app->mousePressed = false;
@@ -127,23 +130,28 @@ void App::init() {
 	// setup OpenGL configurations here
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	/*glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);*/
-	//glCullFace(GL_FRONT);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	// initialize and configure scene instance
-	scene = std::make_unique<Scene>(bus);
+	scene = std::make_unique<Scene>();
 	scene->camera.setViewport(fbWidth, fbHeight); // tell camera about viewport
+
+	// open a debug scene
+	auto start = std::chrono::high_resolution_clock::now();
+	// TODO: load scene here
+	loadScene01(*scene);
+	auto end = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double, std::milli> duration = end - start;
 
 	// initialize renderer instance
 	renderer.init(*scene);
 
-	// open a debug scene
-	sphereScene(*scene);
-
+	logger.info("Scene loaded in " + std::to_string(duration.count()) + " ms");
 	logger.info("ended initialization");
 }
 
@@ -221,6 +229,12 @@ void App::processInput(float dt) {
 		scene->camera.moveUp(dt);
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 		scene->camera.moveDown(dt);
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+		scene->camera.speed = 10.0f;
+	}
+	else {
+		scene->camera.speed = 5.0f;
+	}
 }
 
 // callbacks

@@ -1,24 +1,17 @@
 #include "Scene.h"
 #include "lights/DirectionalLight.h"
-#include "lights/PointLight.h"
 
 // TODO: REFACTOR THIS CONSTRUCTOR
-Scene::Scene(EventBus& bus)
-    : bus(bus), camera(), skybox(std::make_unique<Skybox>()) {
-
-}
+Scene::Scene() : camera(), skybox(std::make_unique<Skybox>()) {}
 
 void Scene::setSkybox(const std::string& hdriPath) {
-	//if (!skybox) {
-	//	skybox = std::make_unique<Skybox>();
-	//}
 	skybox->load(hdriPath);
 }
 
 void Scene::update(float deltaTime) {
-	// update entities
-	for (auto& entity : objects) {
-		entity->update(deltaTime);
+	// update transforms
+	for (auto& object : objects) {
+		object->update(deltaTime);
 	}
 
 	// DEBUG LIGHT ROTATION THINGY!!!
@@ -34,14 +27,12 @@ void Scene::update(float deltaTime) {
 	}
 }
 
-void Scene::addObject(std::shared_ptr<Object> entity) {
-	if (entity) {
-		objects.push_back(std::move(entity));
-	}
+void Scene::addObject(std::shared_ptr<Object> object) {
+	objects.push_back(std::move(object));
 }
 
-void Scene::removeObject(std::shared_ptr<Object> entity) {
-	auto it = std::remove(objects.begin(), objects.end(), entity);
+void Scene::removeObject(std::shared_ptr<Object> object) {
+	auto it = std::remove(objects.begin(), objects.end(), object);
 	if (it != objects.end()) {
 		objects.erase(it, objects.end());
 	}

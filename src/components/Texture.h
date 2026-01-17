@@ -1,7 +1,6 @@
 #pragma once
 
 #include <glad/glad.h>
-//#include "stb_image.h"
 #include <string>
 
 #include <logger.h>
@@ -16,16 +15,24 @@ public:
 		EMISSION
 	};
 
-	Texture(const std::string& path, Type type = Type::ALBEDO);
-	~Texture();
+	// constructor
+	Texture(const Type type, const std::string path) : type(type), path(path) {}
+	~Texture() {
+		if (id != 0) {
+			glDeleteTextures(1, &id);
+		}
+	}
 
-	void bind(unsigned int slot = 0) const;
-	void unbind() const;
+	void bind(unsigned int slot) {
+		glActiveTexture(GL_TEXTURE0 + slot);
+		glBindTexture(GL_TEXTURE_2D, id);
+	}
+	void unbind() {
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
 
-	unsigned int id = 0;
-	Type type;
-	std::string path;
-
-private:
-	void loadFromFile(const std::string& path);
+	// attributes
+	unsigned int id = 0; // handler to GPU
+	const Type type;
+	const std::string path;
 };

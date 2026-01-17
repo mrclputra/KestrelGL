@@ -125,7 +125,7 @@ void Gui::draw() {
     ImGui::SameLine();
     if (ImGui::Button("+")) { mode++; }
 
-    app->renderer.renderMode = mode;
+    //app->renderer.renderMode = mode;
 
     ImGui::Spacing();
 
@@ -153,140 +153,6 @@ void Gui::draw() {
             }
         }
         ImGuiFileDialog::Instance()->Close();
-    }
-
-    // irradiance
-
-    // shadow maps!
-    static bool showShadowMaps = false;
-    ImGui::Checkbox("Visualize Shadow Maps", &showShadowMaps);
-
-    if (showShadowMaps && !app->scene->lights.empty()) {
-        ImGui::Begin("##L-Depth Map", &showShadowMaps, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
-
-        for (auto& light : app->scene->lights) {
-            if (auto dir = std::dynamic_pointer_cast<DirectionalLight>(light)) {
-                ImGui::Image(
-                    (void*)(intptr_t)dir->depthMap,
-                    ImVec2(256, 256),
-                    ImVec2(0, 1),
-                    ImVec2(1, 0)
-                );
-            }
-        }
-
-        ImGui::End();
-    }
-
-    ImGui::Separator();
-
-    // scene tree
-    if (ImGui::TreeNodeEx("Scene Tree")) {
-        // objects
-        if (ImGui::TreeNodeEx("Objects")) {
-            for (auto& obj : app->scene->objects) {
-                if (ImGui::TreeNodeEx((void*)obj.get(), ImGuiTreeNodeFlags_OpenOnArrow, "%s", obj->name.c_str())) {
-                    ImGuiTreeNodeFlags subFlags = ImGuiTreeNodeFlags_DefaultOpen;
-
-                    // transforms
-                    if (ImGui::TreeNodeEx("Transform", subFlags)) {
-                        ImGui::Text("Position");
-                        ImGui::SetNextItemWidth(140.0f);
-                        ImGui::DragFloat3("##Pos", &obj->transform.position[0], 0.1f);
-                        ImGui::TreePop();
-                    }
-
-                    // shader
-                    if (obj->shader && ImGui::TreeNodeEx("Shader", subFlags)) {
-                        ImGui::Text("ID: %u", obj->shader->ID);
-                        ImGui::TreePop();
-                    }
-
-                    // meshes
-                    if (!obj->meshes.empty() && ImGui::TreeNodeEx("Meshes", subFlags)) {
-                        for (int i = 0; i < (int)obj->meshes.size(); i++) {
-                            ImGui::BulletText("Mesh %d", i);
-                        }
-                        ImGui::TreePop();
-                    }
-
-                    // pbr parameters
-                    if (ImGui::TreeNodeEx("PBR", subFlags)) {
-                        ImGui::Text("Albedo");
-                        ImGui::ColorEdit3("##AlbedoColor", &obj->material->albedo[0]);
-
-                        ImGui::Text("Metalness");
-                        ImGui::SetNextItemWidth(140.0f);
-                        ImGui::SliderFloat("##Metalness", &obj->material->metalness, 0.0f, 1.0f);
-
-                        ImGui::Text("Roughness");
-                        ImGui::SetNextItemWidth(140.0f);
-                        ImGui::SliderFloat("##Roughness", &obj->material->roughness, 0.0f, 1.0f);
-
-                        ImGui::Checkbox("Use Albedo Map ##Albedo", &obj->material->useAlbedoMap);
-                        ImGui::Checkbox("Use Normal Map", &obj->material->useNormalMap);
-                        ImGui::Checkbox("Use MetRough Map ##Metal", &obj->material->useMetRoughMap);
-
-                        ImGui::TreePop();
-                    }
-
-                    ImGui::TreePop();
-                }
-            }
-
-            // pop objects
-            ImGui::TreePop();
-        }
-
-        // lights
-        if (ImGui::TreeNodeEx("Lights")) {
-            for (int i = 0; i < app->scene->lights.size(); i++) {
-                auto& light = app->scene->lights[i];
-
-                // make a unique ID for the light node
-                // should probably implement a proper global ID system for the engine down the line
-                char lightLabel[64];
-                auto dirLight = std::dynamic_pointer_cast<DirectionalLight>(light);
-                bool isDir = (dirLight != nullptr);
-                sprintf(lightLabel, "%s ##%p", isDir ? "Directional Light" : "Point Light", (void*)light.get());
-
-                if (ImGui::TreeNodeEx(lightLabel, ImGuiTreeNodeFlags_OpenOnArrow)) {
-                    ImGuiTreeNodeFlags subFlags = ImGuiTreeNodeFlags_DefaultOpen;
-
-                    // appearance
-                    if (ImGui::TreeNodeEx("Appearance", subFlags)) {
-                        ImGui::Text("Light Color");
-                        ImGui::SetNextItemWidth(100.0f);
-                        ImGui::ColorEdit3("##Color", &light->color[0]);
-                        ImGui::TreePop();
-                    }
-
-                    // transforms
-                    if (ImGui::TreeNodeEx("Transform", subFlags)) {
-                        if (isDir) {
-                            ImGui::Text("Direction");
-                            ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "X: %.2f", dirLight->direction.x);
-                            ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "Y: %.2f", dirLight->direction.y);
-                            ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "Z: %.2f", dirLight->direction.z);
-                        }
-                        else {
-                            // for other light types down the line
-                            ImGui::TextDisabled("oops nothing here");
-                        }
-
-                        ImGui::TreePop();
-                    }
-
-                    ImGui::TreePop(); // close light instance
-                }
-            }
-
-            // pop lights
-            ImGui::TreePop();
-        }
-
-        // pop scene
-        ImGui::TreePop();
     }
 
     ImGui::End();

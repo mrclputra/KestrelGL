@@ -44,7 +44,6 @@ public:
     void moveUp(float dt);
     void moveDown(float dt);
 
-
     // this should be called when viewport dimensions change
     // i.e. when window size changes
     void setViewport(int width, int height);

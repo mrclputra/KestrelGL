@@ -24,29 +24,29 @@ public:
 /// </summary>
 class Shader {
 public:
-	unsigned int ID = 0;
+    unsigned int ID = 0;
 
-	Shader() = default;
-	Shader(const char* vertexPath, const char* fragmentPath) : m_vertexPath(vertexPath), m_fragmentPath(fragmentPath) {
+    Shader() = default;
+    Shader(const char* vertexPath, const char* fragmentPath) : m_vertexPath(vertexPath), m_fragmentPath(fragmentPath) {
         if (!compile()) {
             throw ShaderException("Initial shader compilation failed.");
         }
         updateModTimes();
-	}
+    }
     ~Shader() {
         if (ID != 0 && glIsProgram(ID)) {
             glDeleteProgram(ID);
         }
     }
 
-	/// <summary>
-	/// Run the shader program.
-	/// </summary>
-	void use() const { 
+    /// <summary>
+    /// Run the shader program.
+    /// </summary>
+    void use() const {
         if (ID == 0 || !glIsProgram(ID)) {
             throw ShaderException("Attempted to use invalid shader program.");
         }
-        glUseProgram(ID); 
+        glUseProgram(ID);
     }
 
     /// <summary>
@@ -68,14 +68,14 @@ public:
                 return false;
             }
 
-            logger.info(std::to_string(ID) +" shader reloaded");
+            logger.info(std::to_string(ID) + " shader reloaded");
             return true;
         }
 
         return false;
     }
 
-	// uniform setters
+    // uniform setters
     void setBool(const std::string& name, bool value) const {
         glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
     }
@@ -114,11 +114,11 @@ public:
     }
 
 private:
-	std::string m_vertexPath;
-	std::string m_fragmentPath;
-	
-	time_t m_vertexModTime = 0;
-	time_t m_fragmentModTime = 0;
+    std::string m_vertexPath;
+    std::string m_fragmentPath;
+
+    time_t m_vertexModTime = 0;
+    time_t m_fragmentModTime = 0;
 
     // get file modification time
     static time_t getModTime(const std::string& path) {
@@ -172,9 +172,9 @@ private:
         unsigned int vertex = compileShader(vertexCode, GL_VERTEX_SHADER, "VERTEX");
         if (vertex == 0) return false;
         unsigned int fragment = compileShader(fragmentCode, GL_FRAGMENT_SHADER, "FRAGMENT");
-        if (fragment == 0) { 
+        if (fragment == 0) {
             glDeleteShader(vertex);
-            return false; 
+            return false;
         }
 
         unsigned int program = glCreateProgram();

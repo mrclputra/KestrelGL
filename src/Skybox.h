@@ -31,6 +31,7 @@ private:
 	void setupGeometry();
 	unsigned int convertHDRItoCubemap(const std::string& path);
 
+	// IBL stuff
 	void computeIrradiance();
 	void computePrefilterMap();
 
