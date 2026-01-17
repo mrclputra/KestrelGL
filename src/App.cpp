@@ -138,14 +138,13 @@ void App::init() {
 	glCullFace(GL_BACK);
 
 	// initialize and configure scene instance
-	scene = std::make_unique<Scene>(bus);
+	scene = std::make_unique<Scene>();
 	scene->camera.setViewport(fbWidth, fbHeight); // tell camera about viewport
 
 	// open a debug scene
 	auto start = std::chrono::high_resolution_clock::now();
-	//khronos_spheres(*scene);
-	//sphereScene(*scene);
-	sponzaScene(*scene);
+	// TODO: load scene here
+	loadScene01(*scene);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double, std::milli> duration = end - start;
 

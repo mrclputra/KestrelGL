@@ -12,36 +12,48 @@
 
 class Mesh {
 public:
-    struct Vertex {
-        glm::vec3 pos;
-        glm::vec3 normal;
-        glm::vec3 tangent;
-        glm::vec3 bitangent;
-        glm::vec2 uv;
-    };
+	struct Vertex {
+		glm::vec3 pos;
+		glm::vec3 normal;
+		glm::vec3 tangent;
+		glm::vec3 bitangent;
+		glm::vec2 uv;
+	};
 
-    // which textures from the material texture vector this mesh uses
-    std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
-    std::vector<int> textureIndices;
+	// mesh attributes
+	std::vector<Vertex> vertices;
+	std::vector<unsigned int> indices;
+	std::vector<int> texIndices;
 
-    unsigned int VAO = 0;
-    unsigned int VBO = 0;
-    unsigned int EBO = 0;
+	unsigned int VAO = 0;
+	unsigned int VBO = 0;
+	unsigned int EBO = 0;
 
-    // constructors
-    Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) {
-        this->vertices = std::move(vertices);
-        this->indices = std::move(indices);
-        upload();
+	// constructors
+	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) {
+		this->vertices = std::move(vertices);
+		this->indices = std::move(indices);
+		upload();
+	}
+	~Mesh() {
+		if (EBO) glDeleteBuffers(1, &EBO);
+		if (VBO) glDeleteBuffers(1, &VBO);
+		if (VAO) glDeleteVertexArrays(1, &VAO);
+	}
+
+    // render our mesh
+    void render() {
+        if (vertices.empty()) {
+            logger.error("MASH HAS NO VERTICES, CANNOT RENDER");
+            return;
+        }
+
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
     }
-    ~Mesh() {
-        if (EBO) glDeleteBuffers(1, &EBO);
-        if (VBO) glDeleteBuffers(1, &VBO);
-        if (VAO) glDeleteVertexArrays(1, &VAO);
-    }
 
-    // upload vertex data to gpu
+	// upload vertex data to the GPU
     void upload() {
         if (VAO) {
             logger.error("VAO already exists: cannot overwrite mesh data");
@@ -82,15 +94,6 @@ public:
         glBindVertexArray(0);
     }
 
-    // tell GPU to render our mesh
-    void render() {
-        if (vertices.empty()) {
-            logger.error("MASH HAS NO VERTICES, CANNOT RENDER");
-            return;
-        }
+private:
 
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0); // unbind
-    }
 };

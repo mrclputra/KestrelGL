@@ -5,35 +5,33 @@
 #include <memory>
 #include <string>
 
-#include <logger.h>
+#include "Mesh.h"
+#include "Material.h"
+#include "Transform.h"
 
-#include "components/Mesh.h"
-#include "components/Transform.h"
-#include "components/Material.h"
-#include "components/Shader.h"
+#include <logger.h>
 
 class Object {
 public:
-	Object(const std::string& name = "Object") {
+	// constructor
+	Object(const std::string& name = "noname") {
+		material = std::make_shared<Material>();
 		this->name = name;
-
-		//shader = std::make_shared<Shader>();
-		material = std::make_shared<Material>(); // add a material by default?
 	}
 	~Object() = default;
 
 	// per-frame logic
 	void update(float deltaTime) {}
 
-	// the components below must be assigned and valid before any draws are made
+	// the variables below must be assigned and valid before any draws are made
 	// as such, the modelloader class is responsible for doing this
 
-	// object components
+	// components
+	std::string name;
 	Transform transform;
+
 	std::vector<std::shared_ptr<Mesh>> meshes;
 	std::shared_ptr<Material> material;
-
-	std::string name;
 
 	// TODO: figure out how to do parent child references?
 	//	though I don't think it is necessary

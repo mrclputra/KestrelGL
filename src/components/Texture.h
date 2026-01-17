@@ -16,27 +16,23 @@ public:
 	};
 
 	// constructor
-	//Texture() = default;
-	Texture(const std::string& path, Type type = Type::ALBEDO) : path(path), type(type) {}
-	//Texture(const std::string path, Type type = Type::ALBEDO) {
-	//	this->type = type;
-	//	this->path = path;
-	//}
+	Texture(const Type type, const std::string path) : type(type), path(path) {}
 	~Texture() {
 		if (id != 0) {
 			glDeleteTextures(1, &id);
 		}
 	}
 
-	void bind(unsigned int slot = 0) const {
+	void bind(unsigned int slot) {
 		glActiveTexture(GL_TEXTURE0 + slot);
 		glBindTexture(GL_TEXTURE_2D, id);
 	}
-	void unbind() const {
+	void unbind() {
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
-	std::string path;
-	unsigned int id = 0;
-	Type type;
+	// attributes
+	unsigned int id = 0; // handler to GPU
+	const Type type;
+	const std::string path;
 };

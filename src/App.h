@@ -31,7 +31,7 @@ public:
     
     std::unique_ptr<Scene> scene; // single scene instance
     Renderer renderer;
-    EventBus bus;
+    //EventBus bus;
 
     void processInput(float dt);
 

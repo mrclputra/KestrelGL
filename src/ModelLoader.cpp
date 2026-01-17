@@ -1,10 +1,16 @@
 #include "ModelLoader.h"
 #include <stb_image.h>
 
-// todo: allow for custom shaders
-std::vector<std::shared_ptr<Object>> ModelLoader::load(const std::string& path) {
+// todo: rewrite this loader such that it returns a vector of objects instead
+//	we can figure out how to optimize textures later, but for now architecture is what matters
+// 
+// it will be helpful in the future to separate every aiNode into it's own object instance
+// we could implement a singleton textures store in the scene or application level
+// kinda like the logger	
+
+std::shared_ptr<Object> ModelLoader::load(const std::string& path) {
 	Assimp::Importer importer;
-	const aiScene* assimpScene = importer.ReadFile(path, 
+	const aiScene* assimpScene = importer.ReadFile(path,
 		// post-processing flags
 		aiProcess_Triangulate |
 		aiProcess_CalcTangentSpace |
@@ -14,7 +20,7 @@ std::vector<std::shared_ptr<Object>> ModelLoader::load(const std::string& path) 
 
 	if (!assimpScene || assimpScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !assimpScene->mRootNode) {
 		logger.error("failed to load: " + std::string(importer.GetErrorString()));
-		return {};
+		return nullptr;
 	}
 
 	// get directory from file path
@@ -22,50 +28,39 @@ std::vector<std::shared_ptr<Object>> ModelLoader::load(const std::string& path) 
 	size_t lastSlash = path.find_last_of("/\\");
 	directory = (lastSlash != std::string::npos) ? path.substr(0, lastSlash) : ".";
 
-	// objects vector
-	auto objects = std::vector<std::shared_ptr<Object>>();
-
-	// recurse and process all nodes
-	processNode(assimpScene->mRootNode, assimpScene, directory, glm::mat4(1.0), objects);
-
-	return objects;
+	// single object
+	auto object = std::make_shared<Object>();
+	processNode(assimpScene->mRootNode, assimpScene, directory, glm::mat4(1.0), *object);
+	object->material->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model_phong.frag");
+	return object;
 }
 
-void ModelLoader::processNode(aiNode* assimpNode, const aiScene *assimpScene, const std::string& directory, const glm::mat4& parentTransform, std::vector<std::shared_ptr<Object>>& objects) {
-	// get local transformation
-	// as it compounds on it's parent
-	glm::mat4 local = aiMatrixToGLM(assimpNode->mTransformation);
-	glm::mat4 global = parentTransform * local;
-
-	auto object = std::make_shared<Object>("Object_" + std::string(assimpNode->mName.C_Str())	);
-	object->material->shader = std::make_shared<Shader>(SHADER_DIR "model.vert", SHADER_DIR "model_phong.frag");
+void ModelLoader::processNode(aiNode* assimpNode, const aiScene* assimpScene, const std::string& directory, const glm::mat4 transform, Object& object) {
+	// get world space transformation
+	glm::mat4 local = aiMatrixtoGLM(assimpNode->mTransformation);
+	glm::mat4 global = transform * local;
 
 	// process current node's meshes
 	for (unsigned int i = 0; i < assimpNode->mNumMeshes; i++) {
 		aiMesh* assimpMesh = assimpScene->mMeshes[assimpNode->mMeshes[i]];
-		
-		auto mesh = processMesh(assimpMesh, assimpScene, directory, global, *object->material);
+		auto mesh = processMesh(assimpMesh, assimpScene, directory, global, object);
 		if (mesh) {
-			object->meshes.push_back(mesh);
+			object.meshes.push_back(mesh);
 		}
 	}
 
-	objects.push_back(object);
-
-	// recurse into children
+	// recurse and process all children nodes
 	for (unsigned int i = 0; i < assimpNode->mNumChildren; i++) {
-		processNode(assimpNode->mChildren[i], assimpScene, directory, global, objects);
+		processNode(assimpNode->mChildren[i], assimpScene, directory, global, object);
 	}
 }
 
-std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* assimpMesh, const aiScene* assimpScene, const std::string& directory, const glm::mat4 transform, Material& material) {
+std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* assimpMesh, const aiScene* assimpScene, const std::string& directory, const glm::mat4 transform, Object& object) {
 	std::vector<Mesh::Vertex> vertices;
 	std::vector<unsigned int> indices;
 	std::vector<int> texIndices;
-	// TODO: texture index?
 
 	// for proper normal transformation
-	// in the event the original mesh is transformed
 	glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(transform)));
 
 	// extract vertex data
@@ -134,43 +129,40 @@ std::shared_ptr<Mesh> ModelLoader::processMesh(aiMesh* assimpMesh, const aiScene
 		}
 	}
 
-	// TODO: process materials and textures
-	// TODO: this should probably be done before loading vertices?
+	// extract textures
+	if (assimpMesh->mMaterialIndex >= 0) {
+		aiMaterial* assimpMaterial = assimpScene->mMaterials[assimpMesh->mMaterialIndex];
 
-	//if (assimpMesh->mMaterialIndex >= 0) {
-	//	// need to map this into my engine
-	//	aiMaterial* assimpMaterial = assimpScene->mMaterials[assimpMesh->mMaterialIndex];
+		// load albedo textures
+		if (assimpMaterial->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+			for (unsigned int i = 0; i < assimpMaterial->GetTextureCount(aiTextureType_DIFFUSE); i++) {
+				// TODO: load texture
+				aiString str;
+				assimpMaterial->GetTexture(aiTextureType_DIFFUSE, i, &str);
+				std::string texPath = directory + "/" + std::string(str.C_Str());
+				int idx = loadTexture(texPath, Texture::Type::ALBEDO, object);
+				texIndices.push_back(idx);
+			}
+		}
+	}
 
-	//	// load albedo textures
-	//	if (assimpMaterial->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
-	//		for (unsigned int i = 0; i < assimpMaterial->GetTextureCount(aiTextureType_DIFFUSE); i++) {
-	//			aiString str;
-	//			assimpMaterial->GetTexture(aiTextureType_DIFFUSE, i, &str);
-	//			std::string texPath = directory + "/" + std::string(str.C_Str());
-	//			int idx = loadTexture(texPath, Texture::Type::ALBEDO, material);
-	//			texIndices.push_back(idx);
-	//		}
-	//	}
+	logger.info("loaded mesh: " + std::string(assimpMesh->mName.C_Str()));
 
-	//	// todo: add more texture types later
-	//}
-
-	// return mesh
 	auto mesh = std::make_shared<Mesh>(vertices, indices);
-	//mesh->textureIndices = texIndices;
+	mesh->texIndices = texIndices;
 	return mesh;
 }
 
-// loads a texture
-// returns a handler to the texture
-int ModelLoader::loadTexture(const std::string& path, Texture::Type type, Material& material) {
-	// check if texture is already loaded, need to think of a fast way to do this
-	for (size_t i = 0; i < material.textures.size(); ++i) {
-		if (material.textures[i]->path == path) return static_cast<int>(i);
+// load a texture
+int ModelLoader::loadTexture(const std::string& path, Texture::Type type, Object& object) {
+	// check if texture is already loaded
+	for (int i = 0; i < object.material->textures.size(); i++) {
+		if (object.material->textures[i]->path == path) {
+			return i;
+		}
 	}
-	
-	auto texture = std::make_shared<Texture>(path, type);
 
+	auto texture = std::make_shared<Texture>(type, path);
 	glGenTextures(1, &texture->id);
 
 	int width, height, nrChannels;
@@ -190,13 +182,12 @@ int ModelLoader::loadTexture(const std::string& path, Texture::Type type, Materi
 		glBindTexture(GL_TEXTURE_2D, texture->id);
 		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 
-		// configure texture parameters
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		logger.info("Loaded texture: " + path + "\n\tat " + std::to_string(texture->id));
+		logger.info("Loaded texture: " + path);
 		stbi_image_free(data);
 	}
 	else {
@@ -204,12 +195,11 @@ int ModelLoader::loadTexture(const std::string& path, Texture::Type type, Materi
 		stbi_image_free(data);
 	}
 
-	// add to the material
-	material.textures.push_back(texture);
-	return static_cast<int>(material.textures.size() - 1);
+	object.material->textures.push_back(texture);
+	return static_cast<int>(object.material->textures.size() - 1); // index
 }
 
-glm::mat4 ModelLoader::aiMatrixToGLM(const aiMatrix4x4& from) {
+glm::mat4 ModelLoader::aiMatrixtoGLM(const aiMatrix4x4& from) {
 	// Assimp uses row-major, GLM uses column-major
 	return glm::mat4(
 		from.a1, from.b1, from.c1, from.d1,

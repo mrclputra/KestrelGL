@@ -10,10 +10,11 @@
 #include "lights/Light.h"
 #include "components/Object.h"
 #include "components/Mesh.h"
+#include "components/Texture.h"
 
 class Scene {
 public:
-    Scene(EventBus& bus);
+    Scene();
     ~Scene() = default;
 
     // parts of a scene
@@ -25,14 +26,13 @@ public:
     std::unique_ptr<Skybox> skybox;
 
     // event system
-    EventBus& bus;
+    //EventBus& bus;
 
     // skybox management
     void setSkybox(const std::string& hdriPath);
 
     // object management
     void addObject(std::shared_ptr<Object> object);
-    void addObjects(std::vector<std::shared_ptr<Object>> objects);
     void removeObject(std::shared_ptr<Object> object);
 
     // lights management
