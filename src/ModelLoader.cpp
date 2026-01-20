@@ -5,7 +5,7 @@
 //	for one, it is great for performance as we do not have to rebind N-many object transformations every frame
 //	second, helps for organization, as I this engine is meant for rendering only
 
-// if we want to make changes to the model, that should be done externally instead of here
+// TODO: move the origins of each object to the centroid of it's mesh(s)
 
 std::shared_ptr<Object> ModelLoader::load(const std::string& path, std::vector<std::shared_ptr<Texture>>& textureCache, const std::string& name) {
 	Assimp::Importer importer;
@@ -242,22 +242,21 @@ int ModelLoader::loadTexture(const std::string& path, Texture::Type type, Object
 	unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
 
 	if (data) {
-		GLenum format;
-		if (nrChannels == 1)
-			format = GL_RED;
-		if (nrChannels == 2)
-			format = GL_RG;
-		if (nrChannels == 3)
-			format = GL_RGB;
-		if (nrChannels == 4)
-			format = GL_RGBA;
+		GLenum internalFormat = GL_RGBA8;
+		GLenum dataFormat = GL_RGBA;
+
+		if (nrChannels == 1) { internalFormat = GL_R8; dataFormat = GL_RED; }
+		if (nrChannels == 2) { internalFormat = GL_RG8; dataFormat = GL_RG; }
+		if (nrChannels == 3) { internalFormat = GL_RGB8; dataFormat = GL_RGB; }
+		if (nrChannels == 4) { internalFormat = GL_RGBA8; dataFormat = GL_RGBA; }
 
 		glBindTexture(GL_TEXTURE_2D, texture->id);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		logger.info("Loaded texture: " + path);

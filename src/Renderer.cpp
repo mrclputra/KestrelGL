@@ -29,6 +29,8 @@ void Renderer::collectDrawCommands(const Scene& scene) {
 		}
 	}
 
+	// TODO: group by same texture
+
 	// sort
 	std::sort(commands.begin(), commands.end(),
 		[](const DrawCommand& a, const DrawCommand& b) {
@@ -36,32 +38,46 @@ void Renderer::collectDrawCommands(const Scene& scene) {
 				return a.material->isTransparent;
 			}
 
-			return a.material->shader < b.material->shader;
+			if (a.material->shader != b.material->shader) {
+				return a.material->shader < b.material->shader;
+			}
+
+			if (!a.mesh->texIndices.empty() && !b.mesh->texIndices.empty()) {
+				return a.mesh->texIndices[0] < b.mesh->texIndices[0];
+			}
+
+			return false;
 		});
 }
 
 void Renderer::executeBatched(const Scene& scene) {
 	if (commands.empty()) return;
-	Shader* currentShader = nullptr;
+
+	// TODO: resolve the dereference pointer call
+	Shader* shader = nullptr;
 
 	for (const auto& cmd : commands) {
-		if (currentShader != cmd.material->shader.get()) {
-			currentShader = cmd.material->shader.get();
+		if (!cmd.material || !cmd.material->shader) continue;
 
-			currentShader->checkHotReload();
-			currentShader->use();
+		if (shader != cmd.material->shader.get()) {
+			// shader switching logic
+			// the idea behind this is we only switch the shader only when we need to
+			shader = cmd.material->shader.get();
 
-			currentShader->setMat4("view", scene.camera.getViewMatrix());
-			currentShader->setMat4("projection", scene.camera.getProjectionMatrix());
-			currentShader->setVec3("viewPos", scene.camera.position);
+			shader->checkHotReload();
+			shader->use();
+
+			shader->setMat4("view", scene.camera.getViewMatrix());
+			shader->setMat4("projection", scene.camera.getProjectionMatrix());
+			shader->setVec3("viewPos", scene.camera.position);
 		}
 
-		currentShader->setMat4("model", cmd.modelMatrix);
-		currentShader->setVec4("p_albedo", cmd.material->albedo);
-		currentShader->setFloat("p_metalness", cmd.material->metalness);
-		currentShader->setFloat("p_roughness", cmd.material->roughness);
+		shader->setMat4("model", cmd.modelMatrix);
+		shader->setVec4("p_albedo", cmd.material->albedo);
+		shader->setFloat("p_metalness", cmd.material->metalness);
+		shader->setFloat("p_roughness", cmd.material->roughness);
 
-		currentShader->setBool("hasAlbedoMap", false);
+		shader->setBool("hasAlbedoMap", false);
 
 		// textures
 		for (int texIdx : cmd.mesh->texIndices) {
@@ -69,8 +85,8 @@ void Renderer::executeBatched(const Scene& scene) {
 			
 			switch (tex->type) {
 			case Texture::Type::ALBEDO:
-				currentShader->setBool("hasAlbedoMap", true);
-				currentShader->setInt("albedoMap", 0);
+				shader->setBool("hasAlbedoMap", true);
+				shader->setInt("albedoMap", 0);
 				tex->bind(0);
 				break;
 
