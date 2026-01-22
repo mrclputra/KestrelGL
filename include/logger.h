@@ -7,27 +7,31 @@
 #include <condition_variable>
 #include <string>
 #include <atomic>
+#include <sstream>
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
 
 class Logger {
 private:
-    std::queue<std::string> msgQueue;
+    std::queue<std::string> queue;
     std::mutex mtx;
     std::condition_variable cv;
     std::thread worker;
     std::atomic<bool> running{ true };
 
-	// the worker thread just keeps writing whatever comes in
     void process() {
-        while (running || !msgQueue.empty()) {
+        while (running || !queue.empty()) {
             std::unique_lock<std::mutex> lock(mtx);
-            cv.wait(lock, [this] { return !msgQueue.empty() || !running; });
+            cv.wait(lock, [this] { return !queue.empty() || !running; });
 
-            while (!msgQueue.empty()) {
-                std::string msg = msgQueue.front();
-                msgQueue.pop();
+            while (!queue.empty()) {
+                std::string msg = std::move(queue.front());
+                queue.pop();
                 lock.unlock();
 
                 std::cout << msg << std::flush;
+
                 lock.lock();
             }
         }
@@ -43,69 +47,90 @@ private:
         if (worker.joinable()) worker.join();
     }
 
-    // prevent copying
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
 
-public:
-    // get single instance
-    static Logger& instance() {
-        static Logger logger;
-        return logger;
-    }
-
-    // push messages to queue
-    // non-blocking
-    void info(const std::string& msg,
-        const char* file = __builtin_FILE(),
-        int line = __builtin_LINE(),
-        const char* func = __builtin_FUNCTION()) {
-        log("INFO", msg, file, line, func);
-    }
-    void warning(const std::string& msg,
-        const char* file = __builtin_FILE(),
-        int line = __builtin_LINE(),
-        const char* func = __builtin_FUNCTION()) {
-        log("WARNING", msg, file, line, func);
-    }
-    void error(const std::string& msg,
-        const char* file = __builtin_FILE(),
-        int line = __builtin_LINE(),
-        const char* func = __builtin_FUNCTION()) {
-        log("ERROR", msg, file, line, func);
-    }
-
-    void spacing(const std::string& msg = "",
-        const char* file = __builtin_FILE(),
-        int line = __builtin_LINE(),
-        const char* func = __builtin_FUNCTION()) {
-        log("INFO", msg, file, line, func);
-    }
-
-private:
-    void log(const std::string& level, 
-        const std::string& msg,
-        const char* file, 
-        int line, 
-        const char* func
-    ) {
-        std::string filename(file);
-        auto pos = filename.find_last_of("/\\");
-        if (pos != std::string::npos) {
-            filename = filename.substr(pos + 1);
+    void push(const std::string& msg) {
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            queue.push(msg);
         }
+        cv.notify_one();
+    }
 
-        std::lock_guard<std::mutex> lock(mtx);
-        std::string out = "[" + level + "] ";
-        out += filename;
+    static std::string shortFile(const char* file) {
+        std::string f = file ? file : "";
+        auto pos = f.find_last_of("/\\");
+        if (pos != std::string::npos) f = f.substr(pos + 1);
+        return f;
+    }
+
+    // generic to string
+    template <typename T>
+    static std::string toString(const T& v) {
+        std::ostringstream oss;
+        oss << v;
+        return oss.str();
+    }
+
+    static std::string toString(const glm::vec2& v) { return glm::to_string(v); }
+    static std::string toString(const glm::vec3& v) { return glm::to_string(v); }
+    static std::string toString(const glm::vec4& v) { return glm::to_string(v); }
+    static std::string toString(const glm::mat3& v) { return glm::to_string(v); }
+    static std::string toString(const glm::mat4& v) { return glm::to_string(v); }
+
+    template <typename... Args>
+    void log(const char* level,
+        const char* file,
+        int line,
+        const char* func,
+        const Args&... args)
+    {
+        std::string out;
+        out += "[";
+        out += level;
+        out += "] ";
+        out += shortFile(file);
         out += ":";
         out += std::to_string(line);
-        out += " | " + std::string(func) + ":: ";
-        out += msg + "\n";
-        msgQueue.push(std::move(out));
-        cv.notify_one();
+        out += " | ";
+        out += func;
+        out += ":: ";
+
+        // expand args into string with +
+        (void)std::initializer_list<int>{
+            (out += toString(args), 0)...
+        };
+
+        out += "\n";
+        push(out);
+    }
+
+public:
+    static Logger& instance() {
+        static Logger inst;
+        return inst;
+    }
+
+    template <typename... Args>
+    void info(const Args&... args) {
+        log("INFO", __builtin_FILE(), __builtin_LINE(), __builtin_FUNCTION(), args...);
+    }
+
+    template <typename... Args>
+    void warning(const Args&... args) {
+        log("WARNING", __builtin_FILE(), __builtin_LINE(), __builtin_FUNCTION(), args...);
+    }
+
+    template <typename... Args>
+    void error(const Args&... args) {
+        log("ERROR", __builtin_FILE(), __builtin_LINE(), __builtin_FUNCTION(), args...);
+    }
+
+    template <typename... Args>
+    void spacing(const Args&... args) {
+        log("INFO", __builtin_FILE(), __builtin_LINE(), __builtin_FUNCTION(), args...);
     }
 };
 
-// declare global
 inline Logger& logger = Logger::instance();
