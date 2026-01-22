@@ -27,13 +27,14 @@ in vec2 vTexCoords;
 // MAIN
 // -------------------------------------------------
 void main() {
-    // fetch data
     vec3 albedo = vec3(1.0);
     float alpha = 1.0;
+
     if (hasAlbedoMap) {
         // use the texture map
         albedo = pow(texture(albedoMap, vTexCoords).rgb, vec3(2.2));
         alpha = texture(albedoMap, vTexCoords).a;
+
     } else {
         // use p_albedo
         albedo = p_albedo.rgb;

@@ -155,5 +155,53 @@ void Gui::draw() {
         ImGuiFileDialog::Instance()->Close();
     }
 
+    ImGui::Separator();
+
+    // scene tree
+    if (ImGui::TreeNodeEx("Scene Tree")) {
+        // objects
+        if (ImGui::TreeNodeEx("Objects")) {
+            for (auto& obj : app->scene->objects) {
+                if (ImGui::TreeNodeEx((void*)obj.get(), ImGuiTreeNodeFlags_OpenOnArrow, "%s", obj->name.c_str())) {
+                    ImGuiTreeNodeFlags subFlags = ImGuiTreeNodeFlags_DefaultOpen;
+
+                    // transforms
+                    if (ImGui::TreeNodeEx("Transform", subFlags)) {
+                        ImGui::Text("Position");
+                        ImGui::SetNextItemWidth(140.0f);
+                        if (ImGui::DragFloat3("##Pos", &obj->transform.position[0], 0.1f)) {
+                            obj->transform.isDirty = true;
+                        }
+                        ImGui::TreePop();
+                    }
+
+                    // shader
+                    if (obj->material->shader && ImGui::TreeNodeEx("Shader", subFlags)) {
+                        ImGui::Text("ID: %u", obj->material->shader->ID);
+                        ImGui::TreePop();
+                    }
+
+                    // meshes
+                    if (!obj->meshes.empty() && ImGui::TreeNode("Meshes")) {
+                        for (int i = 0; i < (int)obj->meshes.size(); i++) {
+                            ImGui::BulletText("Mesh %d", i);
+                        }
+                        ImGui::TreePop();
+                    }
+
+                    // PBR parameters
+
+                    ImGui::TreePop();
+                }
+            }
+
+            // pop objects
+            ImGui::TreePop();
+        }
+
+        // pop scene
+        ImGui::TreePop();
+    }
+
     ImGui::End();
 }

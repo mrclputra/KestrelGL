@@ -10,18 +10,12 @@
 #include <numeric>
 
 #include <logger.h>
-
 #include "Scene.h"
 
-class ModelLoader {
-public:
-	static std::shared_ptr<Object> load(const std::string& path);
-
-	static void processNode(aiNode* assimpNode, const aiScene* assimpScene, const std::string& directory, const glm::mat4 transform, Object& object);
-
-	static std::shared_ptr<Mesh> processMesh(aiMesh* assimpMesh, const aiScene* assimpScene, const std::string& directory, const glm::mat4 transform, Object& object);
-
-	static int loadTexture(const std::string& path, Texture::Type type, Object& object);
-
-	static glm::mat4 aiMatrixtoGLM(const aiMatrix4x4& from);
-};
+namespace ModelLoader {
+	std::vector<std::shared_ptr<Object>> loadAsObjects(
+		const std::string& path, 
+		std::vector<std::shared_ptr<Texture>>& textureCache,
+		glm::vec3 scale = glm::vec3(1.0f)
+	);
+}

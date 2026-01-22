@@ -19,6 +19,7 @@ public:
 
     // parts of a scene
     std::vector<std::shared_ptr<Object>> objects;
+    std::vector<std::shared_ptr<Texture>> textures;
     std::vector<std::shared_ptr<Light>> lights;
     Camera camera;
 
