@@ -69,7 +69,9 @@ endif()
 # MAIN executable
 add_executable(KestrelGL
     # core
-    src/main.cpp
+    "src/main.cpp"
+    "src/App.cpp"
+    "src/Gui.cpp"
 )
 
 # target properties
