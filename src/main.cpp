@@ -1,16 +1,8 @@
 #include <iostream>
-#include "App.h"
+#include "logger.h"
 
 int main() {
-	logger.info("Hello CMake");
-	logger.info("C++ Standard " + std::to_string(__cplusplus));
-	logger.info("KestrelGL2");
-	logger.spacing();
-
-	// create an App instance
-	// call the app run method 
-	auto app = App(1600, 900, "KestrelGL2");
-	app.run();
-
+	std::cout << "Hello CMake" << std::endl;
+	
 	return 0;
 }
